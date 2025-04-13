@@ -1,1 +1,1 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/huroppar/world-of-stands/main/script.lua"))()
+https://github.com/huroppar/world-of-stands/raw/refs/heads/main/script.lua
