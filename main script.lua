@@ -175,15 +175,6 @@ UIS.JumpRequest:Connect(function()
     end
 end)
 
-combatTab:AddToggle({
-    Name = "無限ジャンプ",
-    Default = settings.InfiniteJump,
-    Callback = function(state)
-        infiniteJumpEnabled = state
-        settings.InfiniteJump = state
-        saveSettings()
-    end
-})
 
 combatTab:AddButton({
     Name = "HP回復",
@@ -240,6 +231,51 @@ combatTab:AddTextbox({
         end
     end
 })
+
+--== ユーティリティ機能 ==--
+utilityTab:AddToggle({
+    Name = "無限ジャンプ",
+    Default = settings.InfiniteJump,
+    Callback = function(state)
+        settings.InfiniteJump = state
+        saveSettings()
+    end
+})
+
+UIS.JumpRequest:Connect(function()
+    if settings.InfiniteJump then
+        character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
+    end
+end)
+
+utilityTab:AddSlider({
+    Name = "スピード調整",
+    Min = 16,
+    Max = settings.SpeedLimit,
+    Default = settings.Speed,
+    Increment = 1,
+    Callback = function(val)
+        settings.Speed = val
+        humanoidRootPart.Parent:FindFirstChildOfClass("Humanoid").WalkSpeed = val
+        saveSettings()
+    end
+})
+
+utilityTab:AddToggle({
+    Name = "透明化",
+    Default = settings.Transparency,
+    Callback = function(state)
+        settings.Transparency = state
+        local parts = character:GetDescendants()
+        for _, part in ipairs(parts) do
+            if part:IsA("BasePart") then
+                part.Transparency = state and 1 or 0
+            end
+        end
+        saveSettings()
+    end
+})
+
 
 --== GUI切り替え ==--
 UIS.InputBegan:Connect(function(input, processed)
