@@ -100,3 +100,108 @@ task.spawn(function()
         task.wait(1.5) -- 実行間隔：重すぎる場合はもっと増やしてもOK
     end
 end)
+
+local JumpEnabled = true
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if JumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+MainTab:AddTextbox({
+    Name = "Speed",
+    Default = "16",
+    TextDisappear = false,
+    Callback = function(value)
+        local speed = tonumber(value)
+        if speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = speed
+        end
+    end
+})
+
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+        if humanoid and humanoid.Health < humanoid.MaxHealth then
+            humanoid.Health = humanoid.MaxHealth
+        end
+    end
+end)
+
+-- 🔁 必要なサービス
+local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- 🧭 テレポート先プレイヤー名 & キー保存用
+local targetName = ""
+local teleportKey = Enum.KeyCode.T -- 初期キーをTに設定（GUIから変更可能）
+
+-- 🪄 テレポート関数
+local function teleportToPlayer()
+    local targetPlayer = Players:FindFirstChild(targetName)
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if root then
+            local targetPos = targetPlayer.Character.HumanoidRootPart.Position
+            root.CFrame = CFrame.new(targetPos + Vector3.new(5, 0, 0)) -- 横に5
+        end
+    else
+        OrionLib:MakeNotification({
+            Name = "エラー",
+            Content = "プレイヤーが見つかりませんでした！",
+            Time = 3
+        })
+    end
+end
+
+-- 🧱 テレポートセクション
+local teleportSection = TeleportTab:AddSection({Name = "テレポート機能"})
+
+-- ✍️ 名前入力
+teleportSection:AddTextbox({
+    Name = "テレポート先プレイヤー名",
+    Default = "",
+    TextDisappear = false,
+    Callback = function(value)
+        targetName = value
+    end
+})
+
+-- 🖱️ ボタンテレポート
+teleportSection:AddButton({
+    Name = "そのプレイヤーの横にテレポート",
+    Callback = teleportToPlayer
+})
+
+-- 🎹 キー入力で割り当て
+teleportSection:AddBind({
+    Name = "テレポートキー設定",
+    Default = Enum.KeyCode.T,
+    Hold = false,
+    Callback = function(key)
+        teleportKey = key
+    end
+})
+
+-- ⌨️ 実際のキー入力チェック
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == teleportKey then
+        teleportToPlayer()
+    end
+end)
+
+-- 👁️ 表示・非表示切り替えトグル
+TeleportTab:AddToggle({
+    Name = "テレポート機能を表示/非表示",
+    Default = true,
+    Callback = function(state)
+        if teleportSection then
+            for _, element in pairs(teleportSection["Items"] or {}) do
+                element.Visible = state
+            end
+        end
+    end
+})
