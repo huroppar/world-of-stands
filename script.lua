@@ -1,3 +1,4 @@
+-- GUI作成（OrionLib不要）
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "WOS_GUI"
 ScreenGui.ResetOnSpawn = false
