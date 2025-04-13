@@ -95,8 +95,8 @@ TeleportTab:AddButton({
 
 -- テレポートのキー割り当て
 local TeleportKeys = {
-    ["F"] = Enum.KeyCode.F,
-    ["G"] = Enum.KeyCode.G,
+    ["T"] = Enum.KeyCode.T,
+    ["1"] = Enum.KeyCode.1,
     ["H"] = Enum.KeyCode.H
 }
 
@@ -104,8 +104,8 @@ local selectedTeleportKey = Enum.KeyCode.F
 
 TeleportTab:AddDropdown({
     Name = "テレポートのキーを選択",
-    Default = "F",
-    Options = {"F", "G", "H"},
+    Default = "T",
+    Options = {"T", "1", "H"},
     Callback = function(value)
         selectedTeleportKey = TeleportKeys[value]
     end
@@ -161,6 +161,39 @@ end
 
 -- 使用例
 teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
+
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+-- 近くの敵を見つける
+local function getNearestEnemy()
+    local nearest = nil
+    local shortestDistance = math.huge
+
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:FindFirstChild("Humanoid") and v ~= Character then
+            local distance = (v:FindFirstChild("HumanoidRootPart").Position - Character:FindFirstChild("HumanoidRootPart").Position).Magnitude
+            if distance < shortestDistance then
+                shortestDistance = distance
+                nearest = v
+            end
+        end
+    end
+    return nearest
+end
+
+-- HPを削る（1にする）
+local target = getNearestEnemy()
+if target and target:FindFirstChild("Humanoid") then
+    local humanoid = target.Humanoid
+    humanoid.Health = 1 -- または humanoid:TakeDamage(humanoid.Health - 1)
+    print("敵のHPを1にしました:", target.Name)
+else
+    warn("近くに攻撃できる敵が見つかりませんでした。")
+end
+
 
 -- OrionLib初期化
 OrionLib:Init()
