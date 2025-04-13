@@ -96,7 +96,7 @@ TeleportTab:AddButton({
 -- テレポートのキー割り当て
 local TeleportKeys = {
     ["T"] = Enum.KeyCode.T,
-    ["1"] = Enum.KeyCode.1,
+    ["1"] = Enum.KeyCode.Y,
     ["H"] = Enum.KeyCode.H
 }
 
@@ -105,7 +105,7 @@ local selectedTeleportKey = Enum.KeyCode.F
 TeleportTab:AddDropdown({
     Name = "テレポートのキーを選択",
     Default = "T",
-    Options = {"T", "1", "H"},
+    Options = {"T", "Y", "H"},
     Callback = function(value)
         selectedTeleportKey = TeleportKeys[value]
     end
