@@ -27,16 +27,7 @@ end)
 local function teleportUp()
     local char = player.Character or player.CharacterAdded:Wait()
     local root = char:WaitForChild("HumanoidRootPart")
-
-    -- 一度アンカーして落下を防ぐ
-    root.Anchored = true
-
-    -- 高さを調整（1000くらいずつ試してみて）
-    root.CFrame = root.CFrame + Vector3.new(0, 5000, 0)
-
-    -- 少し待ってからアンカー解除
-    task.wait(1) -- 1秒後に解除
-    root.Anchored = false
+    root.CFrame = root.CFrame + Vector3.new(0, 1000, 0)
 end
 -- 🎛️ タブとセクション
 local MainTab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false})
