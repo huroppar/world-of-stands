@@ -1,0 +1,4 @@
+humanoid.Jumping:Connect(function()
+    humanoid:ChangeState(Enum.HumanoidStateType.Physics)
+    humanoid:Move(Vector3.new(0, jumpPower, 0))  --
+end)
