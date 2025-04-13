@@ -1,24 +1,29 @@
 --// Masashi Script : World of Stands Most Useful Script
 --// Solara V3 Compatible | Author: Masashi
 
---== OrionLib (Feather Icons エラー回避版) ==--
-local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/3j5EzfEV"))()
-pcall(function() OrionLib.FeatherIcons = {} end)
+--== OrionLib (Solara対応) ==--
+local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 
 --== Services ==--
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
-local TeleportService = game:GetService("TeleportService")
 local UIS = game:GetService("UserInputService")
 
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
---== データ保存 ==--
+--== データ保存用 ==--
 local saveFileName = "MasashiScriptSettings.json"
-local settings = {}
+local settings = {
+    SavedPositions = {},
+    SelectedPosition = nil,
+    Speed = 16,
+    InfiniteJump = false,
+    KeySystem = "None",
+    LastLocation = nil
+}
 
 local function saveSettings()
     writefile(saveFileName, HttpService:JSONEncode(settings))
@@ -26,7 +31,12 @@ end
 
 local function loadSettings()
     if isfile(saveFileName) then
-        settings = HttpService:JSONDecode(readfile(saveFileName))
+        local success, decoded = pcall(function()
+            return HttpService:JSONDecode(readfile(saveFileName))
+        end)
+        if success and type(decoded) == "table" then
+            settings = decoded
+        end
     end
 end
 
@@ -49,150 +59,119 @@ OrionLib:MakeNotification({
     Time = 5
 })
 
---== スピード調整 ==--
-local SpeedTab = Window:MakeTab({Name = "⚡ 移動系", Icon = "", PremiumOnly = false})
-SpeedTab:AddSlider({
-    Name = "移動スピード調整 (最大45)",
-    Min = 16,
-    Max = 45,
-    Default = 16,
-    Increment = 1,
-    ValueName = "Speed",
-    Callback = function(value)
-        if character:FindFirstChildOfClass("Humanoid") then
-            character:FindFirstChildOfClass("Humanoid").WalkSpeed = value
-        end
-    end
+--== プレイヤー位置保存＆テレポート ==--
+local teleportTab = Window:MakeTab({
+    Name = "テレポート管理",
+    Icon = "rbxassetid://6035067836",
+    PremiumOnly = false
 })
 
---== 無限ジャンプ ==--
-local InfiniteJumpEnabled = false
-SpeedTab:AddToggle({
-    Name = "💨 無限ジャンプ",
-    Default = false,
-    Callback = function(val)
-        InfiniteJumpEnabled = val
-    end
-})
-
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    if InfiniteJumpEnabled then
-        character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-    end
-end)
-
---== テレポート機能 ==--
-local TeleportTab = Window:MakeTab({Name = "📍 テレポート", Icon = "", PremiumOnly = false})
-
-TeleportTab:AddButton({
-    Name = "プレイヤー位置を保存",
-    Callback = function()
-        local pos = humanoidRootPart.Position
-        settings.savedPosition = {x = pos.X, y = pos.Y, z = pos.Z}
-        saveSettings()
-        OrionLib:MakeNotification({Name = "保存完了", Content = "現在地を保存しました", Time = 3})
-    end
-})
-
-TeleportTab:AddButton({
-    Name = "保存位置にテレポート",
-    Callback = function()
-        local pos = settings.savedPosition
-        if pos then
-            humanoidRootPart.CFrame = CFrame.new(pos.x, pos.y, pos.z)
-        else
-            OrionLib:MakeNotification({Name = "エラー", Content = "保存された位置がありません", Time = 3})
-        end
-    end
-})
-
---== 敵自動テレポート（指定名） ==--
-local EnemyName = ""
-TeleportTab:AddTextbox({
-    Name = "敵の名前を入力",
-    Default = "",
+teleportTab:AddTextbox({
+    Name = "現在位置の名前",
+    Default = "MySpot",
     TextDisappear = false,
-    Callback = function(txt)
-        EnemyName = txt
+    Callback = function(name)
+        settings.SavedPositions[name] = humanoidRootPart.Position
+        saveSettings()
+        OrionLib:MakeNotification({Name = "保存完了", Content = name .. " の位置を保存しました。", Time = 3})
     end
 })
 
-TeleportTab:AddButton({
-    Name = "🔁 敵を自分の所へテレポート",
+teleportTab:AddDropdown({
+    Name = "保存済みの場所",
+    Options = table.keys(settings.SavedPositions),
+    Callback = function(option)
+        settings.SelectedPosition = option
+        saveSettings()
+    end
+})
+
+teleportTab:AddButton({
+    Name = "選択した場所にテレポート",
     Callback = function()
-        for _, v in pairs(workspace:GetDescendants()) do
-            if v:IsA("Model") and v:FindFirstChild("HumanoidRootPart") and v.Name:lower():find(EnemyName:lower()) then
-                v:MoveTo(humanoidRootPart.Position)
-            end
+        local pos = settings.SavedPositions[settings.SelectedPosition]
+        if pos then
+            humanoidRootPart.CFrame = CFrame.new(pos)
         end
     end
 })
 
---== 自動HP1化 ==--
-local AutoHP1 = false
-SpeedTab:AddToggle({
-    Name = "❤️ HPを1に固定",
-    Default = false,
-    Callback = function(val)
-        AutoHP1 = val
+teleportTab:AddButton({
+    Name = "現在の場所に戻る（復元）",
+    Callback = function()
+        if settings.LastLocation then
+            humanoidRootPart.CFrame = CFrame.new(settings.LastLocation)
+            OrionLib:MakeNotification({Name = "復元完了", Content = "元の場所に戻りました。", Time = 3})
+        end
     end
 })
 
-RunService.RenderStepped:Connect(function()
-    if AutoHP1 and character and character:FindFirstChild("Humanoid") then
-        character.Humanoid.Health = 1
+teleportTab:AddTextbox({
+    Name = "削除したい位置名",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(name)
+        if settings.SavedPositions[name] then
+            settings.SavedPositions[name] = nil
+            saveSettings()
+            OrionLib:MakeNotification({
+                Name = "削除完了",
+                Content = name .. " を削除しました。",
+                Time = 3
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "その名前の位置は存在しません。",
+                Time = 3
+            })
+        end
+    end
+})
+
+--== 移動前の位置を保存（自動） ==--
+local function storeCurrentPosition()
+    settings.LastLocation = humanoidRootPart.Position
+    saveSettings()
+end
+
+--== キーシステム（GUI入力式） ==--
+local keyTab = Window:MakeTab({
+    Name = "キー認証",
+    Icon = "rbxassetid://6031280882",
+    PremiumOnly = false
+})
+
+keyTab:AddTextbox({
+    Name = "キーを入力",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(inputKey)
+        local acceptedKeys = {
+            Masashi0305 = true,
+            [tostring(os.date("%Y%m%d"))] = true,
+            WebKey = tostring(game:HttpGet("https://pastebin.com/raw/YOUR_KEY_HERE"))
+        }
+
+        if acceptedKeys[inputKey] or acceptedKeys.WebKey == inputKey then
+            OrionLib:MakeNotification({Name = "認証成功", Content = "スクリプトが有効化されました！", Time = 5})
+        else
+            OrionLib:MakeNotification({Name = "認証失敗", Content = "キーが間違っています。", Time = 5})
+        end
+    end
+})
+
+--== GUI表示・非表示をF4キーで切り替え ==--
+UIS.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == Enum.KeyCode.F4 then
+        OrionLib:ToggleUI()
     end
 end)
 
---== 敵・プレイヤーの光の柱と名前表示 ==--
-local VisualTab = Window:MakeTab({Name = "✨ 可視化", Icon = "", PremiumOnly = false})
-
-VisualTab:AddButton({
-    Name = "光の柱＋名前表示",
-    Callback = function()
-        for _, plr in pairs(Players:GetPlayers()) do
-            if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-                local part = Instance.new("Part", workspace)
-                part.Anchored = true
-                part.CanCollide = false
-                part.Size = Vector3.new(0.5, 100, 0.5)
-                part.CFrame = plr.Character.HumanoidRootPart.CFrame * CFrame.new(0, 50, 0)
-                part.BrickColor = BrickColor.new("Bright yellow")
-                part.Material = Enum.Material.Neon
-
-                local nameBillboard = Instance.new("BillboardGui", part)
-                nameBillboard.Size = UDim2.new(0, 100, 0, 40)
-                nameBillboard.Adornee = part
-                nameBillboard.AlwaysOnTop = true
-                local label = Instance.new("TextLabel", nameBillboard)
-                label.Size = UDim2.new(1, 0, 1, 0)
-                label.Text = plr.Name
-                label.BackgroundTransparency = 1
-                label.TextColor3 = Color3.new(1, 1, 0)
-                label.TextScaled = true
-            end
-        end
-    end
+--== 初期化通知 ==--
+OrionLib:MakeNotification({
+    Name = "設定復元完了",
+    Content = "前回の状態が読み込まれました。",
+    Image = "rbxassetid://4483345998",
+    Time = 5
 })
-
---== 無敵化・キック防止（ベータ）==--
-SpeedTab:AddButton({
-    Name = "🧬 無敵＆キック防止（テスト）",
-    Callback = function()
-        local mt = getrawmetatable(game)
-        setreadonly(mt, false)
-        local namecall = mt.__namecall
-        mt.__namecall = newcclosure(function(self, ...)
-            local method = getnamecallmethod()
-            if tostring(method) == "Kick" then
-                return
-            end
-            return namecall(self, ...)
-        end)
-        setreadonly(mt, true)
-        OrionLib:MakeNotification({Name = "成功", Content = "Kick防止を有効化しました", Time = 3})
-    end
-})
-
---== GUIの表示非表示切り替え ==--
-OrionLib:Init()
