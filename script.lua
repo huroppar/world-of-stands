@@ -164,48 +164,45 @@ teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
 
 
 Tab:AddButton({
-    Name = "敵のHPを1にする",
+    Name = "近くの敵のHPを1にする",
     Callback = function()
         local success, err = pcall(function()
-            local Players = game:GetService("Players")
-            local LocalPlayer = Players.LocalPlayer
-            local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+            local player = game.Players.LocalPlayer
+            local char = player.Character or player.CharacterAdded:Wait()
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if not root then return end
 
-            local function getNearestEnemy()
-                local nearest = nil
-                local shortestDistance = math.huge
-
-                for _, v in pairs(workspace:GetDescendants()) do
-                    if v:FindFirstChild("Humanoid") and v ~= Character then
-                        local hrp = v:FindFirstChild("HumanoidRootPart")
-                        local myhrp = Character:FindFirstChild("HumanoidRootPart")
-                        if hrp and myhrp then
-                            local distance = (hrp.Position - myhrp.Position).Magnitude
-                            if distance < shortestDistance then
-                                shortestDistance = distance
-                                nearest = v
-                            end
+            local nearest
+            local minDist = math.huge
+            for _,v in ipairs(workspace:GetDescendants()) do
+                if v:FindFirstChild("Humanoid") and v ~= char then
+                    local hrp = v:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        local dist = (hrp.Position - root.Position).Magnitude
+                        if dist < minDist then
+                            nearest = v
+                            minDist = dist
                         end
                     end
                 end
-                return nearest
             end
 
-            local target = getNearestEnemy()
-            if target and target:FindFirstChild("Humanoid") then
-                target.Humanoid.Health = 1
-                print("敵のHPを1にしたよ！:", target.Name)
+            if nearest then
+                local humanoid = nearest:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.Health = 1
+                    print("HPを1にした！")
+                end
             else
-                warn("近くに敵が見つからなかった！")
+                warn("敵が見つかりませんでした")
             end
         end)
 
         if not success then
-            warn("エラーが起きた！内容:", err)
+            warn("エラー:", err)
         end
     end
 })
-
 
 -- OrionLib初期化
 OrionLib:Init()
