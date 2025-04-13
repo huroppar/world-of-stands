@@ -208,33 +208,48 @@ MainTab:AddButton({
 MainTab:AddButton({
     Name = "Remote一覧を表示する",
     Callback = function()
-        local remotes = {}
-        for _, v in ipairs(getgc(true)) do
-            if typeof(v) == "table" then
-                for k, value in pairs(v) do
-                    if typeof(value) == "Instance" and (value:IsA("RemoteEvent") or value:IsA("RemoteFunction")) then
-                        table.insert(remotes, value:GetFullName())
+        local success, err = pcall(function()
+            local found = {}
+            for _, v in ipairs(getgc(true)) do
+                if typeof(v) == "table" then
+                    for k, value in pairs(v) do
+                        if typeof(value) == "Instance" then
+                            if value:IsA("RemoteEvent") or value:IsA("RemoteFunction") then
+                                if not table.find(found, value:GetFullName()) then
+                                    table.insert(found, value:GetFullName())
+                                end
+                            end
+                        end
                     end
                 end
             end
-        end
 
-        if #remotes > 0 then
-            print("=== Remote 一覧 ===")
-            for _, remoteName in ipairs(remotes) do
-                print(remoteName)
+            if #found > 0 then
+                print("=== Remote 一覧 ===")
+                for _, remotePath in ipairs(found) do
+                    print(remotePath)
+                end
+                OrionLib:MakeNotification({
+                    Name = "成功",
+                    Content = "Remote一覧をF9で確認してね！",
+                    Time = 4
+                })
+            else
+                OrionLib:MakeNotification({
+                    Name = "結果なし",
+                    Content = "Remoteが見つからなかったよ",
+                    Time = 4
+                })
             end
-            OrionLib:MakeNotification({
-                Name = "成功",
-                Content = "Remote一覧をコンソールに出力しました！",
-                Time = 4
-            })
-        else
+        end)
+
+        if not success then
             OrionLib:MakeNotification({
                 Name = "エラー",
-                Content = "Remoteが見つかりませんでした。",
+                Content = "Remote探索中にエラーが発生しました",
                 Time = 4
             })
+            warn("Remote探索エラー: ", err)
         end
     end
 })
