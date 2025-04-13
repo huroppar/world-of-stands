@@ -163,7 +163,7 @@ end
 teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
 
 
-Tab:AddButton({
+MainTab:AddButton({
     Name = "近くの敵のHPを1にする",
     Callback = function()
         local success, err = pcall(function()
