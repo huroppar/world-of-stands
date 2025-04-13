@@ -1,31 +1,28 @@
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- GUIの作成
-local screenGui = Instance.new("ScreenGui")  -- GUIの親オブジェクト
-screenGui.Parent = playerGui  -- プレイヤーのPlayerGuiに親として設定
+local screenGui = Instance.new("ScreenGui")
+screenGui.Parent = playerGui
 
--- TextLabelの作成（ラベル）
+）
 local label = Instance.new("TextLabel")
-label.Parent = screenGui  -- 作成したGUIに追加
-label.Size = UDim2.new(0, 300, 0, 50)  -- サイズ設定（横300、縦50）
-label.Position = UDim2.new(0.5, -150, 0.4, -25)  -- 画面中央に配置
-label.Text = "こんにちは！ボタンをクリックしてね"  -- 初期テキスト
-label.TextSize = 24  -- フォントサイズ
-label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)  -- 背景色
-label.TextColor3 = Color3.fromRGB(0, 0, 0)  -- テキストの色
+label.Parent = screenGui  
+label.Size = UDim2.new(0, 300, 0, 50)
+label.Position = UDim2.new(0.5, -150, 0.4, -25)
+label.Text = "こんにちは！ボタンをクリックしてね"
+label.TextSize = 24
+label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+label.TextColor3 = Color3.fromRGB(0, 0, 0)
 
--- TextButtonの作成（ボタン）
 local button = Instance.new("TextButton")
-button.Parent = screenGui  -- 作成したGUIに追加
-button.Size = UDim2.new(0, 200, 0, 50)  -- サイズ設定（横200、縦50）
-button.Position = UDim2.new(0.5, -100, 0.6, -25)  -- 画面中央に配置
-button.Text = "クリックしてね！"  -- ボタンのテキスト
+button.Parent = screenGui
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0.5, -100, 0.6, -25)
+button.Text = "クリックしてね！"
 button.TextSize = 24  -- フォントサイズ
-button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)  -- 背景色（緑色）
-button.TextColor3 = Color3.fromRGB(255, 255, 255)  -- テキストの色（白色）
+button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+button.TextColor3 = Color3.fromRGB(255, 255, 255)
 
--- ボタンがクリックされたときの処理
 button.MouseButton1Click:Connect(function()
-    label.Text = "ボタンがクリックされました！"  -- ボタンをクリックしたらラベルのテキストを変更
+    label.Text = "ボタンがクリックされました！"
 end)
