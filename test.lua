@@ -26,6 +26,10 @@ local OrionLib = {
 	Folder = nil,
 	SaveCfg = false
 }
+-- Feather Iconsのエラー回避（使ってないならこれでOK）
+pcall(function()
+    OrionLib.FeatherIcons = {}
+end)
 
 --Feather Icons https://github.com/evoincorp/lucideblox/tree/master/src/modules/util - Created by 7kayoh
 local Icons = {}
