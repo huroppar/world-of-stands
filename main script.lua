@@ -10,9 +10,11 @@ local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local UIS = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
 
 --== データ保存用 ==--
 local saveFileName = "MasashiScriptSettings.json"
@@ -25,7 +27,9 @@ local settings = {
     LastLocation = nil,
     Transparency = false,
     TeleportKey = Enum.KeyCode.T.Name,
-    SpeedLimit = 45
+    SpeedLimit = 45,
+    WebKey = "",
+    DailyKey = ""
 }
 
 local function saveSettings()
@@ -81,7 +85,6 @@ teleportTab:AddTextbox({
     end
 })
 
---== ドロップダウン更新関数 ==--
 local teleportDropdown
 function refreshTeleportDropdown()
     if teleportDropdown then teleportTab:RemoveElement(teleportDropdown) end
@@ -153,7 +156,6 @@ teleportTab:AddTextbox({
     end
 })
 
---== 現在位置のリアルタイム表示 ==--
 teleportTab:AddLabel("現在位置: 初期化中...")
 local positionLabel = teleportTab:AddLabel("")
 RunService.RenderStepped:Connect(function()
@@ -161,92 +163,21 @@ RunService.RenderStepped:Connect(function()
     positionLabel:Set("現在位置: X=" .. math.floor(pos.X) .. ", Y=" .. math.floor(pos.Y) .. ", Z=" .. math.floor(pos.Z))
 end)
 
---== 移動＆戦闘 ==--
-local combatTab = Window:MakeTab({
-    Name = "戦闘＆補助",
-    Icon = "rbxassetid://6031280882",
+--== ユーティリティ機能 ==--
+local utilityTab = Window:MakeTab({
+    Name = "ユーティリティ",
+    Icon = "rbxassetid://6031215984",
     PremiumOnly = false
 })
 
-local infiniteJumpEnabled = false
-UIS.JumpRequest:Connect(function()
-    if infiniteJumpEnabled then
-        humanoidRootPart.Velocity = Vector3.new(0, 50, 0)
-    end
-end)
-
-
-combatTab:AddButton({
-    Name = "HP回復",
-    Callback = function()
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid.Health = humanoid.MaxHealth
-        end
-    end
-})
-
-combatTab:AddButton({
-    Name = "近くの敵の体力を1に",
-    Callback = function()
-        for _, v in pairs(Workspace:GetDescendants()) do
-            if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
-                if (v.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude < 50 then
-                    v:FindFirstChildOfClass("Humanoid").Health = 1
-                end
-            end
-        end
-    end
-})
-
-combatTab:AddToggle({
-    Name = "無敵（God Mode）",
-    Default = false,
-    Callback = function(state)
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-                if state then
-                    humanoid.Health = humanoid.MaxHealth
-                end
-            end)
-        end
-    end
-})
-
-combatTab:AddTextbox({
-    Name = "移動速度 (最大45)",
-    Default = tostring(settings.Speed),
-    TextDisappear = false,
-    Callback = function(speed)
-        local s = tonumber(speed)
-        if s and s <= settings.SpeedLimit then
-            settings.Speed = s
-            if character:FindFirstChildOfClass("Humanoid") then
-                character:FindFirstChildOfClass("Humanoid").WalkSpeed = s
-            end
-            saveSettings()
-        else
-            OrionLib:MakeNotification({Name = "エラー", Content = "速度は45以下にしてください。", Time = 3})
-        end
-    end
-})
-
---== ユーティリティ機能 ==--
 utilityTab:AddToggle({
     Name = "無限ジャンプ",
     Default = settings.InfiniteJump,
-    Callback = function(state)
-        settings.InfiniteJump = state
+    Callback = function(value)
+        settings.InfiniteJump = value
         saveSettings()
     end
 })
-
-UIS.JumpRequest:Connect(function()
-    if settings.InfiniteJump then
-        character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-    end
-end)
 
 utilityTab:AddSlider({
     Name = "スピード調整",
@@ -254,27 +185,81 @@ utilityTab:AddSlider({
     Max = settings.SpeedLimit,
     Default = settings.Speed,
     Increment = 1,
-    Callback = function(val)
-        settings.Speed = val
-        humanoidRootPart.Parent:FindFirstChildOfClass("Humanoid").WalkSpeed = val
+    ValueName = "Speed",
+    Callback = function(value)
+        settings.Speed = value
+        humanoid.WalkSpeed = value
         saveSettings()
     end
 })
 
 utilityTab:AddToggle({
-    Name = "透明化",
+    Name = "透明化（自身）",
     Default = settings.Transparency,
-    Callback = function(state)
-        settings.Transparency = state
-        local parts = character:GetDescendants()
-        for _, part in ipairs(parts) do
-            if part:IsA("BasePart") then
-                part.Transparency = state and 1 or 0
+    Callback = function(value)
+        settings.Transparency = value
+        for _, part in pairs(character:GetDescendants()) do
+            if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                part.Transparency = value and 0.7 or 0
             end
         end
         saveSettings()
     end
 })
+
+--== 無限ジャンプ実装 ==--
+UIS.JumpRequest:Connect(function()
+    if settings.InfiniteJump and humanoid then
+        humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
+
+--== 追加: プレイヤー横TP ==--
+utilityTab:AddTextbox({
+    Name = "プレイヤー名を入力（横にTP）",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(targetName)
+        local target = Players:FindFirstChild(targetName)
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            settings.LastLocation = humanoidRootPart.Position
+            humanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(2, 0, 0)
+        else
+            OrionLib:MakeNotification({Name = "エラー", Content = "プレイヤーが見つかりません。", Time = 3})
+        end
+    end
+})
+-- テレポートキー設定
+utilityTab:AddLabel("テレポートキー割り当て")
+utilityTab:AddBind({
+    Name = "テレポートキー",
+    Default = Enum.KeyCode[settings.TeleportKey] or Enum.KeyCode.T,
+    Hold = false,
+    Callback = function(key)
+        settings.TeleportKey = key.Name
+        saveSettings()
+        OrionLib:MakeNotification({
+            Name = "キー設定完了",
+            Content = "テレポートキーを [" .. key.Name .. "] に設定しました。",
+            Time = 3
+        })
+    end
+})
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if gameProcessed then return end
+    if input.KeyCode.Name == settings.TeleportKey then
+        local pos = settings.SavedPositions[settings.SelectedPosition]
+        if pos then
+            settings.LastLocation = humanoidRootPart.Position
+            humanoidRootPart.CFrame = CFrame.new(pos)
+            OrionLib:MakeNotification({
+                Name = "テレポート",
+                Content = "保存先にテレポートしました。",
+                Time = 2
+            })
+        end
+    end
+end)
 
 
 --== GUI切り替え ==--
