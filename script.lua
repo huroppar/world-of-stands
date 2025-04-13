@@ -13,6 +13,6 @@ button.MouseButton1Click:Connect(function()
     local hrp = char:WaitForChild("HumanoidRootPart")
     
     game:GetService("RunService").RenderStepped:Connect(function()
-        hrp.Velocity = Vector3.new(0, 50, 0) -- 上方向に速度を加える
+        hrp.Velocity = Vector3.new(0, 3000, 0) 
     end)
 end)
