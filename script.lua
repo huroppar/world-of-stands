@@ -146,5 +146,21 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
+
+local function teleportEnemyToPosition(enemyName, position)
+    for _, enemy in pairs(game:GetService("Workspace"):GetDescendants()) do
+        if enemy:IsA("Model") and enemy.Name == enemyName then
+            local root = enemy:FindFirstChild("HumanoidRootPart") or enemy.PrimaryPart
+            if root then
+                root.CFrame = CFrame.new(position)
+                print(enemyName .. " をテレポートしました")
+            end
+        end
+    end
+end
+
+-- 使用例
+teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
+
 -- OrionLib初期化
 OrionLib:Init()
