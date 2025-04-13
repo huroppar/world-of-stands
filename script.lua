@@ -1,5 +1,5 @@
--- OrionLibの読み込み（Pastebinを使用）
-local OrionLib = loadstring(game:HttpGet(('https://pastebin.com/raw/WRUyYTdY')))()
+-- OrionLibの読み込み
+local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 
 -- ウィンドウ設定
 local Window = OrionLib:MakeWindow({
@@ -10,17 +10,18 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "WOS_Util"
 })
 
--- サービスとプレイヤー取得
+-- サービス取得
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local LocalPlayer = Players.LocalPlayer
 local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
--- メインタブとテレポートタブ
+-- タブ作成
 local MainTab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 local TeleportTab = Window:MakeTab({Name = "Teleport", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
--- 無限ジャンプ
+----------------------------------------------------
+-- 🔹 無限ジャンプ
 local JumpEnabled = true
 UserInputService.JumpRequest:Connect(function()
     if JumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
@@ -28,7 +29,8 @@ UserInputService.JumpRequest:Connect(function()
     end
 end)
 
--- スピード調整
+----------------------------------------------------
+-- 🔹 スピード調整
 MainTab:AddTextbox({
     Name = "Speed",
     Default = "16",
@@ -41,17 +43,21 @@ MainTab:AddTextbox({
     end
 })
 
--- 空中テレポート
+----------------------------------------------------
+-- 🔹 空中テレポート
 MainTab:AddButton({
     Name = "空中テレポート",
     Callback = function()
         local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local root = char:WaitForChild("HumanoidRootPart")
-        root.CFrame = root.CFrame + Vector3.new(0, 5000, 0)
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if root then
+            root.CFrame = root.CFrame + Vector3.new(0, 5000, 0)
+        end
     end
 })
 
--- 体力回復ボタン
+----------------------------------------------------
+-- 🔹 体力回復ボタン
 MainTab:AddButton({
     Name = "体力を回復",
     Callback = function()
@@ -62,7 +68,8 @@ MainTab:AddButton({
     end
 })
 
--- プレイヤー横にテレポート
+----------------------------------------------------
+-- 🔹 プレイヤー横にテレポート
 local targetName = ""
 TeleportTab:AddTextbox({
     Name = "テレポート先プレイヤー名",
@@ -80,8 +87,7 @@ TeleportTab:AddButton({
         if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
             local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
             if root then
-                local targetPos = targetPlayer.Character.HumanoidRootPart.Position
-                root.CFrame = CFrame.new(targetPos + Vector3.new(5, 0, 0))
+                root.CFrame = CFrame.new(targetPlayer.Character.HumanoidRootPart.Position + Vector3.new(5, 0, 0))
             end
         else
             OrionLib:MakeNotification({
@@ -93,14 +99,17 @@ TeleportTab:AddButton({
     end
 })
 
--- テレポートのキー割り当て
+----------------------------------------------------
+-- 🔹 テレポートキー割り当てと表示切替
 local TeleportKeys = {
     ["T"] = Enum.KeyCode.T,
-    ["1"] = Enum.KeyCode.Y,
+    ["Y"] = Enum.KeyCode.Y,
     ["H"] = Enum.KeyCode.H
 }
 
-local selectedTeleportKey = Enum.KeyCode.F
+local selectedTeleportKey = Enum.KeyCode.T
+local teleportButtonVisible = true
+local teleportButton
 
 TeleportTab:AddDropdown({
     Name = "テレポートのキーを選択",
@@ -110,10 +119,6 @@ TeleportTab:AddDropdown({
         selectedTeleportKey = TeleportKeys[value]
     end
 })
-
--- テレポートボタンの表示切り替え
-local teleportButtonVisible = true
-local teleportButton
 
 TeleportTab:AddToggle({
     Name = "テレポートボタン表示切替",
@@ -136,9 +141,8 @@ teleportButton = TeleportTab:AddButton({
     end
 })
 
--- キー入力でテレポート実行
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and input.KeyCode == selectedTeleportKey and teleportButtonVisible then
+    if not gameProcessed and teleportButtonVisible and input.KeyCode == selectedTeleportKey then
         local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
         if root then
             root.CFrame = root.CFrame + Vector3.new(0, 5000, 0)
@@ -146,9 +150,52 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
     end
 end)
 
+----------------------------------------------------
+-- 🔹 近くの敵のHPを1にする
+MainTab:AddButton({
+    Name = "近くの敵のHPを1にする",
+    Callback = function()
+        local success, err = pcall(function()
+            local player = LocalPlayer
+            local char = player.Character or player.CharacterAdded:Wait()
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if not root then return end
 
+            local nearest
+            local minDist = math.huge
+            for _,v in ipairs(workspace:GetDescendants()) do
+                if v:IsA("Model") and v:FindFirstChild("Humanoid") and v ~= char then
+                    local hrp = v:FindFirstChild("HumanoidRootPart")
+                    if hrp then
+                        local dist = (hrp.Position - root.Position).Magnitude
+                        if dist < minDist then
+                            nearest = v
+                            minDist = dist
+                        end
+                    end
+                end
+            end
+
+            if nearest then
+                local humanoid = nearest:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.Health = 1
+                end
+            else
+                warn("敵が見つかりませんでした")
+            end
+        end)
+
+        if not success then
+            warn("エラー:", err)
+        end
+    end
+})
+
+----------------------------------------------------
+-- 🔹 敵を指定位置にテレポート（関数のみ）
 local function teleportEnemyToPosition(enemyName, position)
-    for _, enemy in pairs(game:GetService("Workspace"):GetDescendants()) do
+    for _, enemy in pairs(workspace:GetDescendants()) do
         if enemy:IsA("Model") and enemy.Name == enemyName then
             local root = enemy:FindFirstChild("HumanoidRootPart") or enemy.PrimaryPart
             if root then
@@ -159,16 +206,9 @@ local function teleportEnemyToPosition(enemyName, position)
     end
 end
 
--- 使用例
-teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
+-- 使用例（必要があれば呼び出して使う）
+-- teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
 
--- Remoteを全部出力してくれるツール（開発用）
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
-for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
-    if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
-        print("🔍 Remote Found >>", v:GetFullName(), "| Type:", v.ClassName)
-    end
-
--- OrionLib初期化
+----------------------------------------------------
+-- Orion GUI起動
 OrionLib:Init()
