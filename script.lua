@@ -209,6 +209,21 @@ end
 -- 使用例（必要があれば呼び出して使う）
 -- teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
 
+
+-- Remote呼び出し監視スクリプト
+local mt = getrawmetatable(game)
+setreadonly(mt, false)
+local old = mt.__namecall
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    if method == "FireServer" or method == "InvokeServer" then
+        print("リモート呼び出し検出！", self:GetFullName(), ...)
+    end
+    return old(self, ...)
+end)
+
+
 ----------------------------------------------------
 -- Orion GUI起動
 OrionLib:Init()
