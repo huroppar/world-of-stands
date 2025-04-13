@@ -164,18 +164,21 @@ teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
 
 
 MainTab:AddButton({
-    Name = "近くの敵のHPを1にする",
+    Name = "近くの敵のHPを1にする（修正版）",
     Callback = function()
         local success, err = pcall(function()
             local player = game.Players.LocalPlayer
             local char = player.Character or player.CharacterAdded:Wait()
+            if not char then return end
+
             local root = char:FindFirstChild("HumanoidRootPart")
             if not root then return end
 
-            local nearest
+            local nearest = nil
             local minDist = math.huge
+
             for _,v in ipairs(workspace:GetDescendants()) do
-                if v:FindFirstChild("Humanoid") and v ~= char then
+                if v:IsA("Model") and v:FindFirstChild("Humanoid") and v ~= char then
                     local hrp = v:FindFirstChild("HumanoidRootPart")
                     if hrp then
                         local dist = (hrp.Position - root.Position).Magnitude
@@ -190,8 +193,10 @@ MainTab:AddButton({
             if nearest then
                 local humanoid = nearest:FindFirstChild("Humanoid")
                 if humanoid then
-                    humanoid.Health = 1
-                    print("HPを1にした！")
+                    humanoid.Health = math.max(humanoid.Health - 1, 1)  -- 減らすだけでも試せる
+                    print("近くの敵のHPを1にした！")
+                else
+                    warn("Humanoidが見つからなかった")
                 end
             else
                 warn("敵が見つかりませんでした")
@@ -199,7 +204,7 @@ MainTab:AddButton({
         end)
 
         if not success then
-            warn("エラー:", err)
+            warn("スクリプト実行エラー:", err)
         end
     end
 })
