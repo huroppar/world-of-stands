@@ -1,28 +1,5 @@
 local player = game.Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Parent = playerGui
-
-）
-local label = Instance.new("TextLabel")
-label.Parent = screenGui  
-label.Size = UDim2.new(0, 300, 0, 50)
-label.Position = UDim2.new(0.5, -150, 0.4, -25)
-label.Text = "こんにちは！ボタンをクリックしてね"
-label.TextSize = 24
-label.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-label.TextColor3 = Color3.fromRGB(0, 0, 0)
-
-local button = Instance.new("TextButton")
-button.Parent = screenGui
-button.Size = UDim2.new(0, 200, 0, 50)
-button.Position = UDim2.new(0.5, -100, 0.6, -25)
-button.Text = "クリックしてね！"
-button.TextSize = 24  -- フォントサイズ
-button.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-
-button.MouseButton1Click:Connect(function()
-    label.Text = "ボタンがクリックされました！"
-end)
+humanoid.JumpHeight = 120
