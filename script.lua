@@ -210,54 +210,13 @@ MainTab:AddButton({
 })
 
 
-MainTab:AddButton({
-    Name = "Remote一覧を表示する",
-    Callback = function()
-        local success, err = pcall(function()
-            local found = {}
-            for _, v in ipairs(getgc(true)) do
-                if typeof(v) == "table" then
-                    for k, value in pairs(v) do
-                        if typeof(value) == "Instance" then
-                            if value:IsA("RemoteEvent") or value:IsA("RemoteFunction") then
-                                if not table.find(found, value:GetFullName()) then
-                                    table.insert(found, value:GetFullName())
-                                end
-                            end
-                        end
-                    end
-                end
-            end
+-- Remoteを全部出力してくれるツール（開発用）
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-            if #found > 0 then
-                print("=== Remote 一覧 ===")
-                for _, remotePath in ipairs(found) do
-                    print(remotePath)
-                end
-                OrionLib:MakeNotification({
-                    Name = "成功",
-                    Content = "Remote一覧をF9で確認してね！",
-                    Time = 4
-                })
-            else
-                OrionLib:MakeNotification({
-                    Name = "結果なし",
-                    Content = "Remoteが見つからなかったよ",
-                    Time = 4
-                })
-            end
-        end)
-
-        if not success then
-            OrionLib:MakeNotification({
-                Name = "エラー",
-                Content = "Remote探索中にエラーが発生しました",
-                Time = 4
-            })
-            warn("Remote探索エラー: ", err)
-        end
+for _, v in ipairs(ReplicatedStorage:GetDescendants()) do
+    if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+        print("🔍 Remote Found >>", v:GetFullName(), "| Type:", v.ClassName)
     end
-})
 
 -- OrionLib初期化
 OrionLib:Init()
