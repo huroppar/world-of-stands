@@ -9,6 +9,7 @@ local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local UIS = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -21,7 +22,10 @@ local settings = {
     Speed = 16,
     InfiniteJump = false,
     KeySystem = "None",
-    LastLocation = nil
+    LastLocation = nil,
+    Transparency = false,
+    TeleportKey = Enum.KeyCode.T.Name,
+    SpeedLimit = 45
 }
 
 local function saveSettings()
@@ -58,7 +62,7 @@ OrionLib:MakeNotification({
     Time = 5
 })
 
---== プレイヤー位置保存＆テレポート ==--
+--== テレポート管理 ==--
 local teleportTab = Window:MakeTab({
     Name = "テレポート管理",
     Icon = "rbxassetid://6035067836",
@@ -101,7 +105,7 @@ teleportTab:AddButton({
     Callback = function()
         local pos = settings.SavedPositions[settings.SelectedPosition]
         if pos then
-            storeCurrentPosition()
+            settings.LastLocation = humanoidRootPart.Position
             humanoidRootPart.CFrame = CFrame.new(pos)
         end
     end
@@ -140,11 +144,18 @@ teleportTab:AddTextbox({
     end
 })
 
---== 移動前の位置を保存（自動） ==--
-function storeCurrentPosition()
-    settings.LastLocation = humanoidRootPart.Position
-    saveSettings()
-end
+teleportTab:AddTextbox({
+    Name = "プレイヤー名を入力して横にテレポート",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(name)
+        local target = Players:FindFirstChild(name)
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            settings.LastLocation = humanoidRootPart.Position
+            humanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(3, 0, 0)
+        end
+    end
+})
 
 --== 現在位置のリアルタイム表示 ==--
 teleportTab:AddLabel("現在位置: 初期化中...")
@@ -154,7 +165,7 @@ RunService.RenderStepped:Connect(function()
     positionLabel:Set("現在位置: X=" .. math.floor(pos.X) .. ", Y=" .. math.floor(pos.Y) .. ", Z=" .. math.floor(pos.Z))
 end)
 
---== 戦闘・補助機能 ==--
+--== 移動＆戦闘 ==--
 local combatTab = Window:MakeTab({
     Name = "戦闘＆補助",
     Icon = "rbxassetid://6031280882",
@@ -170,7 +181,7 @@ end)
 
 combatTab:AddToggle({
     Name = "無限ジャンプ",
-    Default = false,
+    Default = settings.InfiniteJump,
     Callback = function(state)
         infiniteJumpEnabled = state
         settings.InfiniteJump = state
@@ -191,7 +202,7 @@ combatTab:AddButton({
 combatTab:AddButton({
     Name = "近くの敵の体力を1に",
     Callback = function()
-        for _, v in pairs(workspace:GetDescendants()) do
+        for _, v in pairs(Workspace:GetDescendants()) do
             if v:IsA("Model") and v:FindFirstChildOfClass("Humanoid") and v:FindFirstChild("HumanoidRootPart") then
                 if (v.HumanoidRootPart.Position - humanoidRootPart.Position).Magnitude < 50 then
                     v:FindFirstChildOfClass("Humanoid").Health = 1
@@ -201,26 +212,47 @@ combatTab:AddButton({
     end
 })
 
-local godModeEnabled = false
 combatTab:AddToggle({
     Name = "無敵（God Mode）",
     Default = false,
     Callback = function(state)
-        godModeEnabled = state
-        if state then
-            local humanoid = character:FindFirstChildOfClass("Humanoid")
-            if humanoid then
-                humanoid.HealthChanged:Connect(function()
-                    if godModeEnabled then
-                        humanoid.Health = humanoid.MaxHealth
-                    end
-                end)
-            end
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:GetPropertyChangedSignal("Health"):Connect(function()
+                if state then
+                    humanoid.Health = humanoid.MaxHealth
+                end
+            end)
         end
     end
 })
 
---== キーシステム（GUI入力式） ==--
+combatTab:AddTextbox({
+    Name = "移動速度 (最大45)",
+    Default = tostring(settings.Speed),
+    TextDisappear = false,
+    Callback = function(speed)
+        local s = tonumber(speed)
+        if s and s <= settings.SpeedLimit then
+            settings.Speed = s
+            if character:FindFirstChildOfClass("Humanoid") then
+                character:FindFirstChildOfClass("Humanoid").WalkSpeed = s
+            end
+            saveSettings()
+        else
+            OrionLib:MakeNotification({Name = "エラー", Content = "速度は45以下にしてください。", Time = 3})
+        end
+    end
+})
+
+--== GUI切り替え ==--
+UIS.InputBegan:Connect(function(input, processed)
+    if not processed and input.KeyCode == Enum.KeyCode.F4 then
+        OrionLib:ToggleUI()
+    end
+end)
+
+--== キーシステム ==--
 local keyTab = Window:MakeTab({
     Name = "キー認証",
     Icon = "rbxassetid://6031280882",
@@ -236,13 +268,11 @@ keyTab:AddTextbox({
         pcall(function()
             webKey = tostring(game:HttpGet("https://pastebin.com/raw/YOUR_KEY_HERE"))
         end)
-
         local acceptedKeys = {
             ["Masashi0305"] = true,
             [tostring(os.date("%Y%m%d"))] = true,
             [webKey] = true
         }
-
         if acceptedKeys[inputKey] then
             OrionLib:MakeNotification({Name = "認証成功", Content = "スクリプトが有効化されました！", Time = 5})
         else
@@ -251,14 +281,7 @@ keyTab:AddTextbox({
     end
 })
 
---== GUI表示・非表示をF4キーで切り替え ==--
-UIS.InputBegan:Connect(function(input, processed)
-    if not processed and input.KeyCode == Enum.KeyCode.F4 then
-        OrionLib:ToggleUI()
-    end
-end)
-
---== 初期化通知 ==--
+--== 通知 ==--
 OrionLib:MakeNotification({
     Name = "設定復元完了",
     Content = "前回の状態が読み込まれました。",
@@ -266,10 +289,27 @@ OrionLib:MakeNotification({
     Time = 5
 })
 
---== 起動時にアップデート通知を表示 ==--
 OrionLib:MakeNotification({
     Name = "🛠️ アップデート情報",
     Content = "スクリプトが最新バージョンに更新されました！",
     Image = "rbxassetid://4483345998",
     Time = 6
 })
+
+--== 🔥 今後のアップデート候補 (実装予定) ==--
+--[[
+✅ 自動クエスト処理：クエスト対象の敵自動討伐・NPC自動テレポート・ステータス＆完了通知
+✅ プレイヤー位置保存＆復元
+✅ キーシステム：日替わり、Web認証、自己キー、保存対応
+✅ GUI表示切り替え（F4）
+✅ 高速移動制限対策（45以下制限）
+✅ 無限ジャンプ・体力回復・無敵モード
+✅ 敵の体力を自動で1に
+✅ プレイヤー横へのテレポート
+🟡 テレポートのGUIボタン表示/非表示切り替え
+🟡 回復のGUI表示機能
+🟡 クエストステータスのリアルタイム表示と自動完了検出
+🟡 光の柱マーカー表示
+🟡 自動ドロップ取得のON/OFF
+🟡 攻撃BOT自動討伐機能
+]]
