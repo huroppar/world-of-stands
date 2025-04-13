@@ -2,7 +2,7 @@
 --// Solara V3 Compatible | Author: Masashi
 
 --== OrionLib (Feather Icons エラー回避版) ==--
-local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
+local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/3j5EzfEV"))()
 pcall(function() OrionLib.FeatherIcons = {} end)
 
 --== Services ==--
