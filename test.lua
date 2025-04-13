@@ -34,13 +34,12 @@ end)
 --Feather Icons https://github.com/evoincorp/lucideblox/tree/master/src/modules/util - Created by 7kayoh
 local Icons = {}
 
-local Success, Response = pcall(function()
-	Icons = HttpService:JSONDecode(game:HttpGetAsync("https://raw.githubusercontent.com/evoincorp/lucideblox/master/src/modules/util/icons.json")).icons
-end)
+-- Feather Icons 無効化（読み込まない）
+local Icons = {}
 
-if not Success then
-	warn("\nOrion Library - Failed to load Feather Icons. Error code: " .. Response .. "\n")
-end	
+local Success, Response = pcall(function()
+    Icons = {} -- 読み込みをスキップ
+end)	
 
 local function GetIcon(IconName)
 	if Icons[IconName] ~= nil then
