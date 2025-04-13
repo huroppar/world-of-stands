@@ -204,5 +204,40 @@ MainTab:AddButton({
     end
 })
 
+
+MainTab:AddButton({
+    Name = "Remote一覧を表示する",
+    Callback = function()
+        local remotes = {}
+        for _, v in ipairs(getgc(true)) do
+            if typeof(v) == "table" then
+                for k, value in pairs(v) do
+                    if typeof(value) == "Instance" and (value:IsA("RemoteEvent") or value:IsA("RemoteFunction")) then
+                        table.insert(remotes, value:GetFullName())
+                    end
+                end
+            end
+        end
+
+        if #remotes > 0 then
+            print("=== Remote 一覧 ===")
+            for _, remoteName in ipairs(remotes) do
+                print(remoteName)
+            end
+            OrionLib:MakeNotification({
+                Name = "成功",
+                Content = "Remote一覧をコンソールに出力しました！",
+                Time = 4
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "Remoteが見つかりませんでした。",
+                Time = 4
+            })
+        end
+    end
+})
+
 -- OrionLib初期化
 OrionLib:Init()
