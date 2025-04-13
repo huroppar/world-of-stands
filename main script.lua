@@ -6,10 +6,6 @@ local RunService = game:GetService("RunService")
 local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local HttpService = game:GetService("HttpService")
--- Feather Iconsのエラー回避（使ってないならこれでOK）
-pcall(function()
-    OrionLib.FeatherIcons = {}
-end)
 
 local OrionLib = {
 	Elements = {},
@@ -30,6 +26,10 @@ local OrionLib = {
 	Folder = nil,
 	SaveCfg = false
 }
+-- Feather Iconsのエラー回避（使ってないならこれでOK）
+pcall(function()
+    OrionLib.FeatherIcons = {}
+end)
 
 --Feather Icons https://github.com/evoincorp/lucideblox/tree/master/src/modules/util - Created by 7kayoh
 local Icons = {}
