@@ -1,4 +1,9 @@
-local player = game.Players.LocalPlayer
-local humanoid = player.Character:WaitForChild("Humanoid")
-local gui = Instance.new("ScreenGui")
-local button = Instance.new("TextButton")
+local button = script.Parent
+
+button.MouseButton1Click:Connect(function()
+    local player = game.Players.LocalPlayer
+    local character = player.Character or player.CharacterAdded:Wait()
+    local humanoid = character:WaitForChild("Humanoid")
+
+    humanoid.WalkSpeed = 50
+end)
