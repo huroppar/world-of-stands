@@ -151,78 +151,76 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 ----------------------------------------------------
--- 🔹 近くの敵のHPを1にする
-MainTab:AddButton({
-    Name = "近くの敵のHPを1にする",
-    Callback = function()
-        local success, err = pcall(function()
-            local player = LocalPlayer
-            local char = player.Character or player.CharacterAdded:Wait()
-            local root = char:FindFirstChild("HumanoidRootPart")
-            if not root then return end
+local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 
-            local nearest
-            local minDist = math.huge
-            for _,v in ipairs(workspace:GetDescendants()) do
-                if v:IsA("Model") and v:FindFirstChild("Humanoid") and v ~= char then
-                    local hrp = v:FindFirstChild("HumanoidRootPart")
-                    if hrp then
-                        local dist = (hrp.Position - root.Position).Magnitude
-                        if dist < minDist then
-                            nearest = v
-                            minDist = dist
-                        end
-                    end
-                end
-            end
+local Window = OrionLib:MakeWindow({
+    Name = "World of Stands | Auto Attack",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "WOS_AutoAttack"
+})
 
-            if nearest then
-                local humanoid = nearest:FindFirstChild("Humanoid")
-                if humanoid then
-                    humanoid.Health = 1
-                end
-            else
-                warn("敵が見つかりませんでした")
-            end
-        end)
+local autoAttack = false
+local selectedEnemy = "Corrupted Swordsman"
+local standName = "Anubis"
 
-        if not success then
-            warn("エラー:", err)
+local remote = game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("Events")
+
+local function attackEnemy(enemy, stand)
+    remote:FireServer(enemy, stand, false, 20)
+end
+
+-- 自動攻撃ループ
+task.spawn(function()
+    while true do
+        if autoAttack then
+            attackEnemy(selectedEnemy, standName)
         end
+        task.wait(0.5) -- 攻撃間隔
+    end
+end)
+
+-- GUIタブ
+local Tab = Window:MakeTab({
+    Name = "Auto Attack",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+Tab:AddTextbox({
+    Name = "Enemy Name",
+    Default = selectedEnemy,
+    TextDisappear = false,
+    Callback = function(Value)
+        selectedEnemy = Value
     end
 })
 
-----------------------------------------------------
--- 🔹 敵を指定位置にテレポート（関数のみ）
-local function teleportEnemyToPosition(enemyName, position)
-    for _, enemy in pairs(workspace:GetDescendants()) do
-        if enemy:IsA("Model") and enemy.Name == enemyName then
-            local root = enemy:FindFirstChild("HumanoidRootPart") or enemy.PrimaryPart
-            if root then
-                root.CFrame = CFrame.new(position)
-                print(enemyName .. " をテレポートしました")
-            end
-        end
+Tab:AddTextbox({
+    Name = "Stand Name",
+    Default = standName,
+    TextDisappear = false,
+    Callback = function(Value)
+        standName = Value
     end
-end
+})
 
--- 使用例（必要があれば呼び出して使う）
--- teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
-
-
--- リモート監視の基本hook（使ったことあるかもだけど改良版）
-local mt = getrawmetatable(game)
-setreadonly(mt, false)
-local oldNamecall = mt.__namecall
-
-mt.__namecall = newcclosure(function(self, ...)
-    local method = getnamecallmethod()
-    if method == "FireServer" or method == "InvokeServer" then
-        print("[Remote Detected] ▶", self:GetFullName())
-        print("  ⬐ Args:", ...)
+Tab:AddButton({
+    Name = "Attack Once",
+    Callback = function()
+        attackEnemy(selectedEnemy, standName)
     end
-    return oldNamecall(self, ...)
-end)
+})
+
+Tab:AddToggle({
+    Name = "Auto Attack",
+    Default = false,
+    Callback = function(Value)
+        autoAttack = Value
+    end
+})
+
+OrionLib:Init()
 
 ----------------------------------------------------
 -- Orion GUI起動
