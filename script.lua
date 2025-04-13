@@ -27,7 +27,7 @@ end)
 local function teleportUp()
     local char = player.Character or player.CharacterAdded:Wait()
     local root = char:WaitForChild("HumanoidRootPart")
-    root.CFrame = root.CFrame + Vector3.new(0, 50000, 0)
+    root.CFrame = root.CFrame + Vector3.new(0, 5000, 0)
 end
 
 -- 🎛️ タブとセクション
