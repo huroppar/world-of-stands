@@ -73,21 +73,30 @@ FarmTab:AddToggle({
     end
 })
 
--- オート攻撃ループ
 task.spawn(function()
     while true do
         if farming and targetEnemyName ~= "" then
-            for _, enemy in pairs(workspace:GetDescendants()) do
-                if enemy.Name == targetEnemyName and enemy:FindFirstChild("HumanoidRootPart") then
-                    -- 攻撃処理（ここをゲームに合わせてチューニングできる）
-                    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-                    if root then
-                        root.CFrame = enemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3) -- 敵の近くに移動
-                        -- 攻撃イベントがあればここに書く（例: fireclickdetector, RemoteEvent, etc）
+            local closestEnemy = nil
+            local shortestDistance = math.huge
+            local myRoot = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+            if myRoot then
+                for _, enemy in pairs(workspace:GetDescendants()) do
+                    if enemy.Name == targetEnemyName and enemy:FindFirstChild("HumanoidRootPart") then
+                        local distance = (myRoot.Position - enemy.HumanoidRootPart.Position).Magnitude
+                        if distance < shortestDistance then
+                            closestEnemy = enemy
+                            shortestDistance = distance
+                        end
                     end
+                end
+
+                if closestEnemy then
+                    myRoot.CFrame = closestEnemy.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                    -- ここに攻撃イベントあれば追加
                 end
             end
         end
-        task.wait(0.5) -- 実行間隔調整（重くなったらここを1以上に）
+        task.wait(1.5) -- 実行間隔：重すぎる場合はもっと増やしてもOK
     end
 end)
