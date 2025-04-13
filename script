@@ -1,5 +1,4 @@
 local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoid = character:WaitForChild("Humanoid")
-
-humanoid.JumpHeight = 120
+local humanoid = player.Character:WaitForChild("Humanoid")
+local gui = Instance.new("ScreenGui")
+local button = Instance.new("TextButton")
