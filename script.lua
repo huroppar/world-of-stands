@@ -210,19 +210,19 @@ end
 -- teleportEnemyToPosition("EnemyNameHere", Vector3.new(0, 100, 0))
 
 
--- Remote呼び出し監視スクリプト
+-- リモート監視の基本hook（使ったことあるかもだけど改良版）
 local mt = getrawmetatable(game)
 setreadonly(mt, false)
-local old = mt.__namecall
+local oldNamecall = mt.__namecall
 
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
     if method == "FireServer" or method == "InvokeServer" then
-        print("リモート呼び出し検出！", self:GetFullName(), ...)
+        print("[Remote Detected] ▶", self:GetFullName())
+        print("  ⬐ Args:", ...)
     end
-    return old(self, ...)
+    return oldNamecall(self, ...)
 end)
-
 
 ----------------------------------------------------
 -- Orion GUI起動
