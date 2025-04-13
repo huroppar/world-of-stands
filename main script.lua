@@ -77,25 +77,33 @@ teleportTab:AddTextbox({
         settings.SavedPositions[name] = humanoidRootPart.Position
         saveSettings()
         OrionLib:MakeNotification({Name = "保存完了", Content = name .. " の位置を保存しました。", Time = 3})
+        refreshTeleportDropdown()
     end
 })
 
-teleportTab:AddDropdown({
-    Name = "保存済みの場所",
-    Options = table.keys(settings.SavedPositions),
-    Callback = function(option)
-        settings.SelectedPosition = option
-        saveSettings()
-    end
-})
+--== ドロップダウン更新関数 ==--
+local teleportDropdown
+function refreshTeleportDropdown()
+    if teleportDropdown then teleportTab:RemoveElement(teleportDropdown) end
+    teleportDropdown = teleportTab:AddDropdown({
+        Name = "保存済みの場所",
+        Options = table.keys(settings.SavedPositions),
+        Callback = function(option)
+            settings.SelectedPosition = option
+            saveSettings()
+        end
+    })
+end
+refreshTeleportDropdown()
 
 teleportTab:AddButton({
     Name = "保存一覧を更新",
     Callback = function()
+        refreshTeleportDropdown()
         OrionLib:MakeNotification({
-            Name = "再起動推奨",
-            Content = "GUIを再読み込みしてください（保存済みの場所を更新するには再起動が必要です）",
-            Time = 4
+            Name = "更新完了",
+            Content = "保存済みの場所リストを更新しました。",
+            Time = 3
         })
     end
 })
@@ -134,25 +142,13 @@ teleportTab:AddTextbox({
                 Content = name .. " を削除しました。",
                 Time = 3
             })
+            refreshTeleportDropdown()
         else
             OrionLib:MakeNotification({
                 Name = "エラー",
                 Content = "その名前の位置は存在しません。",
                 Time = 3
             })
-        end
-    end
-})
-
-teleportTab:AddTextbox({
-    Name = "プレイヤー名を入力して横にテレポート",
-    Default = "",
-    TextDisappear = true,
-    Callback = function(name)
-        local target = Players:FindFirstChild(name)
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            settings.LastLocation = humanoidRootPart.Position
-            humanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(3, 0, 0)
         end
     end
 })
