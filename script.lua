@@ -13,6 +13,7 @@ Frame.Parent = ScreenGui
 -- タイトル
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 40)
+Title.Position = UDim2.new(0, 0, 0, 0)
 Title.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
 Title.Text = "🌀 Stand Power Controller"
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
