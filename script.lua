@@ -1,227 +1,135 @@
--- OrionLibの読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-
--- ウィンドウ設定
-local Window = OrionLib:MakeWindow({
-    Name = "🚀 Stand Power Controller",
-    HidePremium = false,
-    SaveConfig = true,
-    IntroText = "World of Stands Hack Panel",
-    ConfigFolder = "WOS_Util"
-})
-
--- サービス取得
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
+local HumanoidRootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
 
--- タブ作成
-local MainTab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false})
-local TeleportTab = Window:MakeTab({Name = "Teleport", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+local Window = OrionLib:MakeWindow({Name = "World of Stands | All-in-One", HidePremium = false, SaveConfig = true, ConfigFolder = "WOSConfig"})
 
-----------------------------------------------------
--- 🔹 無限ジャンプ
-local JumpEnabled = true
-UserInputService.JumpRequest:Connect(function()
-    if JumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+-- 無限ジャンプ
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if LocalPlayer.Character then
+        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
     end
 end)
 
-----------------------------------------------------
--- 🔹 スピード調整
-MainTab:AddTextbox({
-    Name = "Speed",
+-- スピード調整
+local speedValue = 16
+Window:MakeTab({Name = "Speed", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+:AddTextbox({
+    Name = "WalkSpeed",
     Default = "16",
-    TextDisappear = false,
-    Callback = function(value)
-        local speed = tonumber(value)
-        if speed and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character.Humanoid.WalkSpeed = speed
-        end
+    TextDisappear = true,
+    Callback = function(Value)
+        speedValue = tonumber(Value)
+        LocalPlayer.Character:WaitForChild("Humanoid").WalkSpeed = speedValue
     end
 })
 
-----------------------------------------------------
--- 🔹 空中テレポート
-MainTab:AddButton({
-    Name = "空中テレポート",
-    Callback = function()
-        local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if root then
-            root.CFrame = root.CFrame + Vector3.new(0, 5000, 0)
-        end
-    end
-})
-
-----------------------------------------------------
--- 🔹 体力回復ボタン
-MainTab:AddButton({
-    Name = "体力を回復",
-    Callback = function()
-        local char = LocalPlayer.Character
-        if char and char:FindFirstChild("Humanoid") then
-            char.Humanoid.Health = char.Humanoid.MaxHealth
-        end
-    end
-})
-
-----------------------------------------------------
--- 🔹 プレイヤー横にテレポート
-local targetName = ""
-TeleportTab:AddTextbox({
-    Name = "テレポート先プレイヤー名",
+-- プレイヤー横テレポート
+Window:MakeTab({Name = "Teleport", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+:AddTextbox({
+    Name = "Player Name",
     Default = "",
-    TextDisappear = false,
-    Callback = function(value)
-        targetName = value
+    TextDisappear = true,
+    Callback = function(playerName)
+        local target = Players:FindFirstChild(playerName)
+        if target and target.Character then
+            HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(3, 0, 0)
+        end
     end
 })
 
-TeleportTab:AddButton({
-    Name = "そのプレイヤーの横にテレポート",
+-- 上方向テレポート
+local upKey = Enum.KeyCode.T
+Window:MakeTab({Name = "Upward Teleport", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+:AddBind({
+    Name = "Up Key",
+    Default = upKey,
+    Hold = false,
     Callback = function()
-        local targetPlayer = Players:FindFirstChild(targetName)
-        if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
-            local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if root then
-                root.CFrame = CFrame.new(targetPlayer.Character.HumanoidRootPart.Position + Vector3.new(5, 0, 0))
+        HumanoidRootPart.CFrame = HumanoidRootPart.CFrame + Vector3.new(0, 20, 0)
+    end
+})
+:AddButton({
+    Name = "上にテレポート",
+    Callback = function()
+        HumanoidRootPart.CFrame = HumanoidRootPart.CFrame + Vector3.new(0, 20, 0)
+    end
+})
+
+-- 透明化
+local invisKey = Enum.KeyCode.V
+local isInvisible = false
+Window:MakeTab({Name = "Invisibility", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+:AddBind({
+    Name = "透明化キー",
+    Default = invisKey,
+    Hold = false,
+    Callback = function()
+        isInvisible = not isInvisible
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = isInvisible and 1 or 0
+                if part:FindFirstChild("face") then part.face.Transparency = isInvisible and 1 or 0 end
             end
+        end
+    end
+})
+:AddButton({
+    Name = "透明化 / 非透明化",
+    Callback = function()
+        isInvisible = not isInvisible
+        for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
+            if part:IsA("BasePart") then
+                part.Transparency = isInvisible and 1 or 0
+                if part:FindFirstChild("face") then part.face.Transparency = isInvisible and 1 or 0 end
+            end
+        end
+    end
+})
+
+-- HP回復
+Window:MakeTab({Name = "Recovery", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+:AddButton({
+    Name = "回復",
+    Callback = function()
+        local humanoid = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid.Health = humanoid.MaxHealth
+        end
+    end
+})
+
+-- 敵を指定位置にテレポート
+Window:MakeTab({Name = "Enemy Control", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+:AddTextbox({
+    Name = "敵の名前",
+    Default = "Dummy",
+    TextDisappear = false,
+    Callback = function(enemyName)
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Model") and v.Name:lower():find(enemyName:lower()) and v:FindFirstChild("HumanoidRootPart") then
+                v.HumanoidRootPart.CFrame = HumanoidRootPart.CFrame + Vector3.new(5, 0, 0)
+            end
+        end
+    end
+})
+
+local previousPosition = nil
+
+Window:MakeTab({Name = "空中移動＆戻る", Icon = "rbxassetid://4483345998", PremiumOnly = false})
+:AddButton({
+    Name = "空中へ / 元に戻る",
+    Callback = function()
+        if previousPosition == nil then
+            previousPosition = HumanoidRootPart.CFrame
+            HumanoidRootPart.CFrame = HumanoidRootPart.CFrame + Vector3.new(0, 100, 0)
+            OrionLib:MakeNotification({Name = "テレポート", Content = "空中に移動しました！", Time = 2})
         else
-            OrionLib:MakeNotification({
-                Name = "エラー",
-                Content = "プレイヤーが見つかりませんでした！",
-                Time = 3
-            })
+            HumanoidRootPart.CFrame = previousPosition
+            previousPosition = nil
+            OrionLib:MakeNotification({Name = "テレポート", Content = "元の位置に戻りました！", Time = 2})
         end
     end
 })
 
-----------------------------------------------------
--- 🔹 テレポートキー割り当てと表示切替
-local TeleportKeys = {
-    ["T"] = Enum.KeyCode.T,
-    ["Y"] = Enum.KeyCode.Y,
-    ["H"] = Enum.KeyCode.H
-}
-
-local selectedTeleportKey = Enum.KeyCode.T
-local teleportButtonVisible = true
-local teleportButton
-
-TeleportTab:AddDropdown({
-    Name = "テレポートのキーを選択",
-    Default = "T",
-    Options = {"T", "Y", "H"},
-    Callback = function(value)
-        selectedTeleportKey = TeleportKeys[value]
-    end
-})
-
-TeleportTab:AddToggle({
-    Name = "テレポートボタン表示切替",
-    Default = true,
-    Callback = function(value)
-        teleportButtonVisible = value
-        if teleportButton then
-            teleportButton.Visible = value
-        end
-    end
-})
-
-teleportButton = TeleportTab:AddButton({
-    Name = "キーでテレポート（上に移動）",
-    Callback = function()
-        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if root then
-            root.CFrame = root.CFrame + Vector3.new(0, 5000, 0)
-        end
-    end
-})
-
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if not gameProcessed and teleportButtonVisible and input.KeyCode == selectedTeleportKey then
-        local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if root then
-            root.CFrame = root.CFrame + Vector3.new(0, 5000, 0)
-        end
-    end
-end)
-
-----------------------------------------------------
-local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-
-local Window = OrionLib:MakeWindow({
-    Name = "World of Stands | Auto Attack",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "WOS_AutoAttack"
-})
-
-local autoAttack = false
-local selectedEnemy = "Corrupted Swordsman"
-local standName = "Anubis"
-
-local remote = game:GetService("ReplicatedStorage"):WaitForChild("Communication"):WaitForChild("Events")
-
-local function attackEnemy(enemy, stand)
-    remote:FireServer(enemy, stand, false, 20)
-end
-
--- 自動攻撃ループ
-task.spawn(function()
-    while true do
-        if autoAttack then
-            attackEnemy(selectedEnemy, standName)
-        end
-        task.wait(0.5) -- 攻撃間隔
-    end
-end)
-
--- GUIタブ
-local Tab = Window:MakeTab({
-    Name = "Auto Attack",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-Tab:AddTextbox({
-    Name = "Enemy Name",
-    Default = selectedEnemy,
-    TextDisappear = false,
-    Callback = function(Value)
-        selectedEnemy = Value
-    end
-})
-
-Tab:AddTextbox({
-    Name = "Stand Name",
-    Default = standName,
-    TextDisappear = false,
-    Callback = function(Value)
-        standName = Value
-    end
-})
-
-Tab:AddButton({
-    Name = "Attack Once",
-    Callback = function()
-        attackEnemy(selectedEnemy, standName)
-    end
-})
-
-Tab:AddToggle({
-    Name = "Auto Attack",
-    Default = false,
-    Callback = function(Value)
-        autoAttack = Value
-    end
-})
-
-OrionLib:Init()
-
-----------------------------------------------------
--- Orion GUI起動
-OrionLib:Init()
