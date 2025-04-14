@@ -148,8 +148,13 @@ if settings.ShowTeleport then
     })
 
 local teleportDropdown
+
 function refreshTeleportDropdown()
-    local options = table.keys(settings.SavedPositions)
+    local options = {}
+    for name, _ in pairs(settings.SavedPositions) do
+        table.insert(options, name)
+    end
+
     if teleportDropdown then
         teleportDropdown:Refresh(options, true)
     else
@@ -163,72 +168,76 @@ function refreshTeleportDropdown()
         })
     end
 end
-    refreshTeleportDropdown()
 
-    teleportTab:AddButton({
-        Name = "保存一覧を更新",
-        Callback = function()
-            refreshTeleportDropdown()
+refreshTeleportDropdown()
+
+teleportTab:AddButton({
+    Name = "保存一覧を更新",
+    Callback = function()
+        refreshTeleportDropdown()
+        OrionLib:MakeNotification({
+            Name = "更新完了",
+            Content = "保存済みの場所リストを更新しました。",
+            Time = 3
+        })
+    end
+})
+
+teleportTab:AddButton({
+    Name = "選択した場所にテレポート",
+    Callback = function()
+        local pos = settings.SavedPositions[settings.SelectedPosition]
+        if pos then
+            settings.LastLocation = humanoidRootPart.Position
+            humanoidRootPart.CFrame = CFrame.new(pos)
+        end
+    end
+})
+
+teleportTab:AddButton({
+    Name = "現在の場所に戻る（復元）",
+    Callback = function()
+        if settings.LastLocation then
+            humanoidRootPart.CFrame = CFrame.new(settings.LastLocation)
             OrionLib:MakeNotification({
-                Name = "更新完了",
-                Content = "保存済みの場所リストを更新しました。",
+                Name = "復元完了",
+                Content = "元の場所に戻りました。",
                 Time = 3
             })
         end
-    })
+    end
+})
 
-    teleportTab:AddButton({
-        Name = "選択した場所にテレポート",
-        Callback = function()
-            local pos = settings.SavedPositions[settings.SelectedPosition]
-            if pos then
-                settings.LastLocation = humanoidRootPart.Position
-                humanoidRootPart.CFrame = CFrame.new(pos)
-            end
+teleportTab:AddTextbox({
+    Name = "削除したい位置名",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(name)
+        if settings.SavedPositions[name] then
+            settings.SavedPositions[name] = nil
+            saveSettings()
+            OrionLib:MakeNotification({
+                Name = "削除完了",
+                Content = name .. " を削除しました。",
+                Time = 3
+            })
+            refreshTeleportDropdown()
+        else
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "その名前の位置は存在しません。",
+                Time = 3
+            })
         end
-    })
+    end
+})
 
-    teleportTab:AddButton({
-        Name = "現在の場所に戻る（復元）",
-        Callback = function()
-            if settings.LastLocation then
-                humanoidRootPart.CFrame = CFrame.new(settings.LastLocation)
-                OrionLib:MakeNotification({Name = "復元完了", Content = "元の場所に戻りました。", Time = 3})
-            end
-        end
-    })
-
-    teleportTab:AddTextbox({
-        Name = "削除したい位置名",
-        Default = "",
-        TextDisappear = true,
-        Callback = function(name)
-            if settings.SavedPositions[name] then
-                settings.SavedPositions[name] = nil
-                saveSettings()
-                OrionLib:MakeNotification({
-                    Name = "削除完了",
-                    Content = name .. " を削除しました。",
-                    Time = 3
-                })
-                refreshTeleportDropdown()
-            else
-                OrionLib:MakeNotification({
-                    Name = "エラー",
-                    Content = "その名前の位置は存在しません。",
-                    Time = 3
-                })
-            end
-        end
-    })
-
-    teleportTab:AddLabel("現在位置: 初期化中...")
-    local positionLabel = teleportTab:AddLabel("")
-    RunService.RenderStepped:Connect(function()
-        local pos = humanoidRootPart.Position
-        positionLabel:Set("現在位置: X=" .. math.floor(pos.X) .. ", Y=" .. math.floor(pos.Y) .. ", Z=" .. math.floor(pos.Z))
-    end)
-end
+teleportTab:AddLabel("現在位置: 初期化中...")
+local positionLabel = teleportTab:AddLabel("")
+RunService.RenderStepped:Connect(function()
+    local pos = humanoidRootPart.Position
+    positionLabel:Set("現在位置: X=" .. math.floor(pos.X) .. ", Y=" .. math.floor(pos.Y) .. ", Z=" .. math.floor(pos.Z))
+end)
 
 --== ユーティリティ機能 ==--
 local utilityTab = Window:MakeTab({
@@ -245,7 +254,6 @@ utilityTab:AddToggle({
         saveSettings()
     end
 })
-
 utilityTab:AddSlider({
     Name = "スピード調整",
     Min = 16,
