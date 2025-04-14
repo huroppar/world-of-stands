@@ -2,6 +2,7 @@ local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
+local HRP = Character:WaitForChild("HumanoidRootPart")
 
 -- Solara v3互換ライブラリ
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
@@ -19,7 +20,6 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- 初期値
 local speedValue = 30
 local speedEnabled = false
 
@@ -37,7 +37,7 @@ MainTab:AddToggle({
     end
 })
 
--- スピードスライダー
+-- スライダー
 local speedSlider = MainTab:AddSlider({
     Name = "Speed Slider",
     Min = 1,
@@ -52,7 +52,7 @@ local speedSlider = MainTab:AddSlider({
     end
 })
 
--- 数値入力ボックス（ここが手動入力部分！）
+-- 数値入力
 MainTab:AddTextbox({
     Name = "Speed Input (手動入力)",
     Default = tostring(speedValue),
@@ -61,7 +61,7 @@ MainTab:AddTextbox({
         local num = tonumber(text)
         if num and num >= 1 and num <= 500 then
             speedValue = num
-            speedSlider:Set(num) -- スライダーと同期
+            speedSlider:Set(num)
             if speedEnabled then
                 Humanoid.WalkSpeed = num
             end
@@ -75,20 +75,20 @@ MainTab:AddTextbox({
     end
 })
 
--- Speed維持用ループ（頻度UP & 死亡後対応）
+-- Speed維持ループ
 task.spawn(function()
     while true do
         task.wait(0.1)
-        if speedEnabled and humanoid then
-            if humanoid.WalkSpeed ~= speedValue then
-                humanoid.WalkSpeed = speedValue
+        if speedEnabled and Humanoid then
+            if Humanoid.WalkSpeed ~= speedValue then
+                Humanoid.WalkSpeed = speedValue
             end
         end
     end
 end)
 
 -- 死亡時再取得
-player.CharacterAdded:Connect(function(char)
-    humanoid = char:WaitForChild("Humanoid")
-    hrp = char:WaitForChild("HumanoidRootPart")
+LocalPlayer.CharacterAdded:Connect(function(char)
+    Humanoid = char:WaitForChild("Humanoid")
+    HRP = char:WaitForChild("HumanoidRootPart")
 end)
