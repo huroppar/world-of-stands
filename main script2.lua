@@ -85,6 +85,20 @@ task.spawn(function()
     end
 end)
 
+local airTeleportEnabled = true -- デフォルトはON
+
+MainTab:AddToggle({
+    Name = "空中TP機能 On/Off",
+    Default = true,
+    Callback = function(state)
+        airTeleportEnabled = state
+        OrionLib:MakeNotification({
+            Name = "空中TP",
+            Content = state and "空中TPを有効化したよ！" or "空中TPを無効化したよ！",
+            Time = 3
+        })
+    end
+})
 
 -- 空中テレポート用変数（← ここはループの外！）
 local teleportKey = Enum.KeyCode.Y
@@ -94,6 +108,8 @@ local originalCFrame = nil
 
 -- 空中テレポート関数
 local function toggleAirTeleport()
+　　if not airTeleportEnabled then return end
+    
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not root then return end
 
