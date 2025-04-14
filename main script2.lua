@@ -1,52 +1,82 @@
--- OrionLibの読み込み（ミラーリンク使用）
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local Humanoid = Character:WaitForChild("Humanoid")
+
+-- Solara v3用ライブラリを読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 
--- ウィンドウ作成
+-- GUIウィンドウの作成
 local Window = OrionLib:MakeWindow({
-    Name = "✨ Masashi Neon GUI ✨",
+    Name = "World of Stands - Speed Control",
     HidePremium = false,
     SaveConfig = true,
-    ConfigFolder = "MasashiNeon"
+    ConfigFolder = "WOS_SpeedControl"
 })
 
--- タブ作成
 local MainTab = Window:MakeTab({
-    Name = "Main",
+    Name = "Movement",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- スピード設定変数
-local SpeedEnabled = false
-local SpeedValue = 16
+-- 変数
+local speedValue = 16
+local speedEnabled = false
+local speedSlider, speedBox
 
--- スピード切り替えトグル
+-- スピードのオンオフ切り替え
 MainTab:AddToggle({
-    Name = "スピード変更ON/OFF",
+    Name = "Speed On/Off",
     Default = false,
     Callback = function(state)
-        SpeedEnabled = state
-        if SpeedEnabled then
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
+        speedEnabled = state
+        if speedEnabled then
+            Humanoid.WalkSpeed = speedValue
         else
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
+            Humanoid.WalkSpeed = 16 -- デフォルトに戻す
         end
     end
 })
 
--- スピードスライダー（1〜500）
-MainTab:AddSlider({
-    Name = "スピード調整",
+-- スピードスライダー
+speedSlider = MainTab:AddSlider({
+    Name = "Speed Slider",
     Min = 1,
     Max = 500,
-    Default = 16,
-    Color = Color3.fromRGB(0, 255, 140),
+    Default = speedValue,
     Increment = 1,
-    ValueName = "Speed",
     Callback = function(value)
-        SpeedValue = value
-        if SpeedEnabled then
-            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
+        speedValue = value
+        if speedEnabled then
+            Humanoid.WalkSpeed = value
+        end
+        if speedBox then
+            speedBox:SetText(tostring(value))
+        end
+    end
+})
+
+-- 数値直接入力ボックス
+speedBox = MainTab:AddTextbox({
+    Name = "Speed Input",
+    Default = tostring(speedValue),
+    TextDisappear = false,
+    Callback = function(text)
+        local num = tonumber(text)
+        if num and num >= 1 and num <= 500 then
+            speedValue = num
+            speedSlider:Set(num)
+            if speedEnabled then
+                Humanoid.WalkSpeed = num
+            end
+        else
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "1〜500の数値を入力してください！",
+                Time = 2
+            })
+            speedBox:SetText(tostring(speedValue))
         end
     end
 })
