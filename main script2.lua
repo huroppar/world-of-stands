@@ -75,11 +75,6 @@ MainTab:AddTextbox({
     end
 })
 
--- 空中テレポート用変数（← ここはループの外！）
-local teleportKey = Enum.KeyCode.Y
-local isInAir = false
-local originalCFrame = nil
-
 -- Speed維持ループ（頻度爆上げ & 技に打ち勝つ）
 task.spawn(function()
     while true do
@@ -89,6 +84,13 @@ task.spawn(function()
         end
     end
 end)
+
+
+-- 空中テレポート用変数（← ここはループの外！）
+local teleportKey = Enum.KeyCode.Y
+local isInAir = false
+local originalCFrame = nil
+
 
 -- 空中テレポート関数
 local function toggleAirTeleport()
