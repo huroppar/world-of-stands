@@ -75,20 +75,13 @@ MainTab:AddTextbox({
     end
 })
 
--- Speed維持ループ
+-- Speed維持ループ（頻度爆上げ & 技に打ち勝つ）
 task.spawn(function()
     while true do
-        task.wait(0.1)
+        -- waitじゃなくてRunServiceで超高速ループ
+        game:GetService("RunService").RenderStepped:Wait()
         if speedEnabled and Humanoid then
-            if Humanoid.WalkSpeed ~= speedValue then
-                Humanoid.WalkSpeed = speedValue
-            end
+            Humanoid.WalkSpeed = speedValue
         end
     end
-end)
-
--- 死亡時再取得
-LocalPlayer.CharacterAdded:Connect(function(char)
-    Humanoid = char:WaitForChild("Humanoid")
-    HRP = char:WaitForChild("HumanoidRootPart")
 end)
