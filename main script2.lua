@@ -23,6 +23,15 @@ local MainTab = Window:MakeTab({
 local speedValue = 30
 local speedEnabled = false
 
+-- 監視用ループでWalkSpeedを常時上書き
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        if speedEnabled and humanoid and humanoid.WalkSpeed ~= speedValue then
+            humanoid.WalkSpeed = speedValue
+        end
+    end
+end)
 -- オンオフ切替
 MainTab:AddToggle({
     Name = "Speed On/Off",
@@ -74,30 +83,3 @@ MainTab:AddTextbox({
         end
     end
 })
-
--- WalkSpeed強制固定（変更されたら即戻す！）
-local function enforceSpeed(humanoid)
-    if humanoid then
-        -- 値が変わったときに呼ばれるイベント
-        humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-            if speedEnabled and humanoid.WalkSpeed ~= speedValue then
-                humanoid.WalkSpeed = speedValue
-            end
-        end)
-    end
-end
-
--- 現在のHumanoidに対して適用
-enforceSpeed(humanoid)
-
--- キャラが変わったときにも適用
-player.CharacterAdded:Connect(function(newChar)
-    task.wait(0.5)
-    humanoid = newChar:WaitForChild("Humanoid")
-    if speedEnabled then
-        humanoid.WalkSpeed = speedValue
-    end
-    enforceSpeed(humanoid)
-end)
-    end
-end)
