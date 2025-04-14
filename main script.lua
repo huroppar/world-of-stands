@@ -526,28 +526,45 @@ OrionLib:MakeNotification({
 🟡 攻撃BOT自動討伐機能
 ]]
 
--- GUI全体を囲む Frame を変数にしておく
-local mainGui = ScreenGui or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("🌟 WOS Most Useful Script")  -- ここはGUI名に変更してね
+--== GUI 再表示ボタン ==--
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local coreGui = game:GetService("CoreGui")
 
--- 表示・非表示切り替え
+local mainGui = coreGui:FindFirstChild("Orion") -- GUIの名前が"Orion"でなければ変更！
+
 function toggleMainGui()
     if mainGui then
         mainGui.Enabled = not mainGui.Enabled
     end
 end
 
--- 再表示用の小さなボタンを右上に作成
+-- UIContainerがなければ作る
+local screenGui = coreGui:FindFirstChild("ReopenGuiHolder")
+if not screenGui then
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "ReopenGuiHolder"
+    screenGui.ResetOnSpawn = false
+    screenGui.IgnoreGuiInset = true
+    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    screenGui.Parent = coreGui
+end
+
+-- 小さなボタンを作成
 local reopenButton = Instance.new("TextButton")
 reopenButton.Name = "ReopenGUI"
-reopenButton.Text = "📂"
+reopenButton.Text = "🔁"
 reopenButton.Size = UDim2.new(0, 40, 0, 40)
-reopenButton.Position = UDim2.new(1, -50, 0, 10) -- 右上に配置
-reopenButton.AnchorPoint = Vector2.new(1, 0)
-reopenButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+reopenButton.Position = UDim2.new(1, -50, 1, -60) -- 画面右下
+reopenButton.AnchorPoint = Vector2.new(1, 1)
+reopenButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 reopenButton.TextColor3 = Color3.new(1, 1, 1)
+reopenButton.Font = Enum.Font.GothamBold
+reopenButton.TextScaled = true
+reopenButton.BackgroundTransparency = 0
 reopenButton.BorderSizePixel = 0
-reopenButton.BackgroundTransparency = 0.2
-reopenButton.Parent = game:GetService("CoreGui")
+reopenButton.AutoButtonColor = true
+reopenButton.Parent = screenGui
 
--- ボタン押下時にメインGUIの表示切り替え
 reopenButton.MouseButton1Click:Connect(toggleMainGui)
