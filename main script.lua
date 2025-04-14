@@ -156,7 +156,7 @@ viewTab:AddToggle({
     Name = "テレポート機能表示",
     Default = settings.ShowTeleport,
     Callback = function(value)
-        settings.ShowTeleport = value
+        settings.ShowTeleport = true
         saveSettings()
     end
 })
@@ -535,46 +535,25 @@ OrionLib:MakeNotification({
 🟡 自動ドロップ取得のON/OFF
 🟡 攻撃BOT自動討伐機能
 ]]
+-- GUI再表示ボタン（小さなボタン）を常に表示
+local button = Instance.new("TextButton")
+button.Text = "GUI再表示"
+button.Size = UDim2.new(0, 120, 0, 35)
+button.Position = UDim2.new(0.5, -60, 1, -50) -- 中央下に表示
+button.AnchorPoint = Vector2.new(0.5, 1)
+button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+button.TextColor3 = Color3.new(1, 1, 1)
+button.TextSize = 16
+button.Font = Enum.Font.GothamBold
+button.BorderSizePixel = 0
+button.AutoButtonColor = true
+button.Parent = game:GetService("CoreGui")
 
---== GUI 再表示ボタン ==--
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-local coreGui = game:GetService("CoreGui")
-
-local mainGui = coreGui:FindFirstChild("Orion") -- GUIの名前が"Orion"でなければ変更！
-
-function toggleMainGui()
-    if mainGui then
-        mainGui.Enabled = not mainGui.Enabled
+-- Orion GUI を再表示
+button.MouseButton1Click:Connect(function()
+    if OrionLib and OrionLib._window then
+        OrionLib._window.Enabled = true
+    else
+        warn("Orion GUI がまだ作成されていません。")
     end
-end
-
--- UIContainerがなければ作る
-local screenGui = coreGui:FindFirstChild("ReopenGuiHolder")
-if not screenGui then
-    screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "ReopenGuiHolder"
-    screenGui.ResetOnSpawn = false
-    screenGui.IgnoreGuiInset = true
-    screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    screenGui.Parent = coreGui
-end
-
--- 小さなボタンを作成
-local reopenButton = Instance.new("TextButton")
-reopenButton.Name = "ReopenGUI"
-reopenButton.Text = "🔁"
-reopenButton.Size = UDim2.new(0, 40, 0, 40)
-reopenButton.Position = UDim2.new(0.5, -30, 1, -70) -- 画面右下
-reopenButton.AnchorPoint = Vector2.new(1, 1)
-reopenButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-reopenButton.TextColor3 = Color3.new(1, 1, 1)
-reopenButton.Font = Enum.Font.GothamBold
-reopenButton.TextScaled = true
-reopenButton.BackgroundTransparency = 0
-reopenButton.BorderSizePixel = 0
-reopenButton.AutoButtonColor = true
-reopenButton.Parent = screenGui
-
-reopenButton.MouseButton1Click:Connect(toggleMainGui)
+end)
