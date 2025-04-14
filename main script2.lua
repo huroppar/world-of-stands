@@ -166,11 +166,28 @@ end
 
 createTeleportButton()
 
--- 無限ジャンプ有効化
-local UserInputService = game:GetService("UserInputService")
+-- 無限ジャンプ用変数
+local infiniteJumpEnabled = false
 
-UserInputService.JumpRequest:Connect(function()
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+-- 無限ジャンプ本体処理
+game:GetService("UserInputService").JumpRequest:Connect(function()
+    if infiniteJumpEnabled then
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character:FindFirstChild("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
+        end
     end
 end)
+
+-- GUIにトグル追加
+MainTab:AddToggle({
+    Name = "無限ジャンプ On/Off",
+    Default = false,
+    Callback = function(state)
+        infiniteJumpEnabled = state
+        OrionLib:MakeNotification({
+            Name = "無限ジャンプ",
+            Content = state and "無限ジャンプをONにしたよ！" or "無限ジャンプをOFFにしたよ！",
+            Time = 3
+        })
+    end
+})
