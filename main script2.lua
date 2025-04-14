@@ -12,25 +12,25 @@ local Window = OrionLib:MakeWindow({
 --// メインタブ
 local MainTab = Window:MakeTab({
     Name = "Main",
-    Icon = "rbxassetid://4483345998", -- 好きなアイコンに変えてOK
+    Icon = "rbxassetid://4483345998", -- お好みで変更OK
     PremiumOnly = false
 })
 
---// 変数と関数定義
+--// 基本変数
+local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
+local humanoid = nil
 local speedValue = 16
 local speedEnabled = false
 
---// Humanoidを安全に取得する関数
+--// Humanoid取得関数
 local function getHumanoid()
     local char = player.Character or player.CharacterAdded:Wait()
     return char:WaitForChild("Humanoid")
 end
 
---// スピードスライダー
-local speedValue = 16 -- デフォルトのスピード
+--// スピードスライダーとテキストボックス
 local speedSlider, speedBox
-local speedEnabled = false -- Speedオン/オフの状態
 
 speedSlider = MainTab:AddSlider({
     Name = "Speed",
@@ -40,10 +40,11 @@ speedSlider = MainTab:AddSlider({
     Increment = 1,
     Callback = function(value)
         speedValue = value
-        if speedEnabled and humanoid then
-            humanoid.WalkSpeed = value
+        if speedEnabled then
+            humanoid = getHumanoid()
+            humanoid.WalkSpeed = speedValue
         end
-        speedBox:SetText(tostring(value)) -- テキストボックスに反映
+        speedBox:SetText(tostring(value))
     end
 })
 
@@ -59,32 +60,52 @@ speedBox = MainTab:AddTextbox({
     end
 })
 
---// スピードオン/オフトグル
 MainTab:AddToggle({
     Name = "Speed オン/オフ",
     Default = false,
     Callback = function(state)
         speedEnabled = state
-        if speedEnabled then
-            getHumanoid().WalkSpeed = speedValue
+        humanoid = getHumanoid()
+        if state then
+            humanoid.WalkSpeed = speedValue
         else
-            getHumanoid().WalkSpeed = 16
+            humanoid.WalkSpeed = 16
         end
     end
 })
---// 基本変数
-local UIS = game:GetService("UserInputService")
-local player = game.Players.LocalPlayer
+
+--===========================--
+--    空中テレポート機能     --
+--===========================--
+
+--// 空中テレポート管理用変数
 local char = player.Character or player.CharacterAdded:Wait()
 local hrp = char:WaitForChild("HumanoidRootPart")
-
---// テレポート状態管理
 local isInAir = false
 local originalPosition = nil
-local teleportKey = Enum.KeyCode.Y -- 初期キー（Yキー）
-
---// GUIボタン生成
+local teleportKey = Enum.KeyCode.Y
 local teleportButtonVisible = false
+local teleportButton = nil
+
+--// 空中TP処理
+local function toggleTeleport()
+    local character = player.Character or player.CharacterAdded:Wait()
+    local root = character:WaitForChild("HumanoidRootPart")
+
+    if not isInAir then
+        originalPosition = root.CFrame
+        root.Anchored = true
+        root.CFrame = CFrame.new(root.Position.X, 10000, root.Position.Z)
+        isInAir = true
+    else
+        root.CFrame = originalPosition
+        task.wait(0.1)
+        root.Anchored = false
+        isInAir = false
+    end
+end
+
+--// GUIボタン作成
 local function createTeleportButton()
     local gui = Instance.new("ScreenGui")
     gui.Name = "TeleportGui"
@@ -108,26 +129,8 @@ local function createTeleportButton()
     end)
 end
 
--- 最初に呼び出す！
+-- 最初に呼び出す
 createTeleportButton()
-
---// 空中TP機能
-local function toggleTeleport()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local root = character:WaitForChild("HumanoidRootPart")
-
-    if not isInAir then
-        originalPosition = root.CFrame
-        root.Anchored = true
-        root.CFrame = CFrame.new(root.Position.X, 10000, root.Position.Z)
-        isInAir = true
-    else
-        root.CFrame = originalPosition
-        task.wait(0.1)
-        root.Anchored = false
-        isInAir = false
-    end
-end
 
 --// キー入力処理
 UIS.InputBegan:Connect(function(input, gpe)
@@ -137,17 +140,19 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
---// GUI切り替え（NeonのToggleに組み込み）
+--// テレポートボタン表示トグル
 MainTab:AddToggle({
     Name = "空中テレポートボタン表示",
     Default = false,
     Callback = function(state)
         teleportButtonVisible = state
-        teleportButton.Visible = state
+        if teleportButton then
+            teleportButton.Visible = state
+        end
     end
 })
 
---// キー選択機能（ドロップダウン）
+--// キー設定ドロップダウン
 local keyList = {"Q","E","R","T","Y","U","I","O","P","Z","X","C","V","B","N","M"}
 MainTab:AddDropdown({
     Name = "空中TPキー設定",
