@@ -360,15 +360,19 @@ keyTab:AddTextbox({
     Default = "",
     TextDisappear = true,
     Callback = function(inputKey)
+        inputKey = inputKey:match("^%s*(.-)%s*$") -- 前後の空白除去
+
         local webKey = ""
         pcall(function()
-            webKey = tostring(game:HttpGet("https://pastebin.com/raw/YOUR_KEY_HERE"))
+            webKey = tostring(game:HttpGet("https://pastebin.com/raw/abcd1234")) -- ← 正しいリンクに
         end)
+
         local acceptedKeys = {
             ["Masashi0305"] = true,
             [tostring(os.date("%Y%m%d"))] = true,
             [webKey] = true
         }
+
         if acceptedKeys[inputKey] then
             OrionLib:MakeNotification({Name = "認証成功", Content = "スクリプトが有効化されました！", Time = 5})
         else
