@@ -1,12 +1,3 @@
--- 最初にこれを入れる（GUIがすでにあるかチェック）
-if _G.__WOS_GUI_RUNNING then
-    if _G.__WOS_Window and typeof(_G.__WOS_Window) == "Instance" then
-        _G.__WOS_Window.Enabled = true
-    end
-    return
-end
-_G.__WOS_GUI_RUNNING = true
-
 -- 最初にこれを入れる（Windowがすでにあるかチェック）
 if _G.__WOS_GUI_RUNNING then return end
 _G.__WOS_GUI_RUNNING = true--// Masashi Script : World of Stands Most Useful Script
