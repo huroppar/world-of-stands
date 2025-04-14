@@ -74,6 +74,35 @@ local viewTab = Window:MakeTab({
     Icon = "rbxassetid://6031071058",
     PremiumOnly = false
 })
+local teleportDropdown
+
+-- 先に teleportTab を作成（ここが超重要）
+local teleportTab = Window:MakeTab({
+    Name = "テレポート管理",
+    Icon = "map-pin",
+    PremiumOnly = false
+})
+
+-- ドロップダウンを更新する関数
+function refreshTeleportDropdown()
+    local options = table.keys(settings.SavedPositions)
+
+    if teleportDropdown then
+        teleportDropdown:Refresh(options, true)
+    else
+        teleportDropdown = teleportTab:AddDropdown({
+            Name = "保存済みの場所",
+            Options = options,
+            Callback = function(option)
+                settings.SelectedPosition = option
+                saveSettings()
+            end
+        })
+    end
+end
+
+-- 最後に初期化として呼び出す（GUI構築後）
+refreshTeleportDropdown()
 
 viewTab:AddToggle({
     Name = "テレポート機能表示",
