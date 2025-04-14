@@ -165,3 +165,12 @@ local function createTeleportButton()
 end
 
 createTeleportButton()
+
+-- 無限ジャンプ有効化
+local UserInputService = game:GetService("UserInputService")
+
+UserInputService.JumpRequest:Connect(function()
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
