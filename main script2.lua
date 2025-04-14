@@ -43,6 +43,18 @@ speedSlider = MainTab:AddSlider({
     end
 })
 
+MainTab:AddLabel("これは表示される？")
+MainTab:AddButton({
+    Name = "テストボタン",
+    Callback = function()
+        OrionLib:MakeNotification({
+            Name = "クリックされた！",
+            Content = "ボタンはちゃんと動いてるよ！",
+            Time = 2
+        })
+    end
+})
+
 speedBox = MainTab:AddTextbox({
     Name = "Speed値を手入力",
     Default = tostring(speedValue),
