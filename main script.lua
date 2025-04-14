@@ -113,18 +113,22 @@ if settings.ShowTeleport then
         end
     })
 
-    local teleportDropdown
-    function refreshTeleportDropdown()
-        if teleportDropdown then teleportTab:RemoveElement(teleportDropdown) end
+local teleportDropdown
+function refreshTeleportDropdown()
+    local options = table.keys(settings.SavedPositions)
+    if teleportDropdown then
+        teleportDropdown:Refresh(options, true)
+    else
         teleportDropdown = teleportTab:AddDropdown({
             Name = "保存済みの場所",
-            Options = table.keys(settings.SavedPositions),
+            Options = options,
             Callback = function(option)
                 settings.SelectedPosition = option
                 saveSettings()
             end
         })
     end
+end
     refreshTeleportDropdown()
 
     teleportTab:AddButton({
