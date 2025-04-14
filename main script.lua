@@ -536,11 +536,11 @@ OrionLib:MakeNotification({
 🟡 攻撃BOT自動討伐機能
 ]]
 
--- GUI再表示用ドラッグ＆クリックボタン（By Masashi）
+--== OrionLib 読み込み ==--
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local UserInputService = game:GetService("UserInputService")
 
--- GUIのウィンドウ定義（Windowはグローバルにしておく）
+--== GUI ウィンドウ定義 ==--
 local Window = OrionLib:MakeWindow({
     Name = "🌟 WOS Most Useful Script",
     HidePremium = false,
@@ -550,74 +550,64 @@ local Window = OrionLib:MakeWindow({
     IntroIcon = "rbxassetid://4483345998"
 })
 
--- F4キーでGUI表示切り替え（参考用）
+--== F4キーでGUI表示/非表示切り替え ==--
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if input.KeyCode == Enum.KeyCode.F4 and not gameProcessed then
         Window.Enabled = not Window.Enabled
     end
 end)
 
--- ★ GUI再表示用の小さなボタンを表示＆ドラッグ可能にする ★
-local ScreenGui = Instance.new("ScreenGui", game.CoreGui)
-ScreenGui.Name = "GuiRestoreButton"
+--== GUI再表示ボタン（ドラッグ移動付き）==--
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "MasashiGUIButton"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = game:WaitForChild("CoreGui")
 
 local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 150, 0, 40)
-button.Position = UDim2.new(0.5, -75, 1, -60) -- 画面中央下
+button.Size = UDim2.new(0, 160, 0, 40)
+button.Position = UDim2.new(0.5, -80, 1, -60) -- 中央下
 button.AnchorPoint = Vector2.new(0.5, 1)
-button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
 button.Text = "🌟 GUIを再表示"
 button.Font = Enum.Font.GothamBold
 button.TextSize = 16
-button.Draggable = false -- 独自のドラッグ機能を使う
-button.Active = true
 button.Parent = ScreenGui
+button.Active = true
 
--- ドラッグ機能実装
-local dragging, dragInput, dragStart, startPos
-
-local function update(input)
-	if dragging then
-		local delta = input.Position - dragStart
-		button.Position = UDim2.new(
-			startPos.X.Scale,
-			startPos.X.Offset + delta.X,
-			startPos.Y.Scale,
-			startPos.Y.Offset + delta.Y
-		)
-	end
-end
+--== ドラッグ機能 ==--
+local dragging = false
+local dragStart, startPos
 
 button.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = button.Position
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        startPos = button.Position
 
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
 end)
 
 button.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-		dragInput = input
-	end
+    if input.UserInputType == Enum.UserInputType.MouseMovement and dragging then
+        local delta = input.Position - dragStart
+        button.Position = UDim2.new(
+            startPos.X.Scale,
+            startPos.X.Offset + delta.X,
+            startPos.Y.Scale,
+            startPos.Y.Offset + delta.Y
+        )
+    end
 end)
 
-UserInputService.InputChanged:Connect(function(input)
-	if input == dragInput then
-		update(input)
-	end
-end)
-
--- ボタンクリックでGUIを再表示
+--== ボタン押下で GUI を再表示 ==--
 button.MouseButton1Click:Connect(function()
-	if Window then
-		Window.Enabled = true
-	end
+    if Window then
+        Window.Enabled = true
+    end
 end)
