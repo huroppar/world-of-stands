@@ -175,7 +175,7 @@ teleportTab:AddButton({
             -- 現在の位置を保存
             settings.LastLocation = humanoidRootPart.Position
             -- 上空へ移動
-            humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, 50, 0)
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, 5000, 0)
             OrionLib:MakeNotification({
                 Name = "空中テレポート",
                 Content = "空中に移動しました。",
@@ -409,43 +409,6 @@ UIS.InputBegan:Connect(function(input, processed)
     end
 end)
 
---== キーシステム ==--
-local keyTab = Window:MakeTab({
-    Name = "キー認証",
-    Icon = "rbxassetid://6031280882",
-    PremiumOnly = false
-})
-
-local isAuthorized = false
-
-keyTab:AddTextbox({
-    Name = "キーを入力",
-    Default = "",
-    TextDisappear = true,
-    Callback = function(inputKey)
-        inputKey = inputKey:match("^%s*(.-)%s*$") -- 前後の空白除去
-
-        local acceptedKeys = {
-            ["Masashi0305"] = true,
-            [tostring(os.date("%Y%m%d"))] = true
-        }
-
-        if acceptedKeys[inputKey] then
-            OrionLib:MakeNotification({
-                Name = "認証成功",
-                Content = "スクリプトが有効化されました！",
-                Time = 5
-            })
-            isAuthorized = true
-        else
-            OrionLib:MakeNotification({
-                Name = "認証失敗",
-                Content = "キーが間違っています。",
-                Time = 5
-            })
-        end
-    end
-})
 --== 通知 ==--
 OrionLib:MakeNotification({
     Name = "設定復元完了",
