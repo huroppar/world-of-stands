@@ -1,52 +1,99 @@
---// Masashi Script : World of Stands Most Useful Script
---// Solara V3 Compatible | Author: Masashi
+--== 🔁 改善版: モジュール分離（GUIユーティリティ） + テーマ切替対応 ==--
 
---== GUI 二重起動チェックと再表示処理 ==--
-if _G.__WOS_GUI_RUNNING then
-    if _G.__WOS_Window and _G.__WOS_Window.Enabled ~= nil then
-        _G.__WOS_Window.Enabled = true
-        local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-        OrionLib:MakeNotification({
-            Name = "Masashi WOS GUI",
-            Content = "GUIを再表示しました！",
-            Image = "rbxassetid://4483345998",
-            Time = 5
-        })
-        return
+--== 🌌 gui_utils.lua ==--
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+
+local settings = {
+    SavedPositions = {},
+    SelectedPosition = nil,
+    Speed = 16,
+    InfiniteJump = false,
+    KeySystem = "None",
+    LastLocation = nil,
+    Transparency = false,
+    TeleportKey = Enum.KeyCode.T.Name,
+    SpeedLimit = 900,
+    WebKey = "",
+    DailyKey = "",
+    ShowTeleport = true,
+    ShowRecovery = true,
+    Theme = "Dark"
+}
+
+local saveFileName = "MasashiScriptSettings.json"
+
+local gui_utils = {}
+
+function gui_utils.saveSettings()
+    writefile(saveFileName, HttpService:JSONEncode(settings))
+end
+
+function gui_utils.loadSettings()
+    if isfile(saveFileName) then
+        local success, decoded = pcall(function()
+            return HttpService:JSONDecode(readfile(saveFileName))
+        end)
+        if success and type(decoded) == "table" then
+            for k, v in pairs(decoded) do
+                settings[k] = v
+            end
+        end
     end
 end
-_G.__WOS_GUI_RUNNING = true
 
---== OrionLib 読み込み (Feather Icons対策済み) ==--
-local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
+function gui_utils.getSettings()
+    return settings
+end
 
---== GUI 初期化 ==--
-local Window = OrionLib:MakeWindow({
-    Name = "🌟 WOS Most Useful Script",
-    HidePremium = false,
-    SaveConfig = false,
-    ConfigFolder = "MasashiWOS",
-    IntroText = "By Masashi",
-    IntroIcon = "rbxassetid://4483345998",
-    CloseCallback = function()
-        Window.Enabled = false -- ❗削除ではなく非表示
+local teleportDropdown
+function gui_utils.refreshTeleportDropdown(tab)
+    settings.SavedPositions = settings.SavedPositions or {}
+    local options = {}
+    for name, _ in pairs(settings.SavedPositions) do
+        table.insert(options, name)
     end
-})
+    if teleportDropdown then
+        teleportDropdown:Refresh(options, true)
+    elseif tab then
+        teleportDropdown = tab:AddDropdown({
+            Name = "保存済みの場所",
+            Options = options,
+            Callback = function(option)
+                settings.SelectedPosition = option
+                gui_utils.saveSettings()
+            end
+        })
+    end
+end
 
-_G.__WOS_Window = Window -- ⭐ グローバルに保存（再表示用）
+local playerDropdown
+local selectedPlayer = nil
+function gui_utils.updatePlayerDropdown(tab)
+    local options = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            table.insert(options, player.Name)
+        end
+    end
+    if playerDropdown then
+        playerDropdown:Refresh(options, true)
+    elseif tab then
+        playerDropdown = tab:AddDropdown({
+            Name = "プレイヤーを選択",
+            Options = options,
+            Callback = function(value)
+                selectedPlayer = value
+            end
+        })
+    end
+end
 
---== サービス取得 ==--
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local UIS = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
+function gui_utils.getSelectedPlayer()
+    return selectedPlayer
+end
 
-local player = Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local humanoid = character:WaitForChild("Humanoid")
+return gui_utils
 
 --== 浮遊用の変数と関数 ==--
 local floating = false
