@@ -1,5 +1,6 @@
 local player = game.Players.LocalPlayer  
-local userInputService = game:GetService("UserInputService")  
+local gui = Instance.new("ScreenGui")  
+gui.Parent = player:WaitForChild("PlayerGui")  
 
 -- 初期設定  
 local speedMax = 900  
@@ -7,11 +8,74 @@ local speedToggle = false
 local infiniteJumpEnabled = false  
 local wallPassEnabled = false  
 local originalPosition = nil  
+-- メインフレーム  
+local mainFrame = Instance.new("Frame")  
+mainFrame.Size = UDim2.new(0.5, 0, 0.5, 0)  
+mainFrame.Position = UDim2.new(0.25, 0, 0.25, 0)  
+mainFrame.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)  
+mainFrame.Parent = gui  
 
--- GUIを作成  
-local gui = Instance.new("ScreenGui")  
-gui.Parent = player:WaitForChild("PlayerGui")  
+-- タブのフレーム  
+local tabFrame = Instance.new("Frame")  
+tabFrame.Size = UDim2.new(1, 0, 0.1, 0)  
+tabFrame.Position = UDim2.new(0, 0, 0, 0)  
+tabFrame.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)  
+tabFrame.Parent = mainFrame  
 
+-- タブを管理  
+local tabs = {"Settings", "Visuals", "Players"}  
+
+for i, tabName in ipairs(tabs) do  
+    local tabButton = Instance.new("TextButton")  
+    tabButton.Size = UDim2.new(1 / #tabs, 0, 1, 0)  
+    tabButton.Position = UDim2.new((i - 1) / #tabs, 0, 0, 0)  
+    tabButton.Text = tabName  
+    tabButton.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)  
+    tabButton.Parent = tabFrame  
+    
+    tabButton.MouseButton1Click:Connect(function()  
+        -- タブを表示する処理  
+        for j, button in ipairs(tabFrame:GetChildren()) do  
+            if button:IsA("TextButton") then  
+                button.BackgroundColor3 = (button.Text == tabName) and Color3.new(0.6, 0.6, 0.6) or Color3.new(0.4, 0.4, 0.4)  
+            end  
+        end  
+        
+        for _, child in ipairs(mainFrame:GetChildren()) do  
+            if child:IsA("Frame") and child.Name ~= "TabContent" then  
+                child.Visible = false  
+            end  
+        end  
+        
+        local contentFrame = mainFrame:FindFirstChild(tabName) or Instance.new("Frame", mainFrame)  
+        contentFrame.Name = tabName  
+        contentFrame.Size = UDim2.new(1, 0, 0.9, 0)  
+        contentFrame.Position = UDim2.new(0, 0, 0.1, 0)  
+        contentFrame.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  
+        contentFrame.Visible = true  
+
+        -- 各タブの内容を設定（例）  
+        if tabName == "Settings" then  
+            local label = Instance.new("TextLabel", contentFrame)  
+            label.Size = UDim2.new(1, 0, 0.1, 0)  
+            label.Text = "Settings Options"  
+            label.BackgroundColor3 = Color3.new(0.6, 0.6, 0.6)  
+        elseif tabName == "Visuals" then  
+            local label = Instance.new("TextLabel", contentFrame)  
+            label.Size = UDim2.new(1, 0, 0.1, 0)  
+            label.Text = "Visual Options"  
+            label.BackgroundColor3 = Color3.new(0.6, 0.6, 0.6)  
+        elseif tabName == "Players" then  
+            local label = Instance.new("TextLabel", contentFrame)  
+            label.Size = UDim2.new(1, 0, 0.1, 0)  
+            label.Text = "Player Options"  
+            label.BackgroundColor3 = Color3.new(0.6, 0.6, 0.6)  
+        end  
+    end)  
+end  
+
+-- 初期タブの表示  
+tabFrame:GetChildren()[1].MouseButton1Click:Fire()  
 -- スピード調整スライダー  
 local speedSlider = Instance.new("Frame")  
 speedSlider.Size = UDim2.new(0.5, 0, 0.1, 0)  
