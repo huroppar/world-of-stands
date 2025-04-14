@@ -8,6 +8,7 @@ local speedToggle = false
 local infiniteJumpEnabled = false  
 local wallPassEnabled = false  
 local originalPosition = nil  
+local isTransparent = false  -- 透明化の初期化  
 
 -- メインフレーム  
 local mainFrame = Instance.new("Frame")  
@@ -35,7 +36,7 @@ for i, tabName in ipairs(tabs) do
     tabButton.Parent = tabFrame   
 
     tabButton.MouseButton1Click:Connect(function()  
-        -- タブを表示する処理  
+        -- タブ表示処理  
         for j, button in ipairs(tabFrame:GetChildren()) do  
             if button:IsA("TextButton") then  
                 button.BackgroundColor3 = (button.Text == tabName) and Color3.new(0.6, 0.6, 0.6) or Color3.new(0.4, 0.4, 0.4)  
@@ -48,21 +49,18 @@ for i, tabName in ipairs(tabs) do
                 content.Visible = (content.Name == tabName)  -- 該当タブのフレームのみ表示  
             end  
         end  
-    end)  
-end
-    
-    local contentFrame = mainFrame:FindFirstChild(tabName) or Instance.new("Frame", mainFrame)  
-    contentFrame.Name = tabName  
-    contentFrame.Size = UDim2.new(1, 0, 0.9, 0)  
-    contentFrame.Position = UDim2.new(0, 0, 0.1, 0)  
-    contentFrame.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  
-    contentFrame.Visible = true  -- 現在のタブのコンテンツを表示  
-end)
-    
+
         -- 各タブの内容を設定  
+        local contentFrame = mainFrame:FindFirstChild(tabName) or Instance.new("Frame", mainFrame)  
+        contentFrame.Name = tabName  
+        contentFrame.Size = UDim2.new(1, 0, 0.9, 0)  
+        contentFrame.Position = UDim2.new(0, 0, 0.1, 0)  
+        contentFrame.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  
+        contentFrame.Visible = true  -- 現在のタブのコンテンツを表示  
+
         if tabName == "Settings" then  
             -- スピード調整  
-            local speedLabel = Instance.new("TextLabel", contentFrame)  
+                local speedLabel = Instance.new("TextLabel", contentFrame)  
             speedLabel.Size = UDim2.new(0.5, 0, 0.1, 0)  
             speedLabel.Position = UDim2.new(0.05, 0, 0.1, 0)  
             speedLabel.Text = "Speed Max:"  
@@ -71,8 +69,9 @@ end)
             local speedBox = Instance.new("TextBox", contentFrame)  
             speedBox.Size = UDim2.new(0.4, 0, 0.1, 0)  
             speedBox.Position = UDim2.new(0.55, 0, 0.1, 0)  
-            speedBox.PlaceholderText = tostring(speedMax)  
--- スピード切替ボタン  
+            speedBox.Text = tostring(speedMax)  
+
+            -- スピード切替ボタン  
             local toggleSpeedButton = Instance.new("TextButton", contentFrame)  
             toggleSpeedButton.Text = "Toggle Speed"  
             toggleSpeedButton.Size = UDim2.new(0.5, 0, 0.1, 0)  
@@ -134,9 +133,8 @@ end)
             local toggleWallPassButton = Instance.new("TextButton", contentFrame)  
             toggleWallPassButton.Text = "Toggle Wall Pass"  
             toggleWallPassButton.Size = UDim2.new(0.5, 0, 0.1, 0)  
-            toggleWallPassButton.Position = UDim2.new(0.25, 0, 0.70, 0)  
-
-            toggleWallPassButton.MouseButton1Click:Connect(function()  
+            toggleWallPassButton.Position = UDim2.new(0.25, 0, 0.70, 0)
+                            toggleWallPassButton.MouseButton1Click:Connect(function()  
                 wallPassEnabled = not wallPassEnabled  
                 if wallPassEnabled then  
                     player.Character.HumanoidRootPart.CanCollide = false -- 壁を貫通  
@@ -156,8 +154,8 @@ end)
                 if character then  
                     isTransparent = not isTransparent  
                     for _, part in pairs(character:GetChildren()) do  
-                        if part:IsA("BasePart") then
-                                    part.Transparency = isTransparent and 0.5 or 0 -- 透明化  
+                        if part:IsA("BasePart") then  
+                            part.Transparency = isTransparent and 0.5 or 0 -- 透明化  
                             part.CanCollide = not isTransparent -- 衝突性の設定  
                         end  
                     end  
@@ -169,8 +167,6 @@ end)
                             humanoid.HealthChanged:Connect(function()  
                                 humanoid.Health = humanoid.Health + 100 -- ダメージを無効化するための補正  
                             end)  
-                        else  
-                            -- 接続を解除するためには、何らかの方法で保持した接続を管理する必要があります  
                         end  
                     end  
                 end  
@@ -215,5 +211,24 @@ end)
                 gui.Visible = not gui.Visible  
             end)  
         end  
+    end)  
+end  
+-- タブを切り替えたときの設定  
+for i, tabName in ipairs(tabs) do  
+    -- コンテンツフレームの作成をループの外で行うため、事前に定義します  
+    local contentFrame = Instance.new("Frame", mainFrame)  
+    contentFrame.Name = tabName  
+    contentFrame.Size = UDim2.new(1, 0, 0.9, 0)  
+    contentFrame.Position = UDim2.new(0, 0, 0.1, 0)  
+    contentFrame.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  
+    contentFrame.Visible = false -- 初期状態では非表示にする  
+
+    -- タブ名に応じた内容を設定  
+    if tabName == "Settings" then  
+        -- ここまでの設定を含めます（すでに詳細に説明した内容）  
     end  
-end
+    -- 他のタブ（"Visuals", "Players"）の設定が場合によっては必要です  
+end  
+
+-- 最初のタブを表示する (例: Settings)  
+tabFrame:GetChildren()[1]:Fire() -- タブがクリックされたときの処理をトリガー  
