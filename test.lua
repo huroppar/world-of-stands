@@ -1,197 +1,286 @@
---// Masashi Script : World of Stands Most Useful Script
---// Solara V3 Compatible | Author: Masashi
---// Feather Iconsなしバージョン（カスタムOrionLib）
-
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/masashihub/wos-most-useful-script/main/OrionLibNoIcons.lua"))()
-
---== Services ==--
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local HttpService = game:GetService("HttpService")
-local UIS = game:GetService("UserInputService")
-local player = Players.LocalPlayer
+local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
+local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
---== Settings Save ==--
-local saveFileName = "MasashiScriptSettings.json"
-local settings = {}
-
-local function saveSettings()
-    writefile(saveFileName, HttpService:JSONEncode(settings))
-end
+--== データ保存用 ==--
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local DataStoreKey = "WOS_SavePositions"
 
 local function loadSettings()
-    if isfile(saveFileName) then
-        settings = HttpService:JSONDecode(readfile(saveFileName))
-    end
+    local data = getgenv().WOS_Settings or {}
+    data.SavedPositions = data.SavedPositions or {}
+    data.SelectedPosition = data.SelectedPosition or nil
+    data.ShowTeleport = data.ShowTeleport ~= false
+    getgenv().WOS_Settings = data
+    return data
 end
 
-loadSettings()
+local function saveSettings()
+    getgenv().WOS_Settings = settings
+end
 
---== UI Window ==--
+local settings = loadSettings()
+
+--== ウィンドウ作成 ==--
 local Window = OrionLib:MakeWindow({
-    Name = "🌟 WOS Most Useful Script",
+    Name = "World of Stands Most Useful Script",
     HidePremium = false,
     SaveConfig = false,
-    ConfigFolder = "MasashiWOS",
-    IntroText = "By Masashi",
-    IntroIcon = "rbxassetid://4483345998"
+    ConfigFolder = "WOS_Config"
 })
 
-OrionLib:MakeNotification({
-    Name = "ようこそ！",
-    Content = "Masashi Scriptを読み込みました。",
-    Image = "rbxassetid://4483345998",
-    Time = 5
+--== 表示切替タブ ==--
+local viewTab = Window:MakeTab({
+    Name = "表示設定",
+    Icon = "rbxassetid://6031265989",
+    PremiumOnly = false
 })
 
---== タブ・セクション定義 ==--
-local MainTab = Window:MakeTab({ Name = "Main", Icon = "", PremiumOnly = false })
-local TeleportTab = Window:MakeTab({ Name = "Teleport", Icon = "", PremiumOnly = false })
-local UtilityTab = Window:MakeTab({ Name = "Utility", Icon = "", PremiumOnly = false })
-local SettingsTab = Window:MakeTab({ Name = "Settings", Icon = "", PremiumOnly = false })
+--== テレポート管理タブ（常に生成し、表示切り替えで管理） ==--
+local teleportTab = Window:MakeTab({
+    Name = "テレポート管理",
+    Icon = "rbxassetid://6035067836",
+    PremiumOnly = false
+})
+teleportTab.Visible = settings.ShowTeleport
 
---== 🔁 敵を選んでテレポート ==--
-local function bringEnemy(enemyName)
-    for _, enemy in pairs(workspace:GetDescendants()) do
-        if enemy.Name == enemyName and enemy:FindFirstChild("HumanoidRootPart") then
-            enemy.HumanoidRootPart.CFrame = humanoidRootPart.CFrame
-        end
+--== ドロップダウンを一括管理 ==--
+local teleportDropdown
+
+--== ドロップダウン更新関数 ==--
+local function refreshTeleportDropdown()
+    settings.SavedPositions = settings.SavedPositions or {}
+    local options = {}
+    for name, _ in pairs(settings.SavedPositions) do
+        table.insert(options, name)
+    end
+
+    if teleportDropdown then
+        teleportDropdown:Refresh(options, true)
+    else
+        teleportDropdown = teleportTab:AddDropdown({
+            Name = "保存済みの場所",
+            Options = options,
+            Callback = function(option)
+                settings.SelectedPosition = option
+                saveSettings()
+            end
+        })
     end
 end
 
-MainTab:AddTextbox({
-    Name = "敵の名前を入力してテレポート",
-    Default = "",
-    TextDisappear = false,
-    Callback = function(enemy)
-        bringEnemy(enemy)
-    end
-})
-
---== ❤️ HPを1に ==--
-MainTab:AddButton({
-    Name = "HPを1にする（コンボ用）",
-    Callback = function()
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then humanoid.Health = 1 end
-    end
-})
-
---== 👻 透明化 ==--
-local function invisible()
-    for _, part in pairs(character:GetDescendants()) do
-        if part:IsA("BasePart") or part:IsA("Decal") then
-            part.Transparency = 1
-        end
-    end
-end
-
-MainTab:AddButton({
-    Name = "透明化（敵に見えない）",
-    Callback = invisible
-})
-
---== ⚡ スピード調整 ==--
-UtilityTab:AddSlider({
-    Name = "WalkSpeed調整",
-    Min = 16,
-    Max = 45,
-    Default = 16,
-    Increment = 1,
-    ValueName = "Speed",
+--== 表示トグルの処理 ==--
+viewTab:AddToggle({
+    Name = "テレポート機能表示",
+    Default = settings.ShowTeleport,
     Callback = function(value)
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then humanoid.WalkSpeed = value end
-        settings["Speed"] = value
+        settings.ShowTeleport = value
+        teleportTab.Visible = value
         saveSettings()
     end
 })
 
---== 💨 無限ジャンプ ==--
-local infiniteJumpEnabled = false
-UIS.JumpRequest:Connect(function()
-    if infiniteJumpEnabled then
-        humanoidRootPart.Velocity = Vector3.new(0, 50, 0)
-    end
-end)
-
-UtilityTab:AddToggle({
-    Name = "無限ジャンプ",
-    Default = false,
-    Callback = function(state)
-        infiniteJumpEnabled = state
-        settings["InfiniteJump"] = state
-        saveSettings()
-    end
-})
-
---== ✨ 光の柱表示 ==--
-local function createBeam(pos, color)
-    local beam = Instance.new("Part", workspace)
-    beam.Anchored = true
-    beam.CanCollide = false
-    beam.Size = Vector3.new(0.2, 50, 0.2)
-    beam.Position = pos + Vector3.new(0, 25, 0)
-    beam.Color = color
-    beam.Material = Enum.Material.Neon
-    beam.Name = "BeamMarker"
-    return beam
-end
-
-MainTab:AddButton({
-    Name = "現在地に光の柱設置",
-    Callback = function()
-        createBeam(humanoidRootPart.Position, Color3.new(1, 1, 0))
-    end
-})
-
---== 📍 場所保存とワープ ==--
-local savedLocations = settings["SavedLocations"] or {}
-
-TeleportTab:AddTextbox({
-    Name = "保存名",
-    Default = "Point1",
+--== 位置保存機能 ==--
+teleportTab:AddTextbox({
+    Name = "現在位置の名前",
+    Default = "MySpot",
     TextDisappear = false,
     Callback = function(name)
-        savedLocations[name] = humanoidRootPart.Position
-        settings["SavedLocations"] = savedLocations
-        saveSettings()
-    end
-})
-
-TeleportTab:AddDropdown({
-    Name = "保存済みの場所にワープ",
-    Options = table.keys(savedLocations),
-    Callback = function(name)
-        if savedLocations[name] then
-            humanoidRootPart.CFrame = CFrame.new(savedLocations[name])
-        end
-    end
-})
-
---== 🧬 無敵化（ベータ） ==--
-MainTab:AddToggle({
-    Name = "無敵化（Beta）",
-    Default = false,
-    Callback = function(enabled)
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-        if humanoid then
-            humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, not enabled)
-        end
-    end
-})
-
---== 📁 設定保存チェック ==--
-SettingsTab:AddButton({
-    Name = "設定を手動で保存",
-    Callback = function()
+        settings.SavedPositions[name] = humanoidRootPart.Position
         saveSettings()
         OrionLib:MakeNotification({
             Name = "保存完了",
-            Content = "設定が保存されました。",
-            Time = 4
+            Content = name .. " の位置を保存しました。",
+            Time = 3
         })
+        refreshTeleportDropdown()
     end
 })
+
+--== テレポート実行ボタン ==--
+teleportTab:AddButton({
+    Name = "保存先にテレポート",
+    Callback = function()
+        local pos = settings.SavedPositions[settings.SelectedPosition]
+        if pos then
+            humanoidRootPart.CFrame = CFrame.new(pos)
+            OrionLib:MakeNotification({
+                Name = "テレポート成功",
+                Content = settings.SelectedPosition .. " に移動しました。",
+                Time = 3
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "保存された場所が選択されていません。",
+                Time = 3
+            })
+        end
+    end
+})
+
+--== 名前変更ボタン ==--
+teleportTab:AddTextbox({
+    Name = "新しい名前（現在選択中の場所）",
+    Default = "",
+    TextDisappear = true,
+    Callback = function(newName)
+        local oldName = settings.SelectedPosition
+        if oldName and settings.SavedPositions[oldName] then
+            settings.SavedPositions[newName] = settings.SavedPositions[oldName]
+            settings.SavedPositions[oldName] = nil
+            settings.SelectedPosition = newName
+            saveSettings()
+            OrionLib:MakeNotification({
+                Name = "名前変更",
+                Content = oldName .. " を " .. newName .. " に変更しました。",
+                Time = 3
+            })
+            refreshTeleportDropdown()
+        end
+    end
+})
+
+--== 削除ボタン ==--
+teleportTab:AddButton({
+    Name = "選択中の場所を削除",
+    Callback = function()
+        local selected = settings.SelectedPosition
+        if selected and settings.SavedPositions[selected] then
+            settings.SavedPositions[selected] = nil
+            settings.SelectedPosition = nil
+            saveSettings()
+            OrionLib:MakeNotification({
+                Name = "削除完了",
+                Content = selected .. " を削除しました。",
+                Time = 3
+            })
+            refreshTeleportDropdown()
+        end
+    end
+})
+
+--== 初期ドロップダウン描画 ==--
+refreshTeleportDropdown()
+
+--== GUI起動通知 ==--
+OrionLib:MakeNotification({
+    Name = "起動完了",
+    Content = "保存テレポートGUIを読み込みました - Masashi",
+    Time = 4
+})
+
+local toggleKey = Enum.KeyCode.P -- 初期値（あとで変更可能）
+
+local SettingsTab = Window:MakeTab({
+	Name = "設定",
+	Icon = "rbxassetid://6034509993", -- 歯車アイコンなどお好みで
+	PremiumOnly = false
+})
+
+SettingsTab:AddTextbox({
+	Name = "GUI表示切替キー（例: P や RightShift）",
+	Default = "P",
+	TextDisappear = false,
+	Callback = function(value)
+		local success, result = pcall(function()
+			local newKey = Enum.KeyCode[value]
+			if newKey then
+				toggleKey = newKey
+				OrionLib:MakeNotification({
+					Name = "キー設定完了",
+					Content = "GUI表示切替キーを [" .. value .. "] に設定しました。",
+					Time = 3
+				})
+			else
+				OrionLib:MakeNotification({
+					Name = "エラー",
+					Content = "無効なキー名です。",
+					Time = 3
+				})
+			end
+		end)
+	end
+})
+
+OrionLib:Init()
+-- GUI再表示用のボタンとキー設定
+local UserInputService = game:GetService("UserInputService")
+local GuiService = game:GetService("GuiService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- 小さな再表示ボタンを作成
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "ReopenButtonGui"
+ScreenGui.ResetOnSpawn = false
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+ScreenGui.Parent = game:GetService("CoreGui")
+
+local Button = Instance.new("TextButton")
+Button.Size = UDim2.new(0, 40, 0, 40)
+Button.Position = UDim2.new(1, -60, 1, -60) -- 右下
+Button.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+Button.Text = "M" -- ボタンの見た目
+Button.TextColor3 = Color3.new(1, 1, 1)
+Button.TextSize = 20
+Button.BorderSizePixel = 0
+Button.BackgroundTransparency = 0.3
+Button.Parent = ScreenGui
+
+-- ドラッグ対応（スマホ＋PC）
+local dragging = false
+local dragStart, startPos
+
+local function update(input)
+	if dragging and input then
+		local delta = input.Position - dragStart
+		Button.Position = UDim2.new(
+			startPos.X.Scale,
+			startPos.X.Offset + delta.X,
+			startPos.Y.Scale,
+			startPos.Y.Offset + delta.Y
+		)
+	end
+end
+
+Button.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = Button.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+Button.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+		input.Changed:Connect(function()
+			update(input)
+		end)
+	end
+end)
+
+-- ボタン押したらGUIの表示/非表示トグル
+Button.MouseButton1Click:Connect(function()
+	if Window then
+		Window.Enabled = not Window.Enabled
+	end
+end)
+
+-- 任意キーでGUIをトグル（ここでキー指定）
+local toggleKey = Enum.KeyCode.P  -- ← 好きなキーに変更OK！
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if not processed and input.KeyCode == toggleKey then
+		if Window then
+			Window.Enabled = not Window.Enabled
+		end
+	end
+end)
