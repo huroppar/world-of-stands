@@ -172,8 +172,6 @@ viewTab:AddToggle({
 
 --== テレポート管理 ==--
 if settings.ShowTeleport then
-    settings.SavedPositions = settings.SavedPositions or {} -- ← ここが大事！
-
     local teleportTab = Window:MakeTab({
         Name = "テレポート管理",
         Icon = "rbxassetid://6035067836",
@@ -185,24 +183,36 @@ if settings.ShowTeleport then
         Default = "MySpot",
         TextDisappear = false,
         Callback = function(name)
-            if name and name ~= "" then
-                settings.SavedPositions[name] = humanoidRootPart.Position
-                saveSettings()
-                OrionLib:MakeNotification({
-                    Name = "保存完了",
-                    Content = name .. " の位置を保存しました。",
-                    Time = 3
-                })
-                refreshTeleportDropdown()
-            else
-                OrionLib:MakeNotification({
-                    Name = "エラー",
-                    Content = "名前が空です。",
-                    Time = 3
-                })
-            end
+            settings.SavedPositions[name] = humanoidRootPart.Position
+            saveSettings()
+            OrionLib:MakeNotification({Name = "保存完了", Content = name .. " の位置を保存しました。", Time = 3})
+            refreshTeleportDropdown()
         end
     })
+
+    -- ドロップダウンもここに
+    local teleportDropdown
+    function refreshTeleportDropdown()
+        settings.SavedPositions = settings.SavedPositions or {}
+        local options = {}
+        for name, _ in pairs(settings.SavedPositions) do
+            table.insert(options, name)
+        end
+
+        if teleportDropdown then
+            teleportDropdown:Refresh(options, true)
+        else
+            teleportDropdown = teleportTab:AddDropdown({
+                Name = "保存済みの場所",
+                Options = options,
+                Callback = function(option)
+                    settings.SelectedPosition = option
+                    saveSettings()
+                end
+            })
+        end
+    end
+    refreshTeleportDropdown()
 end
 
 --== 空中テレポート（上昇）＋戻る機能 ==--
