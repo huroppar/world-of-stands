@@ -86,8 +86,14 @@ local function getTableKeys(tbl)
 end
 
 -- ドロップダウンを更新する関数
-function refreshTeleportDropdown()
-    local options = getTableKeys(settings.SavedPositions)
+unction refreshTeleportDropdown()
+    -- ← ここで nil チェックして初期化
+    settings.SavedPositions = settings.SavedPositions or {}
+
+    local options = {}
+    for name, _ in pairs(settings.SavedPositions) do
+        table.insert(options, name)
+    end
 
     if teleportDropdown then
         teleportDropdown:Refresh(options, true)
@@ -102,7 +108,6 @@ function refreshTeleportDropdown()
         })
     end
 end
-
 -- GUI 構築後に呼び出す
 refreshTeleportDropdown()
 
