@@ -585,16 +585,18 @@ button.InputChanged:Connect(function(input)
         )
     end
 end)
-
-button.MouseButton1Click:Connect(function()
-    if OrionLib and OrionLib.Gui then
-        OrionLib.Gui.Enabled = true
-    end
-end)
+-- F4キーでGUI表示/非表示切り替え
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
     if input.KeyCode == Enum.KeyCode.F4 and not gameProcessed then
         if OrionLib and OrionLib.Gui then
             OrionLib.Gui.Enabled = not OrionLib.Gui.Enabled
         end
+    end
+end)
+
+-- ボタン押下で GUI を再表示
+button.MouseButton1Click:Connect(function()
+    if OrionLib and OrionLib.Gui then
+        OrionLib.Gui.Enabled = true
     end
 end)
