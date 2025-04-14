@@ -498,13 +498,13 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 
---== GUI切り替え ==--
 UIS.InputBegan:Connect(function(input, processed)
     if not processed and input.KeyCode == Enum.KeyCode.F4 then
-        OrionLib:ToggleUI()
+        if OrionLib and OrionLib.Gui then
+            OrionLib.Gui.Enabled = not OrionLib.Gui.Enabled
+        end
     end
 end)
-
 --== 通知 ==--
 OrionLib:MakeNotification({
     Name = "設定復元完了",
