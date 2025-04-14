@@ -1,18 +1,27 @@
 --// Masashi Script : World of Stands Most Useful Script
 --// Solara V3 Compatible | Author: Masashi
 
---== OrionLib (Solara対応) ==--
--- OrionLib 読み込み（修正版）
+--== OrionLib (Feather Icons 対策済み) 読み込み ==--
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/lozuwa/RobloxLibraryStorage/main/OrionLib.lua"))()
 
+--== GUI 初期化 ==--
+local Window = OrionLib:MakeWindow({
+    Name = "🌟 WOS Most Useful Script",
+    HidePremium = false,
+    SaveConfig = false,
+    ConfigFolder = "MasashiWOS",
+    IntroText = "By Masashi",
+    IntroIcon = "rbxassetid://4483345998"
+})
 
---== Services ==--
+--== サービス取得 ==--
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local HttpService = game:GetService("HttpService")
 local UIS = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
 local player = Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
@@ -35,7 +44,8 @@ local settings = {
     ShowTeleport = true,
     ShowRecovery = true
 }
--- ✅ saveSettings と loadSettings をここに定義！
+
+--== 設定の保存と読み込み ==--
 local function saveSettings()
     writefile(saveFileName, HttpService:JSONEncode(settings))
 end
@@ -45,54 +55,8 @@ local function loadSettings()
         local success, decoded = pcall(function()
             return HttpService:JSONDecode(readfile(saveFileName))
         end)
-        if success and type(decoded) == "table" then
-            settings = decoded
-        end
-    end
-end
+        if success and type
 
--- ✅ 一番最初に読み込み！
-loadSettings()
-
--- ✅ ロード後に初期化（念のため）
-if not settings.SavedPositions then
-    settings.SavedPositions = {}
-end
-
-
-local function saveSettings()
-    writefile(saveFileName, HttpService:JSONEncode(settings))
-end
-
-local function loadSettings()
-    if isfile(saveFileName) then
-        local success, decoded = pcall(function()
-            return HttpService:JSONDecode(readfile(saveFileName))
-        end)
-        if success and type(decoded) == "table" then
-            settings = decoded
-        end
-    end
-end
-
-loadSettings()
-
---== GUI 初期化 ==--
-local Window = OrionLib:MakeWindow({
-    Name = "🌟 WOS Most Useful Script",
-    HidePremium = false,
-    SaveConfig = false,
-    ConfigFolder = "MasashiWOS",
-    IntroText = "By Masashi",
-    IntroIcon = "rbxassetid://4483345998"
-})
-
-OrionLib:MakeNotification({
-    Name = "ようこそ！",
-    Content = "Masashi Scriptを読み込みました。",
-    Image = "rbxassetid://4483345998",
-    Time = 5
-})
 
 --== 表示設定タブ ==--
 local viewTab = Window:MakeTab({
