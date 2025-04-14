@@ -452,20 +452,6 @@ UIS.JumpRequest:Connect(function()
     end
 end)
 
-utilityTab:AddTextbox({
-    Name = "プレイヤー名を入力（横にTP）",
-    Default = "",
-    TextDisappear = true,
-    Callback = function(targetName)
-        local target = Players:FindFirstChild(targetName)
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            settings.LastLocation = humanoidRootPart.Position
-            humanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(2, 0, 0)
-        else
-            OrionLib:MakeNotification({Name = "エラー", Content = "プレイヤーが見つかりません。", Time = 3})
-        end
-    end
-})
 
 -- テレポートキー設定
 utilityTab:AddLabel("テレポートキー割り当て")
@@ -539,3 +525,29 @@ OrionLib:MakeNotification({
 🟡 自動ドロップ取得のON/OFF
 🟡 攻撃BOT自動討伐機能
 ]]
+
+-- GUI全体を囲む Frame を変数にしておく
+local mainGui = ScreenGui or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("WOS")  -- ここはGUI名に変更してね
+
+-- 表示・非表示切り替え
+function toggleMainGui()
+    if mainGui then
+        mainGui.Enabled = not mainGui.Enabled
+    end
+end
+
+-- 再表示用の小さなボタンを右上に作成
+local reopenButton = Instance.new("TextButton")
+reopenButton.Name = "ReopenGUI"
+reopenButton.Text = "📂"
+reopenButton.Size = UDim2.new(0, 40, 0, 40)
+reopenButton.Position = UDim2.new(1, -50, 0, 10) -- 右上に配置
+reopenButton.AnchorPoint = Vector2.new(1, 0)
+reopenButton.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+reopenButton.TextColor3 = Color3.new(1, 1, 1)
+reopenButton.BorderSizePixel = 0
+reopenButton.BackgroundTransparency = 0.2
+reopenButton.Parent = game:GetService("CoreGui")
+
+-- ボタン押下時にメインGUIの表示切り替え
+reopenButton.MouseButton1Click:Connect(toggleMainGui)
