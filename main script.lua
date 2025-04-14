@@ -33,6 +33,16 @@ local settings = {
     ShowTeleport = true,
     ShowRecovery = true
 }
+-- 初期化
+if not settings.SavedPositions then
+    settings.SavedPositions = {}
+end
+
+-- テスト用データ
+settings.SavedPositions["Test Spot"] = Vector3.new(0, 10, 0)
+
+-- GUI生成
+refreshTeleportDropdown()
 
 local function saveSettings()
     writefile(saveFileName, HttpService:JSONEncode(settings))
