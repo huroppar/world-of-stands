@@ -59,19 +59,6 @@ speedBox = MainTab:AddTextbox({
     end
 })
 
-MainTab:AddToggle({
-    Name = "Speedオン/オフ",
-    Default = false,
-    Callback = function(state)
-        speedEnabled = state
-        if state and humanoid then
-            humanoid.WalkSpeed = speedValue
-        else
-            humanoid.WalkSpeed = 16 -- オフ時はデフォルトに戻す
-        end
-    end
-})
-
 --// スピードオン/オフトグル
 MainTab:AddToggle({
     Name = "Speed オン/オフ",
@@ -148,11 +135,6 @@ UIS.InputBegan:Connect(function(input, gpe)
     if input.KeyCode == teleportKey then
         toggleTeleport()
     end
-end)
-
---// ボタンクリック処理
-teleportButton.MouseButton1Click:Connect(function()
-    toggleTeleport()
 end)
 
 --// GUI切り替え（NeonのToggleに組み込み）
