@@ -74,3 +74,13 @@ MainTab:AddTextbox({
         end
     end
 })
+
+-- スピード維持ループ（非表示でもちゃんと効く！）
+task.spawn(function()
+    while true do
+        task.wait(0.5) -- 0.5秒おきにチェック（過負荷防止）
+        if speedEnabled and Humanoid.WalkSpeed ~= speedValue then
+            Humanoid.WalkSpeed = speedValue
+        end
+    end
+end)
