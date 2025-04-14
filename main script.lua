@@ -167,6 +167,50 @@ if settings.ShowTeleport then
     })
 end
 
+--== 空中テレポート（上昇）＋戻る機能 ==--
+teleportTab:AddButton({
+    Name = "空中にテレポート",
+    Callback = function()
+        if humanoidRootPart then
+            -- 現在の位置を保存
+            settings.LastLocation = humanoidRootPart.Position
+            -- 上空へ移動
+            humanoidRootPart.CFrame = humanoidRootPart.CFrame + Vector3.new(0, 50, 0)
+            OrionLib:MakeNotification({
+                Name = "空中テレポート",
+                Content = "空中に移動しました。",
+                Time = 3
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "HumanoidRootPartが見つかりません。",
+                Time = 3
+            })
+        end
+    end
+})
+
+teleportTab:AddButton({
+    Name = "元の場所に戻る",
+    Callback = function()
+        if settings.LastLocation and humanoidRootPart then
+            humanoidRootPart.CFrame = CFrame.new(settings.LastLocation)
+            OrionLib:MakeNotification({
+                Name = "テレポート",
+                Content = "元の場所に戻りました。",
+                Time = 3
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "保存された場所が見つかりません。",
+                Time = 3
+            })
+        end
+    end
+})
+
 local teleportDropdown
 
 function refreshTeleportDropdown()
