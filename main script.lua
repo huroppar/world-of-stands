@@ -2,7 +2,7 @@
 --// Solara V3 Compatible | Author: Masashi
 
 --== OrionLib (Solara対応) ==--
-local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/MasashiCode/WOSScriptUI/main/OrionLib_NoFeather.lua"))()
 
 --== Services ==--
 local Players = game:GetService("Players")
@@ -57,7 +57,6 @@ if not settings.SavedPositions then
     settings.SavedPositions = {}
 end
 
-refreshTeleportDropdown()
 
 local function saveSettings()
     writefile(saveFileName, HttpService:JSONEncode(settings))
@@ -125,6 +124,8 @@ function refreshTeleportDropdown()
         })
     end
 end
+
+refreshTeleportDropdown()
 
 -- 最後に初期化として呼び出す（GUI構築後）
 refreshTeleportDropdown()
