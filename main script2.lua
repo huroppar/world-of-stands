@@ -108,7 +108,7 @@ local originalCFrame = nil
 
 -- 空中テレポート関数
 local function toggleAirTeleport()
-　　if not airTeleportEnabled then return end
+    if not airTeleportEnabled then return end
     
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not root then return end
