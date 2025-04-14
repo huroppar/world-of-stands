@@ -16,9 +16,11 @@ local Window = OrionLib:MakeWindow({
     SaveConfig = false,
     ConfigFolder = "MasashiWOS",
     IntroText = "By Masashi",
-    IntroIcon = "rbxassetid://4483345998"
+    IntroIcon = "rbxassetid://4483345998",
+    CloseCallback = function()
+        Window.Enabled = false -- 完全削除じゃなく非表示にするだけ
+    end
 })
-
 _G.__WOS_Window = Window -- ⭐ 再表示に使う
 --== サービス取得 ==--
 local Players = game:GetService("Players")
