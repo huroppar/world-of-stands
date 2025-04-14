@@ -355,6 +355,8 @@ local keyTab = Window:MakeTab({
     PremiumOnly = false
 })
 
+local isAuthorized = false
+
 keyTab:AddTextbox({
     Name = "キーを入力",
     Default = "",
@@ -364,7 +366,7 @@ keyTab:AddTextbox({
 
         local webKey = ""
         pcall(function()
-            webKey = tostring(game:HttpGet("https://pastebin.com/raw/abcd1234")) -- ← 正しいリンクに
+            webKey = tostring(game:HttpGet("https://pastebin.com/raw/abcd1234")) -- 正しいリンクに
         end)
 
         local acceptedKeys = {
@@ -374,13 +376,21 @@ keyTab:AddTextbox({
         }
 
         if acceptedKeys[inputKey] then
-            OrionLib:MakeNotification({Name = "認証成功", Content = "スクリプトが有効化されました！", Time = 5})
+            OrionLib:MakeNotification({
+                Name = "認証成功",
+                Content = "スクリプトが有効化されました！",
+                Time = 5
+            })
+            isAuthorized = true
         else
-            OrionLib:MakeNotification({Name = "認証失敗", Content = "キーが間違っています。", Time = 5})
+            OrionLib:MakeNotification({
+                Name = "認証失敗",
+                Content = "キーが間違っています。",
+                Time = 5
+            })
         end
     end
 })
-
 --== 通知 ==--
 OrionLib:MakeNotification({
     Name = "設定復元完了",
