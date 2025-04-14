@@ -28,6 +28,44 @@ local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 local humanoid = character:WaitForChild("Humanoid")
 
+--== 浮遊用の変数と関数 ==--
+local floating = false
+local floatPosition = nil
+
+local function startFloating()
+    settings.LastLocation = humanoidRootPart.Position
+    floatPosition = humanoidRootPart.Position + Vector3.new(0, 100, 0)
+    humanoidRootPart.CFrame = CFrame.new(floatPosition)
+
+    floating = true
+    OrionLib:MakeNotification({
+        Name = "浮遊モード",
+        Content = "空中に浮かび続けます。",
+        Time = 3
+    })
+
+    task.spawn(function()
+        while floating do
+            wait(2)
+            if character and humanoidRootPart then
+                humanoidRootPart.CFrame = CFrame.new(floatPosition)
+            end
+        end
+    end)
+end
+
+local function stopFloating()
+    floating = false
+    if settings.LastLocation then
+        humanoidRootPart.CFrame = CFrame.new(settings.LastLocation)
+        OrionLib:MakeNotification({
+            Name = "復帰完了",
+            Content = "元の場所に戻りました。",
+            Time = 3
+        })
+    end
+end
+
 --== データ保存用 ==--
 local saveFileName = "MasashiScriptSettings.json"
 local settings = {
@@ -332,6 +370,66 @@ utilityTab:AddSlider({
         humanoid.WalkSpeed = value
         saveSettings()
     end
+})
+
+local selectedPlayer = nil
+local playerDropdown -- 後で更新用に変数化
+
+-- ドロップダウン：現在のプレイヤー一覧
+playerDropdown = utilityTab:AddDropdown({
+    Name = "プレイヤーを選択",
+    Options = {}, -- 初期は空、後で更新
+    Callback = function(value)
+        selectedPlayer = value
+    end
+})
+
+-- プレイヤーの横にテレポートするボタン
+utilityTab:AddButton({
+    Name = "選択したプレイヤーの横にTP",
+    Callback = function()
+        local target = Players:FindFirstChild(selectedPlayer)
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            settings.LastLocation = humanoidRootPart.Position
+            humanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(2, 0, 0)
+        else
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "プレイヤーが見つかりません。",
+                Time = 3
+            })
+        end
+    end
+})
+
+-- ドロップダウンのオプションを更新する関数
+local function updatePlayerDropdown()
+    local options = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= Players.LocalPlayer then
+            table.insert(options, player.Name)
+        end
+    end
+    if playerDropdown then
+        playerDropdown:Refresh(options, true)
+    end
+end
+
+-- 初回実行
+updatePlayerDropdown()
+
+-- プレイヤー参加/退出時に自動更新
+Players.PlayerAdded:Connect(updatePlayerDropdown)
+Players.PlayerRemoving:Connect(updatePlayerDropdown)
+
+utilityTab:AddButton({
+    Name = "空中に浮いて停止（ループ）",
+    Callback = startFloating
+})
+
+utilityTab:AddButton({
+    Name = "元の場所に戻る（浮遊終了）",
+    Callback = stopFloating
 })
 
 utilityTab:AddToggle({
