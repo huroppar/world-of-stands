@@ -538,27 +538,6 @@ OrionLib:MakeNotification({
 🟡 攻撃BOT自動討伐機能
 ]]
 
---== OrionLib 読み込み ==--
-local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-local UserInputService = game:GetService("UserInputService")
-
---== GUI ウィンドウ定義 ==--
-local Window = OrionLib:MakeWindow({
-    Name = "🌟 WOS Most Useful Script",
-    HidePremium = false,
-    SaveConfig = false,
-    ConfigFolder = "MasashiWOS",
-    IntroText = "By Masashi",
-    IntroIcon = "rbxassetid://4483345998"
-})
-
---== F4キーでGUI表示/非表示切り替え ==--
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-    if input.KeyCode == Enum.KeyCode.F4 and not gameProcessed then
-        Window.Enabled = not Window.Enabled
-    end
-end)
-
 --== GUI再表示ボタン（ドラッグ移動付き）==--
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "MasashiGUIButton"
@@ -567,7 +546,7 @@ ScreenGui.Parent = game:WaitForChild("CoreGui")
 
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 160, 0, 40)
-button.Position = UDim2.new(0.5, -80, 1, -60) -- 中央下
+button.Position = UDim2.new(0.5, -80, 1, -60)
 button.AnchorPoint = Vector2.new(0.5, 1)
 button.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
 button.TextColor3 = Color3.fromRGB(255, 255, 255)
@@ -611,5 +590,11 @@ end)
 button.MouseButton1Click:Connect(function()
     if Window then
         Window.Enabled = true
+    end
+end)
+--== F4キーでGUI表示/非表示切り替え ==--
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+    if input.KeyCode == Enum.KeyCode.F4 and not gameProcessed then
+        Window.Enabled = not Window.Enabled
     end
 end)
