@@ -75,12 +75,21 @@ MainTab:AddTextbox({
     end
 })
 
--- スピード維持ループ（非表示でもちゃんと効く！）
+-- スピード維持ループ（Humanoidの切り替えにも対応）
 task.spawn(function()
     while true do
-        task.wait(0.5) -- 0.5秒おきにチェック（過負荷防止）
-        if speedEnabled and Humanoid.WalkSpeed ~= speedValue then
-            Humanoid.WalkSpeed = speedValue
+        task.wait(0.2) -- 少し頻度を上げてすばやく対応
+        if speedEnabled then
+            local currentChar = player.Character
+            local currentHumanoid = currentChar and currentChar:FindFirstChildOfClass("Humanoid")
+            if currentHumanoid and currentHumanoid.WalkSpeed ~= speedValue then
+                currentHumanoid.WalkSpeed = speedValue
+            end
         end
     end
+end)
+
+-- キャラが死んだあと復活しても対応したいときは↓もつけとくといいよ！
+player.CharacterAdded:Connect(function(newChar)
+    humanoid = newChar:WaitForChild("Humanoid")
 end)
