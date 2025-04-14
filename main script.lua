@@ -2,7 +2,9 @@
 --// Solara V3 Compatible | Author: Masashi
 
 --== OrionLib (Solara対応) ==--
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/MasashiCode/WOSScriptUI/main/OrionLib_NoFeather.lua"))()
+-- OrionLib 読み込み（修正版）
+local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/lozuwa/RobloxLibraryStorage/main/OrionLib.lua"))()
+
 
 --== Services ==--
 local Players = game:GetService("Players")
