@@ -33,15 +33,30 @@ local settings = {
     ShowTeleport = true,
     ShowRecovery = true
 }
--- 初期化
+-- ✅ saveSettings と loadSettings をここに定義！
+local function saveSettings()
+    writefile(saveFileName, HttpService:JSONEncode(settings))
+end
+
+local function loadSettings()
+    if isfile(saveFileName) then
+        local success, decoded = pcall(function()
+            return HttpService:JSONDecode(readfile(saveFileName))
+        end)
+        if success and type(decoded) == "table" then
+            settings = decoded
+        end
+    end
+end
+
+-- ✅ 一番最初に読み込み！
+loadSettings()
+
+-- ✅ ロード後に初期化（念のため）
 if not settings.SavedPositions then
     settings.SavedPositions = {}
 end
 
--- テスト用データ
-settings.SavedPositions["Test Spot"] = Vector3.new(0, 10, 0)
-
--- GUI生成
 refreshTeleportDropdown()
 
 local function saveSettings()
