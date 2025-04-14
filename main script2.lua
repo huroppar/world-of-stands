@@ -32,22 +32,24 @@ for i, tabName in ipairs(tabs) do
     tabButton.Position = UDim2.new((i - 1) / #tabs, 0, 0, 0)  
     tabButton.Text = tabName  
     tabButton.BackgroundColor3 = Color3.new(0.4, 0.4, 0.4)  
-    tabButton.Parent = tabFrame  
-    
+    tabButton.Parent = tabFrame   
+
     tabButton.MouseButton1Click:Connect(function()  
-    -- タブを表示する処理  
-    for j, button in ipairs(tabFrame:GetChildren()) do  
-        if button:IsA("TextButton") then  
-            button.BackgroundColor3 = (button.Text == tabName) and Color3.new(0.6, 0.6, 0.6) or Color3.new(0.4, 0.4, 0.4)  
+        -- タブを表示する処理  
+        for j, button in ipairs(tabFrame:GetChildren()) do  
+            if button:IsA("TextButton") then  
+                button.BackgroundColor3 = (button.Text == tabName) and Color3.new(0.6, 0.6, 0.6) or Color3.new(0.4, 0.4, 0.4)  
+            end  
         end  
-    end  
-    
-    -- ContentFrame表示/非表示の処理を追加  
-    for i, content in ipairs(mainFrame:GetChildren()) do  
-        if content:IsA("Frame") then  
-            content.Visible = false  -- すべて非表示にする  
+
+        -- コンテンツフレームの表示/非表示制御  
+        for _, content in ipairs(mainFrame:GetChildren()) do  
+            if content:IsA("Frame") then  
+                content.Visible = (content.Name == tabName)  -- 該当タブのフレームのみ表示  
+            end  
         end  
-    end  
+    end)  
+end
     
     local contentFrame = mainFrame:FindFirstChild(tabName) or Instance.new("Frame", mainFrame)  
     contentFrame.Name = tabName  
