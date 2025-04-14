@@ -35,26 +35,28 @@ for i, tabName in ipairs(tabs) do
     tabButton.Parent = tabFrame  
     
     tabButton.MouseButton1Click:Connect(function()  
-        -- タブを表示する処理  
-        for j, button in ipairs(tabFrame:GetChildren()) do  
-            if button:IsA("TextButton") then  
-                button.BackgroundColor3 = (button.Text == tabName) and Color3.new(0.6, 0.6, 0.6) or Color3.new(0.4, 0.4, 0.4)  
-            end  
+    -- タブを表示する処理  
+    for j, button in ipairs(tabFrame:GetChildren()) do  
+        if button:IsA("TextButton") then  
+            button.BackgroundColor3 = (button.Text == tabName) and Color3.new(0.6, 0.6, 0.6) or Color3.new(0.4, 0.4, 0.4)  
         end  
-        
-        for _, child in ipairs(mainFrame:GetChildren()) do  
-            if child:IsA("Frame") and child.Name ~= "TabContent" then  
-                child.Visible = false  
-            end  
+    end  
+    
+    -- ContentFrame表示/非表示の処理を追加  
+    for i, content in ipairs(mainFrame:GetChildren()) do  
+        if content:IsA("Frame") then  
+            content.Visible = false  -- すべて非表示にする  
         end  
-        
-        local contentFrame = mainFrame:FindFirstChild(tabName) or Instance.new("Frame", mainFrame)  
-        contentFrame.Name = tabName  
-        contentFrame.Size = UDim2.new(1, 0, 0.9, 0)  
-        contentFrame.Position = UDim2.new(0, 0, 0.1, 0)  
-        contentFrame.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  
-        contentFrame.Visible = true  
-        
+    end  
+    
+    local contentFrame = mainFrame:FindFirstChild(tabName) or Instance.new("Frame", mainFrame)  
+    contentFrame.Name = tabName  
+    contentFrame.Size = UDim2.new(1, 0, 0.9, 0)  
+    contentFrame.Position = UDim2.new(0, 0, 0.1, 0)  
+    contentFrame.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)  
+    contentFrame.Visible = true  -- 現在のタブのコンテンツを表示  
+end)
+    
         -- 各タブの内容を設定  
         if tabName == "Settings" then  
             -- スピード調整  
