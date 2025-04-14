@@ -75,30 +75,29 @@ MainTab:AddTextbox({
     end
 })
 
--- スピード維持ループ（全自動でHumanoidの再取得も含む）
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-
-        if speedEnabled then
-            local currentChar = player.Character
-            if currentChar then
-                local currentHumanoid = currentChar:FindFirstChildWhichIsA("Humanoid")
-                if currentHumanoid then
-                    if currentHumanoid.WalkSpeed ~= speedValue then
-                        currentHumanoid.WalkSpeed = speedValue
-                    end
-                end
+-- WalkSpeed強制固定（変更されたら即戻す！）
+local function enforceSpeed(humanoid)
+    if humanoid then
+        -- 値が変わったときに呼ばれるイベント
+        humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
+            if speedEnabled and humanoid.WalkSpeed ~= speedValue then
+                humanoid.WalkSpeed = speedValue
             end
-        end
+        end)
     end
-end)
+end
 
--- キャラがリセットされたときも対応
+-- 現在のHumanoidに対して適用
+enforceSpeed(humanoid)
+
+-- キャラが変わったときにも適用
 player.CharacterAdded:Connect(function(newChar)
     task.wait(0.5)
     humanoid = newChar:WaitForChild("Humanoid")
     if speedEnabled then
         humanoid.WalkSpeed = speedValue
+    end
+    enforceSpeed(humanoid)
+end)
     end
 end)
