@@ -23,15 +23,6 @@ local MainTab = Window:MakeTab({
 local speedValue = 30
 local speedEnabled = false
 
--- 監視用ループでWalkSpeedを常時上書き
-task.spawn(function()
-    while true do
-        task.wait(0.1)
-        if speedEnabled and humanoid and humanoid.WalkSpeed ~= speedValue then
-            humanoid.WalkSpeed = speedValue
-        end
-    end
-end)
 -- オンオフ切替
 MainTab:AddToggle({
     Name = "Speed On/Off",
@@ -83,3 +74,13 @@ MainTab:AddTextbox({
         end
     end
 })
+
+-- Speed維持用のループ（定期的に再設定）
+task.spawn(function()
+    while true do
+        task.wait(0.5)
+        if speedEnabled and humanoid and humanoid.WalkSpeed ~= speedValue then
+            humanoid.WalkSpeed = speedValue
+        end
+    end
+end)
