@@ -12,24 +12,20 @@ local Window = OrionLib:MakeWindow({
 --// メインタブ
 local MainTab = Window:MakeTab({
     Name = "Main",
-    Icon = "rbxassetid://4483345998", -- お好みで変更OK
+    Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
 --// 基本変数
-local UIS = game:GetService("UserInputService")
 local player = game.Players.LocalPlayer
-local humanoid = nil
+local UIS = game:GetService("UserInputService")
+local char = player.Character or player.CharacterAdded:Wait()
+local humanoid = char:WaitForChild("Humanoid")
+local hrp = char:WaitForChild("HumanoidRootPart")
+
+--// スピード設定
 local speedValue = 16
 local speedEnabled = false
-
---// Humanoid取得関数
-local function getHumanoid()
-    local char = player.Character or player.CharacterAdded:Wait()
-    return char:WaitForChild("Humanoid")
-end
-
---// スピードスライダーとテキストボックス
 local speedSlider, speedBox
 
 speedSlider = MainTab:AddSlider({
@@ -41,8 +37,7 @@ speedSlider = MainTab:AddSlider({
     Callback = function(value)
         speedValue = value
         if speedEnabled then
-            humanoid = getHumanoid()
-            humanoid.WalkSpeed = speedValue
+            humanoid.WalkSpeed = value
         end
         speedBox:SetText(tostring(value))
     end
@@ -61,11 +56,10 @@ speedBox = MainTab:AddTextbox({
 })
 
 MainTab:AddToggle({
-    Name = "Speed オン/オフ",
+    Name = "Speedオン/オフ",
     Default = false,
     Callback = function(state)
         speedEnabled = state
-        humanoid = getHumanoid()
         if state then
             humanoid.WalkSpeed = speedValue
         else
@@ -74,23 +68,15 @@ MainTab:AddToggle({
     end
 })
 
---===========================--
---    空中テレポート機能     --
---===========================--
-
---// 空中テレポート管理用変数
-local char = player.Character or player.CharacterAdded:Wait()
-local hrp = char:WaitForChild("HumanoidRootPart")
+--// 空中テレポート機能
 local isInAir = false
 local originalPosition = nil
 local teleportKey = Enum.KeyCode.Y
-local teleportButtonVisible = false
 local teleportButton = nil
 
---// 空中TP処理
 local function toggleTeleport()
-    local character = player.Character or player.CharacterAdded:Wait()
-    local root = character:WaitForChild("HumanoidRootPart")
+    local root = player.Character and player.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
 
     if not isInAir then
         originalPosition = root.CFrame
@@ -105,7 +91,7 @@ local function toggleTeleport()
     end
 end
 
---// GUIボタン作成
+--// ボタン生成
 local function createTeleportButton()
     local gui = Instance.new("ScreenGui")
     gui.Name = "TeleportGui"
@@ -124,15 +110,11 @@ local function createTeleportButton()
     teleportButton.Draggable = true
     teleportButton.Parent = gui
 
-    teleportButton.MouseButton1Click:Connect(function()
-        toggleTeleport()
-    end)
+    teleportButton.MouseButton1Click:Connect(toggleTeleport)
 end
-
--- 最初に呼び出す
 createTeleportButton()
 
---// キー入力処理
+--// キー入力で空中テレポート
 UIS.InputBegan:Connect(function(input, gpe)
     if gpe then return end
     if input.KeyCode == teleportKey then
@@ -140,12 +122,11 @@ UIS.InputBegan:Connect(function(input, gpe)
     end
 end)
 
---// テレポートボタン表示トグル
+--// ボタン表示トグル
 MainTab:AddToggle({
     Name = "空中テレポートボタン表示",
     Default = false,
     Callback = function(state)
-        teleportButtonVisible = state
         if teleportButton then
             teleportButton.Visible = state
         end
