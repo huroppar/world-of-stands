@@ -107,9 +107,18 @@ local teleportTab = Window:MakeTab({
     PremiumOnly = false
 })
 
+-- ドロップダウンに使うキー一覧取得関数
+local function getTableKeys(tbl)
+    local keyset = {}
+    for key, _ in pairs(tbl) do
+        table.insert(keyset, key)
+    end
+    return keyset
+end
+
 -- ドロップダウンを更新する関数
 function refreshTeleportDropdown()
-    local options = table.keys(settings.SavedPositions)
+    local options = getTableKeys(settings.SavedPositions)
 
     if teleportDropdown then
         teleportDropdown:Refresh(options, true)
@@ -125,6 +134,7 @@ function refreshTeleportDropdown()
     end
 end
 
+-- GUI 構築後に呼び出す
 refreshTeleportDropdown()
 
 -- 最後に初期化として呼び出す（GUI構築後）
