@@ -83,5 +83,85 @@ task.spawn(function()
         if speedEnabled and Humanoid then
             Humanoid.WalkSpeed = speedValue
         end
+
+            -- 空中テレポート用変数
+local teleportKey = Enum.KeyCode.Y
+local isInAir = false
+local originalCFrame = nil
+
+-- 空中テレポート関数
+local function toggleAirTeleport()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    if not isInAir then
+        originalCFrame = root.CFrame
+        root.Anchored = true
+        root.CFrame = CFrame.new(root.Position.X, 10000, root.Position.Z)
+        isInAir = true
+    else
+        root.CFrame = originalCFrame
+        task.wait(0.1)
+        root.Anchored = false
+        isInAir = false
+    end
+end
+
+-- キー入力で実行
+game:GetService("UserInputService").InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == teleportKey then
+        toggleAirTeleport()
+    end
+end)
+
+-- GUIにボタンとキー設定追加
+MainTab:AddToggle({
+    Name = "空中TPボタン表示",
+    Default = false,
+    Callback = function(state)
+        if teleportButton then
+            teleportButton.Visible = state
+        end
+    end
+})
+
+local keyList = {"Q", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M"}
+MainTab:AddDropdown({
+    Name = "空中TPキー設定",
+    Default = "Y",
+    Options = keyList,
+    Callback = function(key)
+        teleportKey = Enum.KeyCode[key]
+        OrionLib:MakeNotification({
+            Name = "キー変更完了",
+            Content = "空中TPのキーが「" .. key .. "」に設定されたよ！",
+            Time = 3
+        })
+    end
+})
+
+-- 空中TPボタンを画面に表示する処理
+local function createTeleportButton()
+    local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+    gui.Name = "TeleportGui"
+    gui.ResetOnSpawn = false
+
+    teleportButton = Instance.new("TextButton")
+    teleportButton.Size = UDim2.new(0, 140, 0, 40)
+    teleportButton.Position = UDim2.new(0.5, -70, 0.85, 0)
+    teleportButton.Text = "空中TP"
+    teleportButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    teleportButton.TextColor3 = Color3.new(1, 1, 1)
+    teleportButton.TextScaled = true
+    teleportButton.Visible = false
+    teleportButton.Draggable = true
+    teleportButton.Parent = gui
+
+    teleportButton.MouseButton1Click:Connect(toggleAirTeleport)
+end
+
+createTeleportButton()
+
     end
 end)
