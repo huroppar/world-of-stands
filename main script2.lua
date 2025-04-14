@@ -165,6 +165,3 @@ local function createTeleportButton()
 end
 
 createTeleportButton()
-
-    end
-end)
