@@ -70,17 +70,31 @@ local teleportKey = Enum.KeyCode.Y -- 初期キー（Yキー）
 
 --// GUIボタン生成
 local teleportButtonVisible = false
-local teleportButton = Instance.new("TextButton")
-teleportButton.Text = "空中テレポート"
-teleportButton.Size = UDim2.new(0, 140, 0, 40)
-teleportButton.Position = UDim2.new(0.5, -70, 0.8, 0)
-teleportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
-teleportButton.TextColor3 = Color3.new(1, 1, 1)
-teleportButton.TextScaled = true
-teleportButton.Visible = false
-teleportButton.Active = true
-teleportButton.Draggable = true
-teleportButton.Parent = game:GetService("CoreGui")
+local function createTeleportButton()
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "TeleportGui"
+    gui.ResetOnSpawn = false
+    gui.Parent = player:WaitForChild("PlayerGui")
+
+    teleportButton = Instance.new("TextButton")
+    teleportButton.Text = "空中テレポート"
+    teleportButton.Size = UDim2.new(0, 140, 0, 40)
+    teleportButton.Position = UDim2.new(0.5, -70, 0.8, 0)
+    teleportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 255)
+    teleportButton.TextColor3 = Color3.new(1, 1, 1)
+    teleportButton.TextScaled = true
+    teleportButton.Visible = false
+    teleportButton.Active = true
+    teleportButton.Draggable = true
+    teleportButton.Parent = gui
+
+    teleportButton.MouseButton1Click:Connect(function()
+        toggleTeleport()
+    end)
+end
+
+-- 最初に呼び出す！
+createTeleportButton()
 
 --// 空中TP機能
 local function toggleTeleport()
