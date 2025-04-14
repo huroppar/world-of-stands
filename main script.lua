@@ -1,13 +1,24 @@
--- 最初にこれを入れる（Windowがすでにあるかチェック）
-if _G.__WOS_GUI_RUNNING then return end
-_G.__WOS_GUI_RUNNING = true--// Masashi Script : World of Stands Most Useful Script
+--// Masashi Script : World of Stands Most Useful Script
 --// Solara V3 Compatible | Author: Masashi
 
-local UIS = game:GetService("UserInputService")
+--== GUI 二重起動チェックと再表示処理 ==--
+if _G.__WOS_GUI_RUNNING then
+    if _G.__WOS_Window and _G.__WOS_Window.Enabled ~= nil then
+        _G.__WOS_Window.Enabled = true
+        local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
+        OrionLib:MakeNotification({
+            Name = "Masashi WOS GUI",
+            Content = "GUIを再表示しました！",
+            Image = "rbxassetid://4483345998",
+            Time = 5
+        })
+        return
+    end
+end
+_G.__WOS_GUI_RUNNING = true
 
---== OrionLib (Feather Icons 対策済み) 読み込み ==--
+--== OrionLib 読み込み (Feather Icons対策済み) ==--
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-
 
 --== GUI 初期化 ==--
 local Window = OrionLib:MakeWindow({
@@ -18,10 +29,12 @@ local Window = OrionLib:MakeWindow({
     IntroText = "By Masashi",
     IntroIcon = "rbxassetid://4483345998",
     CloseCallback = function()
-        Window.Enabled = false -- 完全削除じゃなく非表示にするだけ
+        Window.Enabled = false -- ❗削除ではなく非表示
     end
 })
-_G.__WOS_Window = Window -- ⭐ 再表示に使う
+
+_G.__WOS_Window = Window -- ⭐ グローバルに保存（再表示用）
+
 --== サービス取得 ==--
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
