@@ -55,9 +55,11 @@ local function loadSettings()
         local success, decoded = pcall(function()
             return HttpService:JSONDecode(readfile(saveFileName))
         end)
-        if success and type
-
-
+        if success and type(decoded) == "table" then
+            settings = decoded
+        end
+    end
+end
 --== 表示設定タブ ==--
 local viewTab = Window:MakeTab({
     Name = "表示設定",
