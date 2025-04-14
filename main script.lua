@@ -364,10 +364,14 @@ keyTab:AddTextbox({
     Callback = function(inputKey)
         inputKey = inputKey:match("^%s*(.-)%s*$") -- 前後の空白除去
 
-        local webKey = ""
-        pcall(function()
-            webKey = tostring(game:HttpGet("https://pastebin.com/raw/abcd1234")) -- 正しいリンクに
-        end)
+       local webKey = ""
+local success, result = pcall(function()
+    return game:HttpGet("https://pastebin.com/raw/abcd1234") -- 実際のキーに変更
+end)
+
+if success and result then
+    webKey = tostring(result)
+end
 
         local acceptedKeys = {
             ["Masashi0305"] = true,
