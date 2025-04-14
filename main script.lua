@@ -1,4 +1,6 @@
---// Masashi Script : World of Stands Most Useful Script
+-- 最初にこれを入れる（Windowがすでにあるかチェック）
+if _G.__WOS_GUI_RUNNING then return end
+_G.__WOS_GUI_RUNNING = true--// Masashi Script : World of Stands Most Useful Script
 --// Solara V3 Compatible | Author: Masashi
 
 --== OrionLib (Feather Icons 対策済み) 読み込み ==--
