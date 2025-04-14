@@ -1,7 +1,18 @@
+-- 最初にこれを入れる（GUIがすでにあるかチェック）
+if _G.__WOS_GUI_RUNNING then
+    if _G.__WOS_Window and typeof(_G.__WOS_Window) == "Instance" then
+        _G.__WOS_Window.Enabled = true
+    end
+    return
+end
+_G.__WOS_GUI_RUNNING = true
+
 -- 最初にこれを入れる（Windowがすでにあるかチェック）
 if _G.__WOS_GUI_RUNNING then return end
 _G.__WOS_GUI_RUNNING = true--// Masashi Script : World of Stands Most Useful Script
 --// Solara V3 Compatible | Author: Masashi
+
+local UIS = game:GetService("UserInputService")
 
 --== OrionLib (Feather Icons 対策済み) 読み込み ==--
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
@@ -17,6 +28,7 @@ local Window = OrionLib:MakeWindow({
     IntroIcon = "rbxassetid://4483345998"
 })
 
+_G.__WOS_Window = Window -- ⭐ 再表示に使う
 --== サービス取得 ==--
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
