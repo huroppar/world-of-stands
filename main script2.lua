@@ -75,7 +75,7 @@ MainTab:AddTextbox({
     end
 })
 
--- 空中テレポート用変数
+-- 空中テレポート用変数（← ここはループの外！）
 local teleportKey = Enum.KeyCode.Y
 local isInAir = false
 local originalCFrame = nil
@@ -83,11 +83,10 @@ local originalCFrame = nil
 -- Speed維持ループ（頻度爆上げ & 技に打ち勝つ）
 task.spawn(function()
     while true do
-        -- waitじゃなくてRunServiceで超高速ループ
         game:GetService("RunService").RenderStepped:Wait()
         if speedEnabled and Humanoid then
             Humanoid.WalkSpeed = speedValue
-         end
+        end
     end
 end)
 
