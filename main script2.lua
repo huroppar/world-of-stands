@@ -20,7 +20,7 @@ local MainTab = Window:MakeTab({
 })
 
 -- 初期値
-local speedValue = 16
+local speedValue = 30
 local speedEnabled = false
 
 -- オンオフ切替
@@ -32,7 +32,7 @@ MainTab:AddToggle({
         if speedEnabled then
             Humanoid.WalkSpeed = speedValue
         else
-            Humanoid.WalkSpeed = 16
+            Humanoid.WalkSpeed = 30
         end
     end
 })
