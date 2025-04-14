@@ -86,7 +86,7 @@ local function getTableKeys(tbl)
 end
 
 -- ドロップダウンを更新する関数
-unction refreshTeleportDropdown()
+function refreshTeleportDropdown()
     -- ← ここで nil チェックして初期化
     settings.SavedPositions = settings.SavedPositions or {}
 
