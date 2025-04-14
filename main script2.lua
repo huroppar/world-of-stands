@@ -75,12 +75,20 @@ MainTab:AddTextbox({
     end
 })
 
--- Speed維持用のループ（定期的に再設定）
+-- Speed維持用ループ（頻度UP & 死亡後対応）
 task.spawn(function()
     while true do
-        task.wait(0.5)
-        if speedEnabled and humanoid and humanoid.WalkSpeed ~= speedValue then
-            humanoid.WalkSpeed = speedValue
+        task.wait(0.1)
+        if speedEnabled and humanoid then
+            if humanoid.WalkSpeed ~= speedValue then
+                humanoid.WalkSpeed = speedValue
+            end
         end
     end
+end)
+
+-- 死亡時再取得
+player.CharacterAdded:Connect(function(char)
+    humanoid = char:WaitForChild("Humanoid")
+    hrp = char:WaitForChild("HumanoidRootPart")
 end)
