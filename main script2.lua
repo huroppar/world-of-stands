@@ -28,18 +28,46 @@ local function getHumanoid()
 end
 
 --// スピードスライダー
-MainTab:AddSlider({
+local speedValue = 16 -- デフォルトのスピード
+local speedSlider, speedBox
+local speedEnabled = false -- Speedオン/オフの状態
+
+speedSlider = MainTab:AddSlider({
     Name = "Speed",
     Min = 1,
     Max = 500,
-    Default = 16,
-    Color = Color3.fromRGB(0, 255, 150),
+    Default = speedValue,
     Increment = 1,
-    ValueName = "速度",
     Callback = function(value)
         speedValue = value
-        if speedEnabled then
-            getHumanoid().WalkSpeed = speedValue
+        if speedEnabled and humanoid then
+            humanoid.WalkSpeed = value
+        end
+        speedBox:SetText(tostring(value)) -- テキストボックスに反映
+    end
+})
+
+speedBox = MainTab:AddTextbox({
+    Name = "Speed値を手入力",
+    Default = tostring(speedValue),
+    TextDisappear = false,
+    Callback = function(text)
+        local num = tonumber(text)
+        if num and num >= 1 and num <= 500 then
+            speedSlider:Set(num)
+        end
+    end
+})
+
+MainTab:AddToggle({
+    Name = "Speedオン/オフ",
+    Default = false,
+    Callback = function(state)
+        speedEnabled = state
+        if state and humanoid then
+            humanoid.WalkSpeed = speedValue
+        else
+            humanoid.WalkSpeed = 16 -- オフ時はデフォルトに戻す
         end
     end
 })
