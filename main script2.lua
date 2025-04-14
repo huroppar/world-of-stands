@@ -3,10 +3,9 @@ local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 
--- Solara v3用ライブラリを読み込み
+-- Solara v3互換ライブラリ
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 
--- GUIウィンドウの作成
 local Window = OrionLib:MakeWindow({
     Name = "World of Stands - Speed Control",
     HidePremium = false,
@@ -20,12 +19,11 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- 変数
+-- 初期値
 local speedValue = 16
 local speedEnabled = false
-local speedSlider, speedBox
 
--- スピードのオンオフ切り替え
+-- オンオフ切替
 MainTab:AddToggle({
     Name = "Speed On/Off",
     Default = false,
@@ -34,13 +32,13 @@ MainTab:AddToggle({
         if speedEnabled then
             Humanoid.WalkSpeed = speedValue
         else
-            Humanoid.WalkSpeed = 16 -- デフォルトに戻す
+            Humanoid.WalkSpeed = 16
         end
     end
 })
 
 -- スピードスライダー
-speedSlider = MainTab:AddSlider({
+local speedSlider = MainTab:AddSlider({
     Name = "Speed Slider",
     Min = 1,
     Max = 500,
@@ -51,32 +49,28 @@ speedSlider = MainTab:AddSlider({
         if speedEnabled then
             Humanoid.WalkSpeed = value
         end
-        if speedBox then
-            speedBox:SetText(tostring(value))
-        end
     end
 })
 
--- 数値直接入力ボックス
-speedBox = MainTab:AddTextbox({
-    Name = "Speed Input",
+-- 数値入力ボックス（ここが手動入力部分！）
+MainTab:AddTextbox({
+    Name = "Speed Input (手動入力)",
     Default = tostring(speedValue),
     TextDisappear = false,
     Callback = function(text)
         local num = tonumber(text)
         if num and num >= 1 and num <= 500 then
             speedValue = num
-            speedSlider:Set(num)
+            speedSlider:Set(num) -- スライダーと同期
             if speedEnabled then
                 Humanoid.WalkSpeed = num
             end
         else
             OrionLib:MakeNotification({
                 Name = "エラー",
-                Content = "1〜500の数値を入力してください！",
-                Time = 2
+                Content = "1〜500の数字を入力してね！",
+                Time = 3
             })
-            speedBox:SetText(tostring(speedValue))
         end
     end
 })
