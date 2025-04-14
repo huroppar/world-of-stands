@@ -1,6 +1,7 @@
+-- OrionLibの読み込み（ミラーリンク使用）
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 
--- メインウィンドウ作成
+-- ウィンドウ作成
 local Window = OrionLib:MakeWindow({
     Name = "✨ Masashi Neon GUI ✨",
     HidePremium = false,
@@ -8,47 +9,44 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "MasashiNeon"
 })
 
--- メインタブ作成
+-- タブ作成
 local MainTab = Window:MakeTab({
     Name = "Main",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
--- スピード制御用変数
-local speedValue = 16
-local speedEnabled = true  -- 最初からONにしておく
-local humanoid = game.Players.LocalPlayer.Character:WaitForChild("Humanoid")
+-- スピード設定変数
+local SpeedEnabled = false
+local SpeedValue = 16
 
--- スピードスライダー
-MainTab:AddSlider({
-    Name = "Speed",
-    Min = 1,
-    Max = 500,
-    Default = speedValue,
-    Increment = 1,
-    Callback = function(value)
-        speedValue = value
-        if speedEnabled and humanoid then
-            humanoid.WalkSpeed = value
+-- スピード切り替えトグル
+MainTab:AddToggle({
+    Name = "スピード変更ON/OFF",
+    Default = false,
+    Callback = function(state)
+        SpeedEnabled = state
+        if SpeedEnabled then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
+        else
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = 16
         end
     end
 })
 
--- ラベル追加
-MainTab:AddLabel("こんにちは！Masashi Neon GUIへようこそ ✨")
-
--- ボタン追加
-MainTab:AddButton({
-    Name = "通知を表示するボタン",
-    Callback = function()
-        OrionLib:MakeNotification({
-            Name = "クリック成功！",
-            Content = "ボタンがちゃんと動いてるよ！",
-            Time = 3
-        })
+-- スピードスライダー（1〜500）
+MainTab:AddSlider({
+    Name = "スピード調整",
+    Min = 1,
+    Max = 500,
+    Default = 16,
+    Color = Color3.fromRGB(0, 255, 140),
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(value)
+        SpeedValue = value
+        if SpeedEnabled then
+            game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
+        end
     end
 })
-
--- GUIを起動
-OrionLib:Init()
