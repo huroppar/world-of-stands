@@ -527,7 +527,7 @@ OrionLib:MakeNotification({
 ]]
 
 -- GUI全体を囲む Frame を変数にしておく
-local mainGui = ScreenGui or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("WOS")  -- ここはGUI名に変更してね
+local mainGui = ScreenGui or game:GetService("Players").LocalPlayer:WaitForChild("PlayerGui"):FindFirstChild("🌟 WOS Most Useful Script")  -- ここはGUI名に変更してね
 
 -- 表示・非表示切り替え
 function toggleMainGui()
