@@ -2,7 +2,8 @@
 --// Solara V3 Compatible | Author: Masashi
 
 --== OrionLib (Feather Icons 対策済み) 読み込み ==--
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/lozuwa/RobloxLibraryStorage/main/OrionLib.lua"))()
+local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
+
 
 --== GUI 初期化 ==--
 local Window = OrionLib:MakeWindow({
