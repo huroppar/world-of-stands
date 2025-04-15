@@ -230,82 +230,70 @@ MainTab:AddToggle({
     end
 })
 
--- ボタン生成処理（GUI上の切替ボタン）
-local function createTransparencyButton()
-    local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
-    gui.Name = "TransparencyGui"
-    gui.ResetOnSpawn = false
+local InvisTab = Window:MakeTab({
+    Name = "Invisibility",
+    Icon = "rbxassetid://1234567890", -- 適当でOK
+    PremiumOnly = false
+})
 
-    toggleTransparencyButton = Instance.new("TextButton")
-    toggleTransparencyButton.Size = UDim2.new(0, 160, 0, 40)
-    toggleTransparencyButton.Position = UDim2.new(0.5, -80, 0.9, 0)
-    toggleTransparencyButton.Text = "透明化切り替え"
-    toggleTransparencyButton.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
-    toggleTransparencyButton.TextColor3 = Color3.new(1, 1, 1)
-    toggleTransparencyButton.TextScaled = true
-    toggleTransparencyButton.Visible = false
-    toggleTransparencyButton.Draggable = true
-    toggleTransparencyButton.Parent = gui
+local showButton = false
+local invisButton
 
-    toggleTransparencyButton.MouseButton1Click:Connect(function()
-        local char = LocalPlayer.Character
-        if not char then return end
-
-        if not isInvisible then
-            -- キャラを半透明にする
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                    part.Transparency = 0.7
-                    if part:FindFirstChild("face") then
-                        part.face.Transparency = 1
+InvisTab:AddToggle({
+    Name = "透明化機能を有効にする",
+    Default = false,
+    Callback = function(value)
+        showButton = value
+        if value and not invisButton then
+            invisButton = InvisTab:AddButton({
+                Name = "透明ON / OFF",
+                Callback = function()
+                    invisible = not invisible
+                    if invisible then
+                        enableInvisibility()
+                    else
+                        disableInvisibility()
                     end
-                elseif part:IsA("Decal") then
-                    part.Transparency = 1
                 end
+            })
+        elseif not value and invisButton then
+            InvisTab:RemoveButton(invisButton)
+            invisButton = nil
+            if invisible then
+                disableInvisibility()
+                invisible = false
             end
+        end
+    end
+})
 
-           -- 当たり判定を空中に移動（視点はキャラのHeadに固定）
-local hrp = char:FindFirstChild("HumanoidRootPart")
-if hrp then
-    originalCFrame = hrp.CFrame
-    hrp.Anchored = true
-    hrp.CFrame = CFrame.new(0, 10000, 0)
 
-    -- カメラを Head に固定して視点維持
-    local cam = workspace.CurrentCamera
+-- 透明化ON/OFFの処理（スクリプトの一番下に貼ってOK）
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local cam = workspace.CurrentCamera
+local char = player.Character or player.CharacterAdded:Wait()
+local invisible = false
+local originalCFrame = nil
+
+local function enableInvisibility()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
     local head = char:FindFirstChild("Head")
-    if cam and head then
-        cam.CameraSubject = head
+    if hrp and head then
+        originalCFrame = hrp.CFrame
+        hrp.Anchored = true
+        hrp.CFrame = CFrame.new(0, 10000, 0)
+        cam.CameraType = Enum.CameraType.Scriptable
+        cam.CFrame = head.CFrame + Vector3.new(0, 2, 5)
     end
 end
 
-            isInvisible = true
-            toggleTransparencyButton.Text = "透明化解除"
-        else
-            -- 透明解除
-            for _, part in ipairs(char:GetDescendants()) do
-                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                    part.Transparency = 0
-                    if part:FindFirstChild("face") then
-                        part.face.Transparency = 0
-                    end
-                elseif part:IsA("Decal") then
-                    part.Transparency = 0
-                end
-            end
-
-            -- 当たり判定元に戻す
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            if hrp and originalCFrame then
-                hrp.CFrame = originalCFrame
-                task.wait(0.1)
-                hrp.Anchored = false
-            end
-
-            isInvisible = false
-            toggleTransparencyButton.Text = "透明化切り替え"
-        end
-    end)
+local function disableInvisibility()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp and originalCFrame then
+        hrp.CFrame = originalCFrame
+        hrp.Anchored = false
+        cam.CameraType = Enum.CameraType.Custom
+        cam.CameraSubject = char:FindFirstChild("Humanoid")
+    end
 end
-
-createTransparencyButton()
