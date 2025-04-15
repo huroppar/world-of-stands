@@ -291,9 +291,8 @@ InvisTab:AddToggle({
                 disableInvisibility()
                 invisible = false
             end
+            -- ちゃんとGUIからボタンを削除する処理もここに追加できると理想
             invisButton = nil
         end
-    end
-})
     end
 })
