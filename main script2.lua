@@ -15,6 +15,105 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "WOS_UltimateTool"
 })
 
+local isInvisible = false
+local originalCFrame = nil
+local dummyPart = nil
+
+local function makeInvisible()
+   local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    originalCFrame = character:GetPrimaryPartCFrame()
+
+    -- パーツを透明＆非表示＆衝突オフ
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 1
+            part.CanCollide = false
+            if part:FindFirstChildOfClass("Decal") then
+                for _, decal in ipairs(part:GetChildren()) do
+                    if decal:IsA("Decal") then
+                        decal.Transparency = 1
+                    end
+                end
+            end
+        elseif part:IsA("Accessory") then
+            part:Destroy()
+        end
+    end
+
+    -- キャラクターのヒットボックスを上空へ移動
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if root then
+        dummyPart = Instance.new("Part")
+        dummyPart.Name = "HiddenHitbox"
+        dummyPart.Size = Vector3.new(4, 4, 1)
+        dummyPart.Anchored = true
+        dummyPart.Transparency = 1
+        dummyPart.CanCollide = false
+        dummyPart.CFrame = CFrame.new(0, 10000, 0)
+        dummyPart.Parent = workspace
+
+        root.Anchored = true
+        root.CFrame = dummyPart.CFrame
+    end
+
+    isInvisible = true
+end
+ -- ここに透明化関数（前回貼ったやつ）を丸ごと貼る
+end
+
+local function revertInvisible()
+    local character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+
+    -- 可視化＆当たり判定復元
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 0
+            part.CanCollide = true
+        elseif part:IsA("Decal") then
+            part.Transparency = 0
+        end
+    end
+
+    -- 位置戻す
+    local root = character:FindFirstChild("HumanoidRootPart")
+    if root and originalCFrame then
+        root.CFrame = originalCFrame
+        root.Anchored = false
+    end
+
+    -- ダミー削除
+    if dummyPart then
+        dummyPart:Destroy()
+        dummyPart = nil
+    end
+
+    isInvisible = false
+end
+
+-- GUI Toggle用コールバック（すでに作ってあるトグルに入れてOK）
+MainTab:AddToggle({
+    Name = "完全透明化（他人にも不可視＋無敵）",
+    Default = false,
+    Callback = function(state)
+        if state then
+            makeInvisible()
+            OrionLib:MakeNotification({
+                Name = "透明化ON",
+                Content = "透明＆当たり判定解除したよ！",
+                Time = 3
+            })
+        else
+            revertInvisible()
+            OrionLib:MakeNotification({
+                Name = "透明化OFF",
+                Content = "元に戻したよ！",
+                Time = 3
+            })
+        end
+    end
+})    -- ここに解除関数（前回貼ったやつ）を丸ごと貼る
+end
+
 local MainTab = Window:MakeTab({
     Name = "機能一覧",
     Icon = "rbxassetid://4483345998",
@@ -169,6 +268,28 @@ local function createTeleportButton()
 end
 
 createTeleportButton()
+
+MainTab:AddToggle({
+    Name = "完全透明化（他人にも不可視＋無敵）",
+    Default = false,
+    Callback = function(state)
+        if state then
+            makeInvisible()
+            OrionLib:MakeNotification({
+                Name = "透明化ON",
+                Content = "透明＆当たり判定解除したよ！",
+                Time = 3
+            })
+        else
+            revertInvisible()
+            OrionLib:MakeNotification({
+                Name = "透明化OFF",
+                Content = "元に戻したよ！",
+                Time = 3
+            })
+        end
+    end
+})
 
 ------------------------------
 -- 無限ジャンプ機能
