@@ -279,3 +279,116 @@ UserInputService.JumpRequest:Connect(function()
         LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
     end
 end)
+
+--== GUI側 ==--
+
+local TransparencyTab = Window:MakeTab({
+    Name = "透明化",
+    Icon = "rbxassetid://13508255076",
+    PremiumOnly = false
+})
+
+local invisibilityEnabled = false
+local fakeRoot
+
+TransparencyTab:AddToggle({
+    Name = "透明ボタンを表示",
+    Default = false,
+    Callback = function(state)
+        if TransparencyButton then
+            TransparencyButton.Visible = state
+        end
+    end
+})
+
+-- 透明化ボタン（Floating）
+TransparencyButton = Instance.new("TextButton")
+TransparencyButton.Size = UDim2.new(0, 120, 0, 40)
+TransparencyButton.Position = UDim2.new(0.5, -60, 0.9, 0)
+TransparencyButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+TransparencyButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+TransparencyButton.Text = "透明ON/OFF"
+TransparencyButton.Visible = false
+TransparencyButton.Parent = game.CoreGui
+
+--== 機能部分 ==--
+
+local function makeInvisible()
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    -- キャラ透明化＋操作保持
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 1
+            part.CanCollide = false
+            part.Massless = false
+        elseif part:IsA("Decal") then
+            part.Transparency = 1
+        end
+    end
+
+    root.Transparency = 1
+    root.CanCollide = false
+    root.Massless = false
+
+    -- フェイクの当たり判定（上空に置くだけ）
+    if not fakeRoot then
+        fakeRoot = root:Clone()
+        fakeRoot.Name = "FakeHitbox"
+        fakeRoot.Anchored = true
+        fakeRoot.Transparency = 1
+        fakeRoot.CanCollide = true
+        fakeRoot.CFrame = CFrame.new(0, 10000, 0)
+        fakeRoot.Parent = workspace
+    end
+end
+
+local function restoreVisible()
+    local player = game.Players.LocalPlayer
+    local char = player.Character or player.CharacterAdded:Wait()
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    -- 元に戻す
+    for _, part in ipairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 0
+            part.CanCollide = true
+            part.Massless = false
+        elseif part:IsA("Decal") then
+            part.Transparency = 0
+        end
+    end
+
+    root.Transparency = 0
+    root.CanCollide = true
+    root.Massless = false
+
+    if fakeRoot then
+        fakeRoot:Destroy()
+        fakeRoot = nil
+    end
+end
+
+-- ボタン処理
+TransparencyButton.MouseButton1Click:Connect(function()
+    invisibilityEnabled = not invisibilityEnabled
+    if invisibilityEnabled then
+        makeInvisible()
+        OrionLib:MakeNotification({
+            Name = "透明化",
+            Content = "キャラが透明になり、当たり判定は空中に移動しました。",
+            Time = 4
+        })
+    else
+        restoreVisible()
+        OrionLib:MakeNotification({
+            Name = "解除完了",
+            Content = "キャラの透明化が解除されました。",
+            Time = 3
+        })
+    end
+end)
