@@ -1,5 +1,3 @@
-# 分割コードの第一部（メインのGUI設定と初期化）
-code_part1 = '''
 --// Script by Masashi
 
 -- ライブラリ読み込み
