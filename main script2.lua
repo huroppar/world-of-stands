@@ -330,9 +330,34 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     HRP = char:WaitForChild("HumanoidRootPart")
 end)
 
-    -- InvisibleHitbox を削除
+    -- ヒットボックス削除
     if remoteHitboxPart and remoteHitboxPart.Parent then
         remoteHitboxPart:Destroy()
         remoteHitboxPart = nil
     end
+    isInvisible = false
 end
+
+-- GUIにトグル追加
+MainTab:AddToggle({
+    Name = "透明化 On/Off",
+    Default = false,
+    Callback = function(state)
+        if state and not isInvisible then
+            makeInvisible()
+            isInvisible = true
+            OrionLib:MakeNotification({
+                Name = "透明化",
+                Content = "キャラを透明にして上空に退避させたよ！",
+                Time = 3
+            })
+        elseif not state and isInvisible then
+            revertVisibility()
+            OrionLib:MakeNotification({
+                Name = "透明解除",
+                Content = "キャラを元に戻したよ！",
+                Time = 3
+            })
+        end
+    end
+})
