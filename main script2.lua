@@ -219,6 +219,8 @@ local mouse = player:GetMouse()
 -- 透明化状態
 local isInvisible = false
 local originalCFrame = nil
+local dummyPart = nil
+local weld = nil
 
 -- 透明化の関数
 local function enableInvisibility()
@@ -226,8 +228,24 @@ local function enableInvisibility()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if hrp then
         originalCFrame = hrp.CFrame
-        hrp.Anchored = true
-        hrp.CFrame = CFrame.new(0, 10000, 0)
+
+        -- ダミーPart作成（当たり判定用）
+        dummyPart = Instance.new("Part")
+        dummyPart.Size = Vector3.new(2, 2, 1)
+        dummyPart.Anchored = true
+        dummyPart.CanCollide = true
+        dummyPart.Transparency = 1
+        dummyPart.Position = Vector3.new(0, 10000, 0)
+        dummyPart.Name = "InvisibleHitbox"
+        dummyPart.Parent = workspace
+
+        -- WeldでHRPと接続
+        weld = Instance.new("WeldConstraint")
+        weld.Part0 = hrp
+        weld.Part1 = dummyPart
+        weld.Parent = hrp
+
+        -- 透明化（見た目のみ）
         for _, part in pairs(char:GetDescendants()) do
             if part:IsA("BasePart") or part:IsA("Decal") then
                 part.Transparency = 0.5
@@ -236,12 +254,19 @@ local function enableInvisibility()
     end
 end
 
+-- 透明解除
 local function disableInvisibility()
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if hrp and originalCFrame then
+        -- Weld削除 & ダミーPart破棄
+        if weld then weld:Destroy() weld = nil end
+        if dummyPart then dummyPart:Destroy() dummyPart = nil end
+
+        -- 元の位置に戻す（視点ズレ防止のためそのままでもOK）
         hrp.CFrame = originalCFrame
-        hrp.Anchored = false
+
+        -- 透明解除
         for _, part in pairs(char:GetDescendants()) do
             if part:IsA("BasePart") or part:IsA("Decal") then
                 part.Transparency = 0
