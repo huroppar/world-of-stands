@@ -212,18 +212,14 @@ local transparencyEnabled = false
 local isInvisible = false
 local originalCFrame = nil
 local collisionPart = nil
+local invisible = false
+local invisButton = nil
 
--- タブ作成（すでに作ってるTabがあれば省略OK）
 local InvisTab = Window:MakeTab({
     Name = "Invisibility",
-    Icon = "rbxassetid://1234567890", -- アイコン自由に変えてOK
+    Icon = "rbxassetid://1234567890",
     PremiumOnly = false
 })
-
--- 状態管理用の変数
-local invisible = false
-local originalCFrame = nil
-local invisButton = nil
 
 -- 透明化処理
 local function enableInvisibility()
@@ -236,9 +232,10 @@ local function enableInvisibility()
         originalCFrame = hrp.CFrame
         hrp.Anchored = true
         hrp.CFrame = CFrame.new(0, 10000, 0)
-        cam.CameraType = Enum.CameraType.Scriptable
-        cam.CFrame = head.CFrame + Vector3.new(0, 2, 5)
-        -- 半透明にする（自分視点）
+
+        cam.CameraType = Enum.CameraType.Custom
+        cam.CameraSubject = char:FindFirstChild("Humanoid")
+
         for _, part in pairs(char:GetDescendants()) do
             if part:IsA("BasePart") or part:IsA("Decal") then
                 part.Transparency = 0.5
@@ -256,9 +253,10 @@ local function disableInvisibility()
     if hrp and originalCFrame then
         hrp.CFrame = originalCFrame
         hrp.Anchored = false
+
         cam.CameraType = Enum.CameraType.Custom
         cam.CameraSubject = char:FindFirstChild("Humanoid")
-        -- 半透明解除
+
         for _, part in pairs(char:GetDescendants()) do
             if part:IsA("BasePart") or part:IsA("Decal") then
                 part.Transparency = 0
@@ -267,7 +265,7 @@ local function disableInvisibility()
     end
 end
 
--- トグルで透明ボタンを表示/非表示にする処理
+-- トグル
 InvisTab:AddToggle({
     Name = "透明化機能を有効にする",
     Default = false,
@@ -291,7 +289,8 @@ InvisTab:AddToggle({
                 disableInvisibility()
                 invisible = false
             end
-            -- ちゃんとGUIからボタンを削除する処理もここに追加できると理想
+            -- GUIボタン削除したい場合の例（必要なら実装）
+            -- invisButton:Destroy()
             invisButton = nil
         end
     end
