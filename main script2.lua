@@ -264,21 +264,20 @@ local function createTransparencyButton()
                 end
             end
 
-           -- 当たり判定を空中に移動（視点はキャラに固定）
+           -- 当たり判定を空中に移動（視点はキャラのHeadに固定）
 local hrp = char:FindFirstChild("HumanoidRootPart")
 if hrp then
     originalCFrame = hrp.CFrame
     hrp.Anchored = true
     hrp.CFrame = CFrame.new(0, 10000, 0)
 
-    -- カメラをキャラの Humanoid に固定して視点維持
+    -- カメラを Head に固定して視点維持
     local cam = workspace.CurrentCamera
-    local humanoid = char:FindFirstChildWhichIsA("Humanoid")
-    if cam and humanoid then
-        cam.CameraSubject = humanoid
+    local head = char:FindFirstChild("Head")
+    if cam and head then
+        cam.CameraSubject = head
     end
 end
-
 
             isInvisible = true
             toggleTransparencyButton.Text = "透明化解除"
