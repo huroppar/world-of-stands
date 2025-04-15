@@ -1,215 +1,193 @@
--- World of Stands Most Useful Script 完全版 by Masashi
 
--- OrionLib 読み込み
+--[[
+    World of Stands Most Useful Script by Masashi
+    最新版：空中TP・完全透明・スピード調整・無限ジャンプ 全部入り
+--]]
+
+-- OrionLib 読み込み（GitHub対応）
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-
--- GUI 初期化
-local Window = OrionLib:MakeWindow({Name = "World of Stands GUI", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
-
--- 共通変数
 local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
 local UserInputService = game:GetService("UserInputService")
-local HumanoidRootPart = LocalPlayer.Character:WaitForChild("HumanoidRootPart")
 local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local hrp = character:WaitForChild("HumanoidRootPart")
+
+local window = OrionLib:MakeWindow({Name="World of Stands Utility", HidePremium=false, SaveConfig=true, ConfigFolder="WOS_Config"})
+
+-- 状態管理変数
 local speedEnabled = false
-local speedValue = 30
 local infiniteJumpEnabled = false
-local teleportKey = Enum.KeyCode.T
-local flyPos = nil
-local buttonVisible = true
-local transparencyEnabled = false
+local invisible = false
+local airTPEnabled = false
+local storedPosition = nil
+local airTPKey = Enum.KeyCode.T
+local dragEnabled = false
 
--- 通知機能
-local function Notify(title, text)
-    OrionLib:MakeNotification({Name = title, Content = text, Time = 5})
-end
+-- スピード設定
+local currentSpeed = 30
 
--- スピード切り替え
-local function toggleSpeed(enabled, value)
-    speedEnabled = enabled
-    speedValue = value or 30
-    if not speedEnabled then
-        LocalPlayer.Character:WaitForChild("Humanoid").WalkSpeed = 30
+-- UI初期設定
+local mainTab = window:MakeTab({Name="Main", Icon="rbxassetid://4483345998", PremiumOnly=false})
+
+-- スピード機能
+mainTab:AddToggle({
+    Name="Speed ON/OFF",
+    Default=false,
+    Callback=function(value)
+        speedEnabled = value
+        if not value then humanoid.WalkSpeed = 30 end
     end
-end
+})
 
-RunService.Stepped:Connect(function()
-    if speedEnabled then
-        pcall(function()
-            LocalPlayer.Character:WaitForChild("Humanoid").WalkSpeed = speedValue
-        end)
+mainTab:AddSlider({
+    Name="Speed",
+    Min=1,
+    Max=500,
+    Default=30,
+    Increment=1,
+    Callback=function(value)
+        currentSpeed = value
+        if speedEnabled then humanoid.WalkSpeed = value end
     end
-end)
+})
 
--- 無限ジャンプ
+mainTab:AddTextbox({
+    Name="Speed Input",
+    Default="30",
+    TextDisappear=true,
+    Callback=function(text)
+        local num = tonumber(text)
+        if num then
+            currentSpeed = math.clamp(num, 1, 500)
+            if speedEnabled then humanoid.WalkSpeed = currentSpeed end
+        end
+    end
+})
+
+-- 無限ジャンプ機能
+mainTab:AddToggle({
+    Name="Infinite Jump",
+    Default=false,
+    Callback=function(state)
+        infiniteJumpEnabled = state
+    end
+})
+
+-- 完全透明化用のボタン（表示/非表示）
+mainTab:AddToggle({
+    Name="透明ボタンを表示",
+    Default=false,
+    Callback=function(show)
+        invisibleButton.Visible = show
+    end
+})
+
+-- 空中TPボタン表示切替
+mainTab:AddToggle({
+    Name="空中TPボタンを表示",
+    Default=false,
+    Callback=function(show)
+        airTPButton.Visible = show
+    end
+})
+
+-- 空中TPキー設定
+mainTab:AddTextbox({
+    Name="空中TPキー（例: T）",
+    Default="T",
+    TextDisappear=true,
+    Callback=function(input)
+        local kc = Enum.KeyCode[input:upper()]
+        if kc then airTPKey = kc end
+    end
+})
+
+-- 無限ジャンプ処理
 UserInputService.JumpRequest:Connect(function()
     if infiniteJumpEnabled then
-        pcall(function()
-            LocalPlayer.Character:WaitForChild("Humanoid"):ChangeState("Jumping")
-        end)
+        humanoid:ChangeState("Jumping")
     end
 end)
 
--- 空中テレポート
-UserInputService.InputBegan:Connect(function(input)
-    if input.KeyCode == teleportKey and flyPos then
-        HumanoidRootPart.CFrame = CFrame.new(flyPos)
+-- スピード常時更新処理
+RunService.Heartbeat:Connect(function()
+    if speedEnabled then
+        humanoid.WalkSpeed = currentSpeed
     end
 end)
 
--- GUIタブと要素
-local MainTab = Window:MakeTab({Name = "メイン機能", Icon = "rbxassetid://4483345998", PremiumOnly = false})
-
-MainTab:AddSlider({
-    Name = "移動スピード",
-    Min = 1,
-    Max = 500,
-    Default = 30,
-    Increment = 1,
-    ValueName = "Speed",
-    Callback = function(value)
-        speedValue = value
-    end
-})
-
-MainTab:AddToggle({
-    Name = "スピード変更ON/OFF",
-    Default = false,
-    Callback = function(value)
-        toggleSpeed(value, speedValue)
-    end
-})
-
-MainTab:AddToggle({
-    Name = "無限ジャンプON/OFF",
-    Default = false,
-    Callback = function(value)
-        infiniteJumpEnabled = value
-    end
-})
-
-MainTab:AddTextbox({
-    Name = "空中テレポートキー変更",
-    Default = "T",
-    TextDisappear = true,
-    Callback = function(keyStr)
-        local foundKey = Enum.KeyCode[keyStr:upper()]
-        if foundKey then
-            teleportKey = foundKey
-            Notify("キー設定", "空中TPキーを " .. keyStr:upper() .. " に設定しました")
+-- 空中TP処理
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == airTPKey then
+        if not airTPEnabled then
+            storedPosition = hrp.Position
+            hrp.Anchored = true
+            hrp.CFrame = CFrame.new(hrp.Position.X, 10000, hrp.Position.Z)
+            airTPEnabled = true
         else
-            Notify("エラー", "指定されたキーは無効です")
+            hrp.CFrame = CFrame.new(storedPosition)
+            task.wait(0.1)
+            hrp.Anchored = false
+            airTPEnabled = false
         end
     end
-})
+end)
 
-MainTab:AddButton({
-    Name = "空中位置を保存",
-    Callback = function()
-        flyPos = HumanoidRootPart.Position + Vector3.new(0, 10000, 0)
-        Notify("位置保存", "空中テレポート位置を保存しました")
+-- ドラッグ可能な透明ボタン生成
+local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
+ScreenGui.Name = "Masashi_TransparentButtons"
+local function createDraggableButton(name, text, callback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 120, 0, 40)
+    btn.Position = UDim2.new(0.5, -60, 0.5, 0)
+    btn.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Text = text
+    btn.Parent = ScreenGui
+    btn.Visible = false
+
+    btn.MouseButton1Down:Connect(function()
+        dragEnabled = true
+    end)
+    btn.MouseButton1Up:Connect(function()
+        dragEnabled = false
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragEnabled and input.UserInputType == Enum.UserInputType.MouseMovement then
+            btn.Position = UDim2.new(0, input.Position.X, 0, input.Position.Y)
+        end
+    end)
+    btn.MouseButton1Click:Connect(callback)
+    return btn
+end
+
+-- 空中TPボタン（ドラッグ可）
+airTPButton = createDraggableButton("AirTP", "空中TP", function()
+    if not airTPEnabled then
+        storedPosition = hrp.Position
+        hrp.Anchored = true
+        hrp.CFrame = CFrame.new(hrp.Position.X, 10000, hrp.Position.Z)
+        airTPEnabled = true
+    else
+        hrp.CFrame = CFrame.new(storedPosition)
+        task.wait(0.1)
+        hrp.Anchored = false
+        airTPEnabled = false
     end
-})
+end)
 
-MainTab:AddToggle({
-    Name = "空中TPボタン表示切替",
-    Default = true,
-    Callback = function(value)
-        buttonVisible = value
-        if airTpButton then
-            airTpButton.Visible = value
+-- 透明化ボタン（ドラッグ可）
+invisibleButton = createDraggableButton("Invisible", "透明化", function()
+    invisible = not invisible
+    for _, part in ipairs(character:GetDescendants()) do
+        if part:IsA("BasePart") or part:IsA("Decal") then
+            part.LocalTransparencyModifier = invisible and 1 or 0
+        end
+        if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+            part.CanCollide = not invisible
         end
     end
-})
-
-MainTab:AddToggle({
-    Name = "透明化ボタン表示切替",
-    Default = true,
-    Callback = function(value)
-        if invisButton then
-            invisButton.Visible = value
-        end
-    end
-})
-
--- 空中TPボタン
-local airTpButton = Instance.new("TextButton")
-airTpButton.Size = UDim2.new(0, 120, 0, 50)
-airTpButton.Position = UDim2.new(0, 100, 0, 100)
-airTpButton.Text = "空中TP"
-airTpButton.Parent = game:GetService("CoreGui")
-airTpButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
-airTpButton.TextColor3 = Color3.new(1, 1, 1)
-airTpButton.Visible = buttonVisible
-
-airTpButton.MouseButton1Click:Connect(function()
-    if flyPos then
-        HumanoidRootPart.CFrame = CFrame.new(flyPos)
-    end
 end)
-
--- ドラッグ機能（空中TPボタン）
-local dragging, offset
-airTpButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        offset = input.Position - airTpButton.AbsolutePosition
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        airTpButton.Position = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- 透明化機能 + ボタン
-local invisButton = Instance.new("TextButton")
-invisButton.Size = UDim2.new(0, 120, 0, 50)
-invisButton.Position = UDim2.new(0, 100, 0, 160)
-invisButton.Text = "透明化切替"
-invisButton.Parent = game:GetService("CoreGui")
-invisButton.BackgroundColor3 = Color3.fromRGB(170, 0, 255)
-invisButton.TextColor3 = Color3.new(1, 1, 1)
-invisButton.Visible = true
-
-invisButton.MouseButton1Click:Connect(function()
-    transparencyEnabled = not transparencyEnabled
-    for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            part.Transparency = transparencyEnabled and 1 or 0
-        end
-    end
-    Notify("透明化", transparencyEnabled and "透明になりました" or "透明を解除しました")
-end)
-
--- ドラッグ機能（透明化ボタン）
-local dragging2, offset2
-invisButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging2 = true
-        offset2 = input.Position - invisButton.AbsolutePosition
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging2 and input.UserInputType == Enum.UserInputType.MouseMovement then
-        invisButton.Position = UDim2.new(0, input.Position.X - offset2.X, 0, input.Position.Y - offset2.Y)
-    end
-end)
-
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging2 = false
-    end
-end)
-
--- 起動通知
-Notify("Masashiスクリプト", "World of Stands GUIが起動しました")
