@@ -208,12 +208,12 @@ MainTab:AddToggle({
     end
 })
 
-local transparencyEnabled = false
-local isInvisible = false
-local originalCFrame = nil
-local collisionPart = nil
 local invisible = false
 local invisButton = nil
+local originalCFrame = nil
+
+local player = game.Players.LocalPlayer
+local camera = workspace.CurrentCamera
 
 local InvisTab = Window:MakeTab({
     Name = "Invisibility",
@@ -223,8 +223,6 @@ local InvisTab = Window:MakeTab({
 
 -- 透明化処理
 local function enableInvisibility()
-    local player = game.Players.LocalPlayer
-    local cam = workspace.CurrentCamera
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     local head = char:FindFirstChild("Head")
@@ -233,10 +231,8 @@ local function enableInvisibility()
         hrp.Anchored = true
         hrp.CFrame = CFrame.new(0, 10000, 0)
 
-        cam.CameraType = Enum.CameraType.Custom
-        cam.CameraSubject = char:FindFirstChild("Humanoid")
-
-        for _, part in pairs(char:GetDescendants()) do
+        -- 半透明にする（見た目）
+        for _, part in ipairs(char:GetDescendants()) do
             if part:IsA("BasePart") or part:IsA("Decal") then
                 part.Transparency = 0.5
             end
@@ -244,20 +240,16 @@ local function enableInvisibility()
     end
 end
 
--- 透明解除処理
+-- 透明化解除処理
 local function disableInvisibility()
-    local player = game.Players.LocalPlayer
-    local cam = workspace.CurrentCamera
     local char = player.Character or player.CharacterAdded:Wait()
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if hrp and originalCFrame then
         hrp.CFrame = originalCFrame
         hrp.Anchored = false
 
-        cam.CameraType = Enum.CameraType.Custom
-        cam.CameraSubject = char:FindFirstChild("Humanoid")
-
-        for _, part in pairs(char:GetDescendants()) do
+        -- 元の透明度に戻す
+        for _, part in ipairs(char:GetDescendants()) do
             if part:IsA("BasePart") or part:IsA("Decal") then
                 part.Transparency = 0
             end
@@ -265,15 +257,16 @@ local function disableInvisibility()
     end
 end
 
--- トグル
+-- トグルで透明ON/OFFボタンを表示・非表示
 InvisTab:AddToggle({
     Name = "透明化機能を有効にする",
     Default = false,
     Callback = function(state)
         if state then
+            -- 初回だけ作成
             if not invisButton then
                 invisButton = InvisTab:AddButton({
-                    Name = "透明 ON/OFF",
+                    Name = "透明 ON / OFF",
                     Callback = function()
                         invisible = not invisible
                         if invisible then
@@ -285,13 +278,15 @@ InvisTab:AddToggle({
                 })
             end
         else
+            -- OFF時に透明解除とボタン削除
             if invisible then
                 disableInvisibility()
                 invisible = false
             end
-            -- GUIボタン削除したい場合の例（必要なら実装）
-            -- invisButton:Destroy()
-            invisButton = nil
+            if invisButton then
+                invisButton:Destroy()
+                invisButton = nil
+            end
         end
     end
 })
