@@ -1,9 +1,3 @@
-
---[[
-    World of Stands Most Useful Script by Masashi
-    最新版：空中TP・完全透明・スピード調整・無限ジャンプ 全部入り
---]]
-
 -- OrionLib 読み込み（GitHub対応）
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Players = game:GetService("Players")
