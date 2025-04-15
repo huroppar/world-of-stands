@@ -213,159 +213,87 @@ local isInvisible = false
 local originalCFrame = nil
 local collisionPart = nil
 
--- トグル追加（GUIで透明化機能のオンオフ）
-MainTab:AddToggle({
-    Name = "透明化機能 On/Off",
-    Default = false,
-    Callback = function(state)
-        transparencyEnabled = state
-        if toggleTransparencyButton then
-            toggleTransparencyButton.Visible = state
-        end
-        OrionLib:MakeNotification({
-            Name = "透明化機能",
-            Content = state and "透明化機能を有効化したよ！" or "透明化機能を無効化したよ！",
-            Time = 3
-        })
-    end
-})
-
+-- タブ作成（すでに作ってるTabがあれば省略OK）
 local InvisTab = Window:MakeTab({
     Name = "Invisibility",
-    Icon = "rbxassetid://1234567890", -- 適当でOK
+    Icon = "rbxassetid://1234567890", -- アイコン自由に変えてOK
     PremiumOnly = false
 })
 
-local showButton = false
-local invisButton
+-- 状態管理用の変数
+local invisible = false
+local originalCFrame = nil
+local invisButton = nil
 
+-- 透明化処理
+local function enableInvisibility()
+    local player = game.Players.LocalPlayer
+    local cam = workspace.CurrentCamera
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local head = char:FindFirstChild("Head")
+    if hrp and head then
+        originalCFrame = hrp.CFrame
+        hrp.Anchored = true
+        hrp.CFrame = CFrame.new(0, 10000, 0)
+        cam.CameraType = Enum.CameraType.Scriptable
+        cam.CFrame = head.CFrame + Vector3.new(0, 2, 5)
+        -- 半透明にする（自分視点）
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.Transparency = 0.5
+            end
+        end
+    end
+end
+
+-- 透明解除処理
+local function disableInvisibility()
+    local player = game.Players.LocalPlayer
+    local cam = workspace.CurrentCamera
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp and originalCFrame then
+        hrp.CFrame = originalCFrame
+        hrp.Anchored = false
+        cam.CameraType = Enum.CameraType.Custom
+        cam.CameraSubject = char:FindFirstChild("Humanoid")
+        -- 半透明解除
+        for _, part in pairs(char:GetDescendants()) do
+            if part:IsA("BasePart") or part:IsA("Decal") then
+                part.Transparency = 0
+            end
+        end
+    end
+end
+
+-- トグルで透明ボタンを表示/非表示にする処理
 InvisTab:AddToggle({
     Name = "透明化機能を有効にする",
     Default = false,
-    Callback = function(value)
-        showButton = value
-        if value and not invisButton then
-            invisButton = InvisTab:AddButton({
-                Name = "透明ON / OFF",
-                Callback = function()
-                    invisible = not invisible
-                    if invisible then
-                        enableInvisibility()
-                    else
-                        disableInvisibility()
+    Callback = function(state)
+        if state then
+            if not invisButton then
+                invisButton = InvisTab:AddButton({
+                    Name = "透明 ON/OFF",
+                    Callback = function()
+                        invisible = not invisible
+                        if invisible then
+                            enableInvisibility()
+                        else
+                            disableInvisibility()
+                        end
                     end
-                end
-            })
-        elseif not value and invisButton then
-            InvisTab:RemoveButton(invisButton)
-            invisButton = nil
+                })
+            end
+        else
             if invisible then
                 disableInvisibility()
                 invisible = false
             end
+            invisButton = nil
         end
     end
 })
-
-
--- 透明化ON/OFFの処理（スクリプトの一番下に貼ってOK）
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local cam = workspace.CurrentCamera
-local char = player.Character or player.CharacterAdded:Wait()
-local invisible = false
-local originalCFrame = nil
-
-local function enableInvisibility()
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local head = char:FindFirstChild("Head")
-    if hrp and head then
-        originalCFrame = hrp.CFrame
-        hrp.Anchored = true
-        hrp.CFrame = CFrame.new(0, 10000, 0)
-        cam.CameraType = Enum.CameraType.Scriptable
-        cam.CFrame = head.CFrame + Vector3.new(0, 2, 5)
-    end
-end
-
-local function disableInvisibility()
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if hrp and originalCFrame then
-        hrp.CFrame = originalCFrame
-        hrp.Anchored = false
-        cam.CameraType = Enum.CameraType.Custom
-        cam.CameraSubject = char:FindFirstChild("Humanoid")
-    end
-end
-
-local InvisTab = Window:MakeTab({
-    Name = "Invisibility",
-    Icon = "rbxassetid://1234567890", -- 適当でOK
-    PremiumOnly = false
-})
-
-local invisible = false
-local originalCFrame = nil
-local buttonVisible = false
-local invisButtonObj
-
--- 透明化処理（関数はスクリプトの下でも上でもOK）
-local function enableInvisibility()
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-    local cam = workspace.CurrentCamera
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local head = char:FindFirstChild("Head")
-    if hrp and head then
-        originalCFrame = hrp.CFrame
-        hrp.Anchored = true
-        hrp.CFrame = CFrame.new(0, 10000, 0)
-        cam.CameraType = Enum.CameraType.Scriptable
-        cam.CFrame = head.CFrame + Vector3.new(0, 2, 5)
-    end
-end
-
-local function disableInvisibility()
-    local Players = game:GetService("Players")
-    local player = Players.LocalPlayer
-    local cam = workspace.CurrentCamera
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    if hrp and originalCFrame then
-        hrp.CFrame = originalCFrame
-        hrp.Anchored = false
-        cam.CameraType = Enum.CameraType.Custom
-        cam.CameraSubject = char:FindFirstChild("Humanoid")
-    end
-end
-
--- 透明化ボタン（最初に作るけど非表示にしておく）
-invisButtonObj = InvisTab:AddButton({
-    Name = "透明ON / OFF",
-    Callback = function()
-        invisible = not invisible
-        if invisible then
-            enableInvisibility()
-        else
-            disableInvisibility()
-        end
-    end
-})
-
--- ボタンを非表示にしておく
-invisButtonObj:SetVisible(false)
-
--- トグルでONにしたらボタン表示、OFFにしたら非表示
-InvisTab:AddToggle({
-    Name = "透明化機能を有効にする",
-    Default = false,
-    Callback = function(state)
-        buttonVisible = state
-        invisButtonObj:SetVisible(state)
-        if not state and invisible then
-            disableInvisibility()
-            invisible = false
-        end
     end
 })
