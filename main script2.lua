@@ -57,8 +57,19 @@ local function makeInvisible()
         dummyPart.CFrame = CFrame.new(0, 10000, 0)
         dummyPart.Parent = workspace
 
-        root.Anchored = true
-        root.CFrame = dummyPart.CFrame
+       -- 擬似的に当たり判定だけ遠くに逃がす
+local fakeRoot = root:Clone()
+fakeRoot.Name = "FakeHitbox"
+fakeRoot.Anchored = true
+fakeRoot.Transparency = 1
+fakeRoot.CanCollide = false
+fakeRoot.CFrame = CFrame.new(0, 10000, 0)
+fakeRoot.Parent = workspace
+
+-- 元のHumanoidRootPartを無効化しておく（安全）
+root.CanCollide = false
+root.Transparency = 1
+root.Massless = true
     end
 
     isInvisible = true
@@ -112,6 +123,9 @@ MainTab:AddToggle({
     end
 })
 
+if workspace:FindFirstChild("FakeHitbox") then
+    workspace:FindFirstChild("FakeHitbox"):Destroy()
+end
 -- 空中テレポート機能
 local teleportKey = Enum.KeyCode.Y
 local isInAir = false
