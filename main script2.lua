@@ -297,3 +297,75 @@ local function disableInvisibility()
         cam.CameraSubject = char:FindFirstChild("Humanoid")
     end
 end
+
+local InvisTab = Window:MakeTab({
+    Name = "Invisibility",
+    Icon = "rbxassetid://1234567890", -- 適当でOK
+    PremiumOnly = false
+})
+
+local invisible = false
+local originalCFrame = nil
+local buttonVisible = false
+local invisButtonObj
+
+-- 透明化処理（関数はスクリプトの下でも上でもOK）
+local function enableInvisibility()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local cam = workspace.CurrentCamera
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    local head = char:FindFirstChild("Head")
+    if hrp and head then
+        originalCFrame = hrp.CFrame
+        hrp.Anchored = true
+        hrp.CFrame = CFrame.new(0, 10000, 0)
+        cam.CameraType = Enum.CameraType.Scriptable
+        cam.CFrame = head.CFrame + Vector3.new(0, 2, 5)
+    end
+end
+
+local function disableInvisibility()
+    local Players = game:GetService("Players")
+    local player = Players.LocalPlayer
+    local cam = workspace.CurrentCamera
+    local char = player.Character or player.CharacterAdded:Wait()
+    local hrp = char:FindFirstChild("HumanoidRootPart")
+    if hrp and originalCFrame then
+        hrp.CFrame = originalCFrame
+        hrp.Anchored = false
+        cam.CameraType = Enum.CameraType.Custom
+        cam.CameraSubject = char:FindFirstChild("Humanoid")
+    end
+end
+
+-- 透明化ボタン（最初に作るけど非表示にしておく）
+invisButtonObj = InvisTab:AddButton({
+    Name = "透明ON / OFF",
+    Callback = function()
+        invisible = not invisible
+        if invisible then
+            enableInvisibility()
+        else
+            disableInvisibility()
+        end
+    end
+})
+
+-- ボタンを非表示にしておく
+invisButtonObj:SetVisible(false)
+
+-- トグルでONにしたらボタン表示、OFFにしたら非表示
+InvisTab:AddToggle({
+    Name = "透明化機能を有効にする",
+    Default = false,
+    Callback = function(state)
+        buttonVisible = state
+        invisButtonObj:SetVisible(state)
+        if not state and invisible then
+            disableInvisibility()
+            invisible = false
+        end
+    end
+})
