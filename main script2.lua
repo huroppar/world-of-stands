@@ -329,3 +329,10 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     Humanoid = char:WaitForChild("Humanoid")
     HRP = char:WaitForChild("HumanoidRootPart")
 end)
+
+    -- InvisibleHitbox を削除
+    if remoteHitboxPart and remoteHitboxPart.Parent then
+        remoteHitboxPart:Destroy()
+        remoteHitboxPart = nil
+    end
+end
