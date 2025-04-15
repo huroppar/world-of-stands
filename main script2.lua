@@ -1,43 +1,41 @@
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
 local HRP = Character:WaitForChild("HumanoidRootPart")
 
--- Solara v3互換ライブラリ
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-
 local Window = OrionLib:MakeWindow({
-    Name = "World of Stands - Speed Control",
+    Name = "World of Stands - Ultimate Tool",
     HidePremium = false,
     SaveConfig = true,
-    ConfigFolder = "WOS_SpeedControl"
+    ConfigFolder = "WOS_UltimateTool"
 })
 
 local MainTab = Window:MakeTab({
-    Name = "Movement",
+    Name = "機能一覧",
     Icon = "rbxassetid://4483345998",
     PremiumOnly = false
 })
 
+------------------------------
+-- Speedコントロール機能
+------------------------------
 local speedValue = 30
 local speedEnabled = false
 
--- オンオフ切替
 MainTab:AddToggle({
     Name = "Speed On/Off",
     Default = false,
     Callback = function(state)
         speedEnabled = state
-        if speedEnabled then
-            Humanoid.WalkSpeed = speedValue
-        else
-            Humanoid.WalkSpeed = 30
-        end
+        Humanoid.WalkSpeed = state and speedValue or 30
     end
 })
 
--- スライダー
 local speedSlider = MainTab:AddSlider({
     Name = "Speed Slider",
     Min = 1,
@@ -46,15 +44,12 @@ local speedSlider = MainTab:AddSlider({
     Increment = 1,
     Callback = function(value)
         speedValue = value
-        if speedEnabled then
-            Humanoid.WalkSpeed = value
-        end
+        if speedEnabled then Humanoid.WalkSpeed = value end
     end
 })
 
--- 数値入力
 MainTab:AddTextbox({
-    Name = "Speed Input (手動入力)",
+    Name = "Speed数値入力",
     Default = tostring(speedValue),
     TextDisappear = false,
     Callback = function(text)
@@ -62,56 +57,65 @@ MainTab:AddTextbox({
         if num and num >= 1 and num <= 500 then
             speedValue = num
             speedSlider:Set(num)
-            if speedEnabled then
-                Humanoid.WalkSpeed = num
-            end
+            if speedEnabled then Humanoid.WalkSpeed = num end
         else
             OrionLib:MakeNotification({
                 Name = "エラー",
-                Content = "1〜500の数字を入力してね！",
+                Content = "1〜500の数字を入れてね！",
                 Time = 3
             })
         end
     end
 })
 
--- Speed維持ループ（頻度爆上げ & 技に打ち勝つ）
+-- Speed維持ループ
 task.spawn(function()
     while true do
-        game:GetService("RunService").RenderStepped:Wait()
+        RunService.RenderStepped:Wait()
         if speedEnabled and Humanoid then
             Humanoid.WalkSpeed = speedValue
         end
     end
 end)
 
-local airTeleportEnabled = true -- デフォルトはON
+------------------------------
+-- 空中テレポート機能
+------------------------------
+local teleportKey = Enum.KeyCode.Y
+local isInAir = false
+local originalCFrame = nil
+local airTeleportEnabled = true
 
 MainTab:AddToggle({
-    Name = "空中TP機能 On/Off",
+    Name = "空中TP On/Off",
     Default = true,
     Callback = function(state)
         airTeleportEnabled = state
         OrionLib:MakeNotification({
             Name = "空中TP",
-            Content = state and "空中TPを有効化したよ！" or "空中TPを無効化したよ！",
+            Content = state and "空中TPを有効化したよ！" or "無効化したよ！",
+            Time = 2
+        })
+    end
+})
+
+MainTab:AddDropdown({
+    Name = "空中TPキー設定",
+    Default = "Y",
+    Options = {"Q","E","R","T","Y","U","I","O","P","Z","X","C","V","B","N","M"},
+    Callback = function(key)
+        teleportKey = Enum.KeyCode[key]
+        OrionLib:MakeNotification({
+            Name = "キー設定完了",
+            Content = "空中TPキーを ["..key.."] にしたよ！",
             Time = 3
         })
     end
 })
 
--- 空中テレポート用変数（← ここはループの外！）
-local teleportKey = Enum.KeyCode.Y
-local isInAir = false
-local originalCFrame = nil
-
-
--- 空中テレポート関数
 local function toggleAirTeleport()
-    if not airTeleportEnabled then return end
-    
     local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    if not airTeleportEnabled or not root then return end
 
     if not isInAir then
         originalCFrame = root.CFrame
@@ -126,15 +130,15 @@ local function toggleAirTeleport()
     end
 end
 
--- キー入力で実行
-game:GetService("UserInputService").InputBegan:Connect(function(input, gpe)
+UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
     if input.KeyCode == teleportKey then
         toggleAirTeleport()
     end
 end)
 
--- GUIにボタンとキー設定追加
+-- 画面ボタン
+local teleportButton = nil
 MainTab:AddToggle({
     Name = "空中TPボタン表示",
     Default = false,
@@ -145,22 +149,6 @@ MainTab:AddToggle({
     end
 })
 
-local keyList = {"Q", "E", "R", "T", "Y", "U", "I", "O", "P", "Z", "X", "C", "V", "B", "N", "M"}
-MainTab:AddDropdown({
-    Name = "空中TPキー設定",
-    Default = "Y",
-    Options = keyList,
-    Callback = function(key)
-        teleportKey = Enum.KeyCode[key]
-        OrionLib:MakeNotification({
-            Name = "キー変更完了",
-            Content = "空中TPのキーが「" .. key .. "」に設定されたよ！",
-            Time = 3
-        })
-    end
-})
-
--- 空中TPボタンを画面に表示する処理
 local function createTeleportButton()
     local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
     gui.Name = "TeleportGui"
@@ -182,19 +170,11 @@ end
 
 createTeleportButton()
 
--- 無限ジャンプ用変数
+------------------------------
+-- 無限ジャンプ機能
+------------------------------
 local infiniteJumpEnabled = false
 
--- 無限ジャンプ本体処理
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    if infiniteJumpEnabled then
-        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-            LocalPlayer.Character:FindFirstChild("Humanoid"):ChangeState(Enum.HumanoidStateType.Jumping)
-        end
-    end
-end)
-
--- GUIにトグル追加
 MainTab:AddToggle({
     Name = "無限ジャンプ On/Off",
     Default = false,
@@ -202,40 +182,25 @@ MainTab:AddToggle({
         infiniteJumpEnabled = state
         OrionLib:MakeNotification({
             Name = "無限ジャンプ",
-            Content = state and "無限ジャンプをONにしたよ！" or "無限ジャンプをOFFにしたよ！",
-            Time = 3
+            Content = state and "ONにしたよ！" or "OFFにしたよ！",
+            Time = 2
         })
     end
 })
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local RunService = game:GetService("RunService")
+UserInputService.JumpRequest:Connect(function()
+    if infiniteJumpEnabled and LocalPlayer.Character and Humanoid then
+        Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
+    end
+end)
 
--- 初期キャラ取得
-local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-
--- OrionLib で GUI 作成
-local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-
-local Window = OrionLib:MakeWindow({
-    Name = "World of Stands - 透明化システム",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "WOS_Invisible"
-})
-
-local MainTab = Window:MakeTab({
-    Name = "ステルス",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
+------------------------------
+-- 透明化機能
+------------------------------
 local isInvisible = false
 local savedParts = {}
 local remoteHitboxPart = nil
 
--- キャラを透明にする関数
 local function makeInvisible()
     Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
     for _, part in ipairs(Character:GetDescendants()) do
@@ -248,7 +213,6 @@ local function makeInvisible()
         end
     end
 
-    -- 当たり判定を上空に退避させるヒットボックス（ダメージ回避）
     local root = Character:FindFirstChild("HumanoidRootPart")
     if root then
         remoteHitboxPart = Instance.new("Part")
@@ -266,7 +230,6 @@ local function makeInvisible()
     end
 end
 
--- 元に戻す関数
 local function revertVisibility()
     for part, transparency in pairs(savedParts) do
         if part and part:IsDescendantOf(Character) then
@@ -290,74 +253,20 @@ local function revertVisibility()
     end
 end
 
--- GUIトグル
 MainTab:AddToggle({
     Name = "透明化 On/Off",
     Default = false,
     Callback = function(state)
         isInvisible = state
-        if state then
+        if isInvisible then
             makeInvisible()
-            OrionLib:MakeNotification({
-                Name = "透明化ON",
-                Content = "完全透明状態に切り替えたよ！",
-                Time = 3
-            })
         else
             revertVisibility()
-            OrionLib:MakeNotification({
-                Name = "透明化OFF",
-                Content = "元に戻したよ！",
-                Time = 3
-            })
         end
-    end
-})
-
--- リスポーン検知で再適用
-LocalPlayer.CharacterAdded:Connect(function(char)
-    Character = char
-    if isInvisible then
-        wait(1)
-        makeInvisible()
-    end
-end)
-
-
-LocalPlayer.CharacterAdded:Connect(function(char)
-    Character = char
-    Humanoid = char:WaitForChild("Humanoid")
-    HRP = char:WaitForChild("HumanoidRootPart")
-end)
-
-    -- ヒットボックス削除
-    if remoteHitboxPart and remoteHitboxPart.Parent then
-        remoteHitboxPart:Destroy()
-        remoteHitboxPart = nil
-    end
-    isInvisible = false
-end
-
--- GUIにトグル追加
-MainTab:AddToggle({
-    Name = "透明化 On/Off",
-    Default = false,
-    Callback = function(state)
-        if state and not isInvisible then
-            makeInvisible()
-            isInvisible = true
-            OrionLib:MakeNotification({
-                Name = "透明化",
-                Content = "キャラを透明にして上空に退避させたよ！",
-                Time = 3
-            })
-        elseif not state and isInvisible then
-            revertVisibility()
-            OrionLib:MakeNotification({
-                Name = "透明解除",
-                Content = "キャラを元に戻したよ！",
-                Time = 3
-            })
-        end
+        OrionLib:MakeNotification({
+            Name = "透明化",
+            Content = state and "キャラを透明にしたよ！" or "元に戻したよ！",
+            Time = 3
+        })
     end
 })
