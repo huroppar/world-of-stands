@@ -208,107 +208,120 @@ MainTab:AddToggle({
     end
 })
 
--- サービス取得
+-- Services
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
-local player = Players.LocalPlayer
+local UIS = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Mouse = LocalPlayer:GetMouse()
 
--- 状態管理
+-- 状態
+local isInvisible = false
+local fakePart = nil
 local transparencyButton = nil
 local dragging = false
 local offset = Vector2.zero
-local isInvisible = false
-local originalCFrame = nil
 
--- キャラ透明化・無敵化
+-- 透明化機能
 local function enableInvisibility()
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChildOfClass("Humanoid")
+    if isInvisible then return end
+    isInvisible = true
 
-    if hrp and humanoid then
-        originalCFrame = hrp.CFrame
-        hrp.Anchored = true
-        hrp.CFrame = CFrame.new(0, 10000, 0)
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
 
-        for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BasePart") or v:IsA("Decal") then
-                v.Transparency = 1
-                v.CanCollide = false
-            elseif v:IsA("BillboardGui") or v:IsA("SurfaceGui") then
-                v.Enabled = false
-            end
+    -- パーツ透明化 & 衝突なし
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 1
+            part.CanCollide = false
+        elseif part:IsA("Decal") then
+            part.Transparency = 1
         end
-
-        humanoid.Name = "NOHUMANOID" -- 一部スクリプト攻撃対策
     end
+
+    -- 上空に偽当たり判定パーツ
+    fakePart = Instance.new("Part")
+    fakePart.Size = Vector3.new(2,2,1)
+    fakePart.Anchored = true
+    fakePart.CanCollide = true
+    fakePart.Transparency = 1
+    fakePart.Position = Vector3.new(0, 10000, 0)
+    fakePart.Parent = workspace
+
+    -- キャラのHRPを上空に移動
+    hrp.CFrame = fakePart.CFrame
 end
 
--- キャラ元に戻す
+-- 透明解除
 local function disableInvisibility()
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChild("NOHUMANOID")
+    if not isInvisible then return end
+    isInvisible = false
 
-    if hrp and humanoid and originalCFrame then
-        hrp.CFrame = originalCFrame
-        hrp.Anchored = false
-        humanoid.Name = "Humanoid"
+    local char = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+    local hrp = char:WaitForChild("HumanoidRootPart")
 
-        for _, v in pairs(char:GetDescendants()) do
-            if v:IsA("BasePart") or v:IsA("Decal") then
-                v.Transparency = 0
-                v.CanCollide = true
-            elseif v:IsA("BillboardGui") or v:IsA("SurfaceGui") then
-                v.Enabled = true
-            end
+    for _, part in pairs(char:GetDescendants()) do
+        if part:IsA("BasePart") then
+            part.Transparency = 0
+            part.CanCollide = true
+        elseif part:IsA("Decal") then
+            part.Transparency = 0
         end
     end
+
+    if fakePart then
+        fakePart:Destroy()
+        fakePart = nil
+    end
+
+    -- キャラの位置リセット
+    hrp.CFrame = CFrame.new(hrp.Position.X, 10, hrp.Position.Z)
 end
 
--- フローティングボタン生成
+-- 浮遊ボタン作成（クリックで透明ON/OFF）
 local function createFloatingButton()
     if transparencyButton then return end
 
     local gui = Instance.new("ScreenGui", game.CoreGui)
-    gui.Name = "InvisButtonGui"
+    gui.Name = "TransparencyButtonGui"
 
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, 120, 0, 40)
     button.Position = UDim2.new(0.5, -60, 0.85, 0)
-    button.BackgroundColor3 = Color3.new(0.1, 0.6, 1)
-    button.Text = "透明化：OFF"
-    button.TextColor3 = Color3.new(1,1,1)
+    button.BackgroundColor3 = Color3.fromRGB(0, 100, 255)
+    button.Text = "透明 ON/OFF"
+    button.TextColor3 = Color3.new(1, 1, 1)
     button.TextScaled = true
+    button.BorderSizePixel = 0
     button.Parent = gui
 
-    -- ボタン操作
+    -- クリックで切替
     button.MouseButton1Click:Connect(function()
-        isInvisible = not isInvisible
         if isInvisible then
-            button.Text = "透明化：ON"
-            enableInvisibility()
-        else
-            button.Text = "透明化：OFF"
             disableInvisibility()
+        else
+            enableInvisibility()
         end
     end)
 
-    -- ドラッグ可能
+    -- ドラッグ開始
     button.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
-            offset = input.Position - button.AbsolutePosition
+            offset = Vector2.new(input.Position.X - button.AbsolutePosition.X, input.Position.Y - button.AbsolutePosition.Y)
         end
     end)
 
-    UserInputService.InputChanged:Connect(function(input)
+    -- ドラッグ中
+    UIS.InputChanged:Connect(function(input)
         if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
-            button.Position = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
+            local newPos = UDim2.new(0, input.Position.X - offset.X, 0, input.Position.Y - offset.Y)
+            button.Position = newPos
         end
     end)
 
-    UserInputService.InputEnded:Connect(function(input)
+    -- ドラッグ終了
+    UIS.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
         end
@@ -317,32 +330,31 @@ local function createFloatingButton()
     transparencyButton = gui
 end
 
--- フローティングボタン削除
+-- ボタン削除
 local function removeFloatingButton()
     if transparencyButton then
         transparencyButton:Destroy()
         transparencyButton = nil
     end
-    if isInvisible then
-        disableInvisibility()
-        isInvisible = false
-    end
 end
 
--- OrionLib側のタブにトグル追加
+-- OrionLib の GUI にトグルスイッチを追加（Window は作成済み前提）
 local InvisTab = Window:MakeTab({
     Name = "Invisibility",
-    Icon = "rbxassetid://1234567890",
+    Icon = "rbxassetid://1234567890", -- 任意のアイコンIDに置き換えてOK
     PremiumOnly = false
 })
 
 InvisTab:AddToggle({
-    Name = "透明化機能 ON/OFF",
+    Name = "透明化 機能 ON/OFF スイッチ",
     Default = false,
-    Callback = function(value)
-        if value then
+    Callback = function(state)
+        if state then
             createFloatingButton()
         else
+            if isInvisible then
+                disableInvisibility()
+            end
             removeFloatingButton()
         end
     end
