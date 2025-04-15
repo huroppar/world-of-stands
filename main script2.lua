@@ -1,6 +1,5 @@
 --// Script by Masashi
 
--- ライブラリ読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -8,15 +7,20 @@ local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
--- 状態管理変数
-local savedPosition = nil
+-- 状態管理
 local speedEnabled = false
 local infiniteJumpEnabled = false
-local transparencyEnabled = false
-local teleportBackPosition = nil
-local airTeleporting = false
+local airTPEnabled = false
+local invisibilityEnabled = false
+local lastPosition = nil
+local airTPKey = Enum.KeyCode.T
 
--- GUIウィンドウ作成
+-- Util
+local function getRoot()
+    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+end
+
+-- GUI作成
 local Window = OrionLib:MakeWindow({
     Name = "World of Stands - Masashi GUI",
     HidePremium = false,
@@ -24,13 +28,9 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "WOS_Masashi_Config"
 })
 
--- タブ作成
 local MainTab = Window:MakeTab({Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false})
-local TogglesTab = Window:MakeTab({Name = "表示切替", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
 -- スピード機能
-local SpeedSlider
-local SpeedBox
 MainTab:AddToggle({
     Name = "スピード変更 有効化",
     Default = false,
@@ -41,7 +41,8 @@ MainTab:AddToggle({
         end
     end
 })
-SpeedSlider = MainTab:AddSlider({
+
+MainTab:AddSlider({
     Name = "速度スライダー",
     Min = 1,
     Max = 500,
@@ -53,28 +54,25 @@ SpeedSlider = MainTab:AddSlider({
         end
     end
 })
-SpeedBox = MainTab:AddTextbox({
+
+MainTab:AddTextbox({
     Name = "速度を直接入力",
     Default = "30",
     TextDisappear = false,
     Callback = function(text)
         local num = tonumber(text)
         if num and speedEnabled then
-            SpeedSlider:Set(num)
             LocalPlayer.Character:FindFirstChildOfClass("Humanoid").WalkSpeed = num
         end
     end
 })
-'''
 
 -- 無限ジャンプ
-local uis = game:GetService("UserInputService")
-local infiniteJumpEnabled = false
-uis.JumpRequest:Connect(function()
+UserInputService.JumpRequest:Connect(function()
     if infiniteJumpEnabled then
         local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
         if humanoid then
-            humanoid:ChangeState("Jumping")
+            humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
         end
     end
 end)
@@ -87,12 +85,7 @@ MainTab:AddToggle({
     end
 })
 
--- 空中TP
-local airTPEnabled = false
-local lastPosition = nil
-local airTPKey = Enum.KeyCode.T
-local airTPButtonVisible = false
-
+-- 空中TP機能本体
 local function teleportToAir()
     if not airTPEnabled then return end
     local root = getRoot()
@@ -108,7 +101,7 @@ local function teleportToAir()
     end
 end
 
-uis.InputBegan:Connect(function(input, gpe)
+UserInputService.InputBegan:Connect(function(input, gpe)
     if gpe then return end
     if input.KeyCode == airTPKey and airTPEnabled then
         teleportToAir()
@@ -124,16 +117,7 @@ MainTab:AddBind({
     end
 })
 
-MainTab:AddToggle({
-    Name = "空中TPボタン表示",
-    Default = false,
-    Callback = function(Value)
-        airTPButton.Visible = Value
-        airTPEnabled = Value
-    end
-})
-
--- 空中TPボタン作成
+-- ボタン（後から作成することで安全に参照できる）
 local airTPButton = Instance.new("TextButton")
 airTPButton.Text = "空中TP"
 airTPButton.Size = UDim2.new(0, 100, 0, 40)
@@ -145,8 +129,16 @@ airTPButton.Parent = game:GetService("CoreGui")
 
 airTPButton.MouseButton1Click:Connect(teleportToAir)
 
--- 透明化
-local invisibilityEnabled = false
+MainTab:AddToggle({
+    Name = "空中TPボタン表示",
+    Default = false,
+    Callback = function(Value)
+        airTPButton.Visible = Value
+        airTPEnabled = Value
+    end
+})
+
+-- 透明化ボタン
 local invisButton = Instance.new("TextButton")
 invisButton.Text = "透明化"
 invisButton.Size = UDim2.new(0, 100, 0, 40)
