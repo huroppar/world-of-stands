@@ -1,92 +1,85 @@
---// Hide the sky! GUI by Masashi
+--// Script by Masashi
 
+-- ライブラリ読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
-local Humanoid = Character:WaitForChild("Humanoid")
 local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+local Humanoid = Character:WaitForChild("Humanoid")
 
+-- 状態変数
 local speedEnabled = false
-local airTPEnabled = false
+local speedValue = 30
 local infiniteJumpEnabled = false
-local velocityForce = nil
+local airTPEnabled = false
 local lastPosition = nil
+local airTPKey = Enum.KeyCode.T
 
--- GUI
+-- GUI作成
 local Window = OrionLib:MakeWindow({
-    Name = "Hide the sky!",
+    Name = "World of Stands - Masashi GUI",
     HidePremium = false,
     SaveConfig = true,
-    ConfigFolder = "HideTheSky_Config"
+    ConfigFolder = "WOS_Masashi_Config"
 })
-
 local MainTab = Window:MakeTab({Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
--- スピード
-local currentSpeed = 30
-local speedSlider, speedBox
+-- スピード変更
+local function applySpeed()
+    if Humanoid then
+        Humanoid.WalkSpeed = speedEnabled and speedValue or 30
+    end
+end
+
+LocalPlayer.CharacterAdded:Connect(function(char)
+    Humanoid = char:WaitForChild("Humanoid")
+    task.wait(0.1)
+    applySpeed()
+end)
 
 MainTab:AddToggle({
-    Name = "スピード変更 有効化",
+    Name = "スピード有効化",
     Default = false,
     Callback = function(state)
         speedEnabled = state
-        if not state and velocityForce then
-            velocityForce:Destroy()
-            velocityForce = nil
-            Humanoid.WalkSpeed = 30
-        end
+        applySpeed()
     end
 })
 
-speedSlider = MainTab:AddSlider({
-    Name = "速度スライダー",
+MainTab:AddSlider({
+    Name = "スピード調整",
     Min = 1,
     Max = 500,
     Default = 30,
     Increment = 1,
     Callback = function(value)
-        currentSpeed = value
-        if speedEnabled then
-            if not velocityForce then
-                velocityForce = Instance.new("BodyVelocity")
-                velocityForce.MaxForce = Vector3.new(1e9, 0, 1e9)
-                velocityForce.Velocity = Vector3.zero
-                velocityForce.Parent = HumanoidRootPart
-            end
-        end
+        speedValue = value
+        applySpeed()
     end
 })
 
-speedBox = MainTab:AddTextbox({
-    Name = "速度を直接入力",
+MainTab:AddTextbox({
+    Name = "スピード数値入力",
     Default = "30",
     TextDisappear = false,
     Callback = function(text)
-        local num = tonumber(text)
-        if num then
-            currentSpeed = num
-            speedSlider:Set(num)
+        local number = tonumber(text)
+        if number and number >= 1 and number <= 500 then
+            speedValue = number
+            applySpeed()
         end
     end
 })
-
--- 毎フレーム移動反映
-RunService.RenderStepped:Connect(function()
-    if speedEnabled and velocityForce and LocalPlayer.Character then
-        local moveDir = Humanoid.MoveDirection
-        velocityForce.Velocity = moveDir * currentSpeed
-    end
-end)
 
 -- 無限ジャンプ
 UserInputService.JumpRequest:Connect(function()
     if infiniteJumpEnabled then
-        Humanoid:ChangeState("Jumping")
+        local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+        if humanoid then
+            humanoid:ChangeState("Jumping")
+        end
     end
 end)
 
@@ -98,34 +91,32 @@ MainTab:AddToggle({
     end
 })
 
--- 空中TP
-local airTPKey = Enum.KeyCode.T
-local airTPButton = Instance.new("TextButton")
-airTPButton.Text = "空中TP"
-airTPButton.Size = UDim2.new(0, 100, 0, 40)
-airTPButton.Position = UDim2.new(0, 200, 0, 200)
-airTPButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
-airTPButton.Visible = false
-airTPButton.Draggable = true
-airTPButton.Parent = game:GetService("CoreGui")
+-- 空中TP処理
+local function getRoot()
+    return LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+end
 
-local function airTeleport()
-    if not airTPEnabled then return end
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+local function teleportToAir()
+    local root = getRoot()
     if not root then return end
 
-    if lastPosition == nil then
-        lastPosition = root.CFrame
+    if not lastPosition then
+        lastPosition = root.Position
         root.Anchored = true
         root.CFrame = CFrame.new(root.Position.X, 10000, root.Position.Z)
     else
-        root.CFrame = lastPosition
+        root.CFrame = CFrame.new(lastPosition)
         root.Anchored = false
         lastPosition = nil
     end
 end
 
-airTPButton.MouseButton1Click:Connect(airTeleport)
+UserInputService.InputBegan:Connect(function(input, gpe)
+    if gpe then return end
+    if input.KeyCode == airTPKey and airTPEnabled then
+        teleportToAir()
+    end
+end)
 
 MainTab:AddToggle({
     Name = "空中TP有効化",
@@ -136,7 +127,7 @@ MainTab:AddToggle({
 })
 
 MainTab:AddBind({
-    Name = "空中TPキー",
+    Name = "空中TPキー設定",
     Default = airTPKey,
     Hold = false,
     Callback = function(Key)
@@ -144,11 +135,16 @@ MainTab:AddBind({
     end
 })
 
-UserInputService.InputBegan:Connect(function(input, gpe)
-    if not gpe and airTPEnabled and input.KeyCode == airTPKey then
-        airTeleport()
-    end
-end)
+-- 空中TPボタン
+local airTPButton = Instance.new("TextButton")
+airTPButton.Text = "空中TP"
+airTPButton.Size = UDim2.new(0, 100, 0, 40)
+airTPButton.Position = UDim2.new(0, 200, 0, 200)
+airTPButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
+airTPButton.Visible = false
+airTPButton.Draggable = true
+airTPButton.Parent = game:GetService("CoreGui")
+airTPButton.MouseButton1Click:Connect(teleportToAir)
 
 MainTab:AddToggle({
     Name = "空中TPボタン表示",
