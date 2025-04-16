@@ -108,11 +108,11 @@ local function teleportToAir()
     if not root then return end
 
     if not lastAirTPPosition then
-        lastAirTPPosition = root.Position
+        lastAirTPPosition = root.CFrame
         root.Anchored = true
         root.CFrame = CFrame.new(root.Position.X, 10000, root.Position.Z)
     else
-        root.CFrame = CFrame.new(lastAirTPPosition)
+        root.CFrame = lastAirTPPosition
         root.Anchored = false
         lastAirTPPosition = nil
     end
@@ -127,14 +127,19 @@ UserInputService.InputBegan:Connect(function(input, gameProcessed)
 end)
 
 -- 空中TPボタン
+local CoreGui = game:GetService("CoreGui")
+local screenGui = Instance.new("ScreenGui", CoreGui)
+screenGui.Name = "AirTPGui"
+
 local airTPButton = Instance.new("TextButton")
+airTPButton.Name = "AirTPButton"
 airTPButton.Text = "空中TP"
 airTPButton.Size = UDim2.new(0, 100, 0, 40)
 airTPButton.Position = UDim2.new(0, 300, 0, 300)
 airTPButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
 airTPButton.Visible = false
 airTPButton.Draggable = true
-airTPButton.Parent = game:GetService("CoreGui")
+airTPButton.Parent = screenGui
 
 airTPButton.MouseButton1Click:Connect(function()
     if airTPEnabled then
