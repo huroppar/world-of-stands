@@ -1,28 +1,25 @@
 --// Script by Masashi
 
--- ライブラリとサービス
+-- ライブラリ読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Players = game:GetService("Players")
-local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local CoreGui = game:GetService("CoreGui")
-
+local UserInputService = game:GetService("UserInputService")
 local LocalPlayer = Players.LocalPlayer
 local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
 local Humanoid = Character:WaitForChild("Humanoid")
-local Root = Character:WaitForChild("HumanoidRootPart")
+local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
 
--- 状態
+-- 状態管理変数
 local speedEnabled = false
-local currentSpeed = 30
 local infiniteJumpEnabled = false
 local airTPEnabled = false
-local airTPKey = Enum.KeyCode.T
 local airTPButtonVisible = false
-local savedTPPosition = nil
-local airTPButton
+local airTPKey = Enum.KeyCode.T
+local lastPosition = nil
+local savedSpeed = 30
 
--- GUI初期化
+-- GUIウィンドウ作成
 local Window = OrionLib:MakeWindow({
     Name = "World of Stands - Masashi GUI",
     HidePremium = false,
@@ -30,58 +27,56 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "WOS_Masashi_Config"
 })
 
+-- タブ作成
 local MainTab = Window:MakeTab({Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
--- スピード変更
+-- スピード制御（Velocity式）
+RunService.RenderStepped:Connect(function()
+    if speedEnabled then
+        Humanoid.WalkSpeed = 30 -- サーバー検知回避用に固定
+        HumanoidRootPart.Velocity = HumanoidRootPart.CFrame.lookVector * savedSpeed
+    else
+        Humanoid.WalkSpeed = 30
+    end
+end)
+
+-- スピードスライダーと手入力
 MainTab:AddToggle({
-    Name = "スピード変更 有効化",
+    Name = "スピード有効化",
     Default = false,
     Callback = function(state)
         speedEnabled = state
         if not state then
-            currentSpeed = 30
+            HumanoidRootPart.Velocity = Vector3.zero
             Humanoid.WalkSpeed = 30
-        else
-            Humanoid.WalkSpeed = currentSpeed
         end
     end
 })
 
-MainTab:AddSlider({
-    Name = "スピードスライダー",
+local speedSlider
+speedSlider = MainTab:AddSlider({
+    Name = "速度スライダー",
     Min = 1,
-    Max = 500,
+    Max = 45,
     Default = 30,
     Increment = 1,
     Callback = function(value)
-        currentSpeed = value
-        if speedEnabled then
-            Humanoid.WalkSpeed = value
-        end
+        savedSpeed = value
     end
 })
 
 MainTab:AddTextbox({
-    Name = "スピードを手入力",
+    Name = "速度を手入力",
     Default = "30",
     TextDisappear = false,
-    Callback = function(input)
-        local num = tonumber(input)
-        if num then
-            currentSpeed = num
-            if speedEnabled then
-                Humanoid.WalkSpeed = num
-            end
+    Callback = function(text)
+        local num = tonumber(text)
+        if num and num <= 45 then
+            savedSpeed = num
+            speedSlider:Set(num)
         end
     end
 })
-
--- スピード維持
-RunService.Stepped:Connect(function()
-    if speedEnabled and Humanoid then
-        Humanoid.WalkSpeed = currentSpeed
-    end
-end)
 
 -- 無限ジャンプ
 UserInputService.JumpRequest:Connect(function()
@@ -91,72 +86,68 @@ UserInputService.JumpRequest:Connect(function()
 end)
 
 MainTab:AddToggle({
-    Name = "無限ジャンプ 有効化",
+    Name = "無限ジャンプ",
     Default = false,
-    Callback = function(state)
-        infiniteJumpEnabled = state
+    Callback = function(Value)
+        infiniteJumpEnabled = Value
     end
 })
 
 -- 空中TP処理
-local function teleportAir()
-    if not Root then return end
-    if not savedTPPosition then
-        savedTPPosition = Root.Position
-        Root.Anchored = true
-        Root.CFrame = CFrame.new(Root.Position.X, 10000, Root.Position.Z)
+local function teleportToAir()
+    if not airTPEnabled then return end
+    if not lastPosition then
+        lastPosition = HumanoidRootPart.Position
+        HumanoidRootPart.Anchored = true
+        HumanoidRootPart.CFrame = CFrame.new(HumanoidRootPart.Position.X, 10000, HumanoidRootPart.Position.Z)
     else
-        Root.CFrame = CFrame.new(savedTPPosition)
-        Root.Anchored = false
-        savedTPPosition = nil
+        HumanoidRootPart.CFrame = CFrame.new(lastPosition)
+        HumanoidRootPart.Anchored = false
+        lastPosition = nil
     end
 end
 
--- キー割当
-MainTab:AddBind({
-    Name = "空中TPキー",
-    Default = airTPKey,
-    Hold = false,
-    Callback = function(key)
-        airTPKey = key
-    end
-})
-
+-- 空中TPキー設定
 UserInputService.InputBegan:Connect(function(input, gpe)
-    if not gpe and input.KeyCode == airTPKey and airTPEnabled then
-        teleportAir()
+    if gpe then return end
+    if input.KeyCode == airTPKey and airTPEnabled then
+        teleportToAir()
     end
 end)
 
--- 空中TPボタン作成
-airTPButton = Instance.new("TextButton")
+MainTab:AddBind({
+    Name = "空中TPキー設定",
+    Default = airTPKey,
+    Hold = false,
+    Callback = function(Key)
+        airTPKey = Key
+    end
+})
+
+MainTab:AddToggle({
+    Name = "空中TP機能オン/オフ",
+    Default = false,
+    Callback = function(Value)
+        airTPEnabled = Value
+    end
+})
+
+-- 空中TPボタン表示
+local airTPButton = Instance.new("TextButton")
 airTPButton.Text = "空中TP"
 airTPButton.Size = UDim2.new(0, 100, 0, 40)
-airTPButton.Position = UDim2.new(0, 200, 0, 300)
+airTPButton.Position = UDim2.new(0, 200, 0, 200)
 airTPButton.BackgroundColor3 = Color3.fromRGB(0, 255, 255)
 airTPButton.Visible = false
 airTPButton.Draggable = true
-airTPButton.Parent = CoreGui
+airTPButton.Parent = game:GetService("CoreGui")
 
-airTPButton.MouseButton1Click:Connect(function()
-    if airTPEnabled then
-        teleportAir()
-    end
-end)
+airTPButton.MouseButton1Click:Connect(teleportToAir)
 
 MainTab:AddToggle({
-    Name = "空中TPボタン 表示",
+    Name = "空中TPボタン表示切替",
     Default = false,
-    Callback = function(state)
-        airTPButtonVisible = state
-        airTPButton.Visible = state
-    end
-})
-
-MainTab:AddToggle({
-    Name = "空中TP機能 オンオフ",
-    Default = false,
-    Callback = function(state)
-        airTPEnabled = state
+    Callback = function(Value)
+        airTPButton.Visible = Value
     end
 })
