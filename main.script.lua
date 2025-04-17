@@ -48,7 +48,7 @@ if not allowedUsers[LocalPlayer.Name] then
                 end
             })
 
-        repeat wait() until verified
+        repeat task.wait() until verified
         keyInput.Enabled = false
     end
 end
@@ -70,8 +70,9 @@ local highlightEnabled = false
 local highlightInstances = {}
 local originalPosition = nil
 local tpButtonVisible = false
+local selectedPlayerName = nil
 
--- セクション
+-- メインタブ作成
 local MainTab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
 -- スピード変更
@@ -140,7 +141,7 @@ btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Visible = false
 btn.Parent = game.CoreGui
 
--- ボタンのドラッグ
+-- ドラッグ機能
 local dragging, dragInput, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -149,17 +150,13 @@ btn.InputBegan:Connect(function(input)
         startPos = btn.Position
 
         input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
+            if input.UserInputState == Enum.UserInputState.End then dragging = false end
         end)
     end
 end)
 
 btn.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
+    if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
 end)
 
 game:GetService("UserInputService").InputChanged:Connect(function(input)
@@ -182,15 +179,6 @@ btn.MouseButton1Click:Connect(function()
 end)
 
 MainTab:AddToggle({
-    Name = "空中TP機能 ON/OFF",
-    Default = false,
-    Callback = function(state)
-        tpButtonVisible = state
-        btn.Visible = state
-    end
-})
-
-MainTab:AddToggle({
     Name = "空中TPボタン表示切替",
     Default = false,
     Callback = function(state)
@@ -198,7 +186,7 @@ MainTab:AddToggle({
     end
 })
 
--- ハイライト（他プレイヤー）
+-- ハイライト機能
 local function updateHighlights()
     for _, h in pairs(highlightInstances) do h:Destroy() end
     table.clear(highlightInstances)
@@ -246,7 +234,7 @@ MainTab:AddToggle({
     end
 })
 
--- 最小化ボタン機能
+-- GUI 最小化ボタン
 local minimized = false
 MainTab:AddButton({
     Name = "🔽 GUI 最小化/元に戻す",
@@ -262,9 +250,7 @@ MainTab:AddButton({
     end
 })
 
--- プレイヤーTP機能（ドロップダウン選択）
-local selectedPlayerName = nil
-
+-- プレイヤーTP（ドロップダウン）
 MainTab:AddDropdown({
     Name = "プレイヤーを選択してTP",
     Default = "",
@@ -292,8 +278,17 @@ MainTab:AddDropdown({
     end
 })
 
--- プレイヤー一覧の定期更新
+-- プレイヤー一覧更新
 task.spawn(function()
+    while true do
+        local options = {}
+        for _, player in ipairs(game.Players:GetPlayers()) do
+            if player ~= LocalPlayer then table.insert(options, player.Name) end
+        end
+        MainTab:UpdateDropdown("プレイヤーを選択してTP", options)
+        task.wait(5)
+    end
+end)
 
 -- 起動通知
 OrionLib:MakeNotification({
