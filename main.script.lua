@@ -1,100 +1,60 @@
 -- OrionLibの読み込み（GitHubエラー対応版）
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 
--- ユーザー情報
-local LocalPlayer = game.Players.LocalPlayer
-local username = LocalPlayer.Name
-
--- オーナーリスト（無条件起動）
-local AuthorizedUsers = {
-    ["Masashi"] = true,
-    ["Furoppersama"] = true
+-- ユーザー名と認証キー設定
+local BypassUsers = {
+	["Furoppersama"] = true,
+	["BNVGUE2"] = true,
+	["Furopparsama"] = true
 }
+local CorrectKey = "Masashi0407"
+local playerName = game.Players.LocalPlayer.Name
 
--- 正しいキー
-local ValidKey = "Masashi0407"
+-- GUIウィンドウの初期化（仮置き）
+local Window
 
--- オーナー判定
-if AuthorizedUsers[username] then
-    -- 自動で起動
-    OrionLib:MakeNotification({
-        Name = "認証成功",
-        Content = "ようこそ " .. username .. " さん！スクリプトを開始します。",
-        Image = "rbxassetid://4483345998",
-        Time = 5
-    })
-    loadstring(game:HttpGet('https://raw.githubusercontent.com/wploits/critclhub/refs/heads/main/bluelockrivals.lua'))()
-else
-    -- キー入力GUI
-    local Window = OrionLib:MakeWindow({Name = "Key System", HidePremium = false, SaveConfig = true, ConfigFolder = "KeyConfig"})
+-- 認証成功後にGUI作成
+local function initGUI()
+	Window = OrionLib:MakeWindow({Name = "🎯 スタンド厳選BOT", HidePremium = false, SaveConfig = true, ConfigFolder = "StandGachaGUI"})
 
-    local KeyTab = Window:MakeTab({
-        Name = "キー入力",
-        Icon = "rbxassetid://4483345998",
-        PremiumOnly = false
-    })
+	-- UI状態保存
+	_G.StandGachaRunning = false
+	_G.TargetStand = "Star Platinum"
 
-    KeyTab:AddTextbox({
-        Name = "キーを入力してください",
-        Default = "",
-        TextDisappear = true,
-        Callback = function(input)
-            if input == ValidKey then
-                OrionLib:MakeNotification({
-                    Name = "認証成功",
-                    Content = "キーが正しいです。スクリプトを開始します。",
-                    Image = "rbxassetid://4483345998",
-                    Time = 5
-                })
-                wait(1)
-                loadstring(game:HttpGet('https://raw.githubusercontent.com/wploits/critclhub/refs/heads/main/bluelockrivals.lua'))()
-            else
-                OrionLib:MakeNotification({
-                    Name = "エラー",
-                    Content = "キーが間違っています。",
-                    Image = "rbxassetid://4483345998",
-                    Time = 5
-                })
-            end
-        end
-    })
-end
--- OrionLibの読み込み（GitHubエラー対応版）
-local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
+	local Tab = Window:MakeTab({
+		Name = "Main",
+		Icon = "rbxassetid://4483345998",
+		PremiumOnly = false
+	})
 
--- ウィンドウ初期化
-local Window = OrionLib:MakeWindow({Name = "🎯 スタンド厳選BOT", HidePremium = false, SaveConfig = true, ConfigFolder = "StandGachaGUI"})
-
--- UI状態保存
-_G.StandGachaRunning = false
-_G.TargetStand = "Star Platinum"
-
--- セクション作成
-local Tab = Window:MakeTab({
-	Name = "Main",
-	Icon = "rbxassetid://4483345998",
-	PremiumOnly = false
-})
-
-Tab:AddTextbox({
-	Name = "目当てのスタンド名",
-	Default = "Star Platinum",
-	TextDisappear = false,
-	Callback = function(Value)
-		_G.TargetStand = Value
-	end
-})
-
-Tab:AddToggle({
-	Name = "自動ガチャ ON/OFF",
-	Default = false,
-	Callback = function(Value)
-		_G.StandGachaRunning = Value
-		if Value then
-			startGachaLoop()
+	Tab:AddTextbox({
+		Name = "目当てのスタンド名",
+		Default = "Star Platinum",
+		TextDisappear = false,
+		Callback = function(Value)
+			_G.TargetStand = Value
 		end
-	end
-})
+	})
+
+	Tab:AddToggle({
+		Name = "自動ガチャ ON/OFF",
+		Default = false,
+		Callback = function(Value)
+			_G.StandGachaRunning = Value
+			if Value then
+				startGachaLoop()
+			end
+		end
+	})
+
+	-- GUI起動通知
+	OrionLib:MakeNotification({
+		Name = "Gacha BOT Ready!",
+		Content = "Masashi式ガチャスクリプト 起動完了！",
+		Image = "rbxassetid://4483345998",
+		Time = 5
+	})
+end
 
 -- ガチャループ処理
 function startGachaLoop()
@@ -103,7 +63,6 @@ function startGachaLoop()
 		local player = game.Players.LocalPlayer
 
 		local function getCurrentStand()
-			-- スタンド名の正確な保存先に合わせて修正（仮：StandName）
 			local s = player:FindFirstChild("StandName") or player:FindFirstChild("Data") and player.Data:FindFirstChild("Stand")
 			return s and s.Value or "Unknown"
 		end
@@ -167,10 +126,46 @@ function startGachaLoop()
 	end)
 end
 
--- GUI起動通知
-OrionLib:MakeNotification({
-	Name = "Gacha BOT Ready!",
-	Content = "Masashi式ガチャスクリプト 起動完了！",
-	Image = "rbxassetid://4483345998",
-	Time = 5
-})
+-- 認証処理
+if BypassUsers[playerName] then
+	initGUI()
+else
+	local inputKey = ""
+	local AuthTab = OrionLib:MakeWindow({Name = "🔐 認証が必要です", HidePremium = false}):MakeTab({
+		Name = "Key認証",
+		Icon = "rbxassetid://6031071053",
+		PremiumOnly = false
+	})
+
+	AuthTab:AddTextbox({
+		Name = "キーを入力してください",
+		Default = "",
+		TextDisappear = false,
+		Callback = function(Value)
+			inputKey = Value
+		end
+	})
+
+	AuthTab:AddButton({
+		Name = "キー認証",
+		Callback = function()
+			if inputKey == CorrectKey then
+				OrionLib:MakeNotification({
+					Name = "認証成功！",
+					Content = "ようこそ、" .. playerName .. "！",
+					Image = "rbxassetid://4483345998",
+					Time = 5
+				})
+				wait(0.5)
+				initGUI()
+			else
+				OrionLib:MakeNotification({
+					Name = "認証失敗",
+					Content = "キーが間違っています。",
+					Image = "rbxassetid://7733960981",
+					Time = 5
+				})
+			end
+		end
+	})
+end
