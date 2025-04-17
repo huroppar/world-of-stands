@@ -53,7 +53,7 @@ if not allowedUsers[LocalPlayer.Name] then
     end
 end
 
--- GUI ウィンドウ作成
+-- GUI作成
 local Window = OrionLib:MakeWindow({
     Name = "💫 Masashi式ユーティリティ",
     HidePremium = false,
@@ -61,7 +61,7 @@ local Window = OrionLib:MakeWindow({
     ConfigFolder = "MasashiGUI"
 })
 
--- 値の初期化
+-- 初期値
 local speedEnabled = false
 local speedValue = 30
 local jumpEnabled = false
@@ -72,10 +72,11 @@ local originalPosition = nil
 local tpButtonVisible = false
 local selectedPlayerName = nil
 
--- メインタブ作成
+-- GUI本体
 local MainTab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
--- スピード変更
+-- スピード制御
+local speedSlider
 MainTab:AddToggle({
     Name = "スピード変更 ON/OFF",
     Default = false,
@@ -85,7 +86,7 @@ MainTab:AddToggle({
     end
 })
 
-MainTab:AddSlider({
+speedSlider = MainTab:AddSlider({
     Name = "スピード",
     Min = 1,
     Max = 500,
@@ -102,12 +103,13 @@ MainTab:AddSlider({
 
 MainTab:AddTextbox({
     Name = "スピード数値入力",
-    Default = "30",
+    Default = tostring(speedValue),
     TextDisappear = false,
     Callback = function(val)
         local num = tonumber(val)
         if num and num >= 1 and num <= 500 then
             speedValue = num
+            speedSlider:Set(num) -- スライダーを同期
             if speedEnabled then
                 game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = num
             end
@@ -139,26 +141,25 @@ btn.AnchorPoint = Vector2.new(0.5, 1)
 btn.BackgroundColor3 = Color3.fromRGB(100, 100, 255)
 btn.TextColor3 = Color3.new(1, 1, 1)
 btn.Visible = false
-btn.Parent = game.CoreGui
+btn.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
--- ドラッグ機能
+-- ドラッグ処理
 local dragging, dragInput, dragStart, startPos
 btn.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
         dragStart = input.Position
         startPos = btn.Position
-
         input.Changed:Connect(function()
             if input.UserInputState == Enum.UserInputState.End then dragging = false end
         end)
     end
 end)
-
 btn.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+    if input.UserInputType == Enum.UserInputType.MouseMovement then
+        dragInput = input
+    end
 end)
-
 game:GetService("UserInputService").InputChanged:Connect(function(input)
     if input == dragInput and dragging then
         local delta = input.Position - dragStart
@@ -179,20 +180,20 @@ btn.MouseButton1Click:Connect(function()
 end)
 
 MainTab:AddToggle({
-    Name = "空中TPボタン表示切替",
+    Name = "空中TPボタン表示",
     Default = false,
     Callback = function(state)
         btn.Visible = state
     end
 })
 
--- ハイライト機能
+-- ハイライト
 local function updateHighlights()
     for _, h in pairs(highlightInstances) do h:Destroy() end
     table.clear(highlightInstances)
     if highlightEnabled then
         for _, player in ipairs(game.Players:GetPlayers()) do
-            if player ~= game.Players.LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
                 local highlight = Instance.new("Highlight")
                 highlight.FillColor = Color3.fromRGB(255, 255, 0)
                 highlight.OutlineColor = Color3.fromRGB(255, 0, 0)
@@ -204,12 +205,11 @@ local function updateHighlights()
         end
     end
 end
-
 game.Players.PlayerAdded:Connect(updateHighlights)
 game.Players.PlayerRemoving:Connect(updateHighlights)
 
 MainTab:AddToggle({
-    Name = "他プレイヤーのハイライト表示",
+    Name = "他プレイヤーをハイライト表示",
     Default = false,
     Callback = function(state)
         highlightEnabled = state
@@ -223,7 +223,7 @@ MainTab:AddToggle({
     Default = false,
     Callback = function(state)
         wallHackEnabled = state
-        local char = game.Players.LocalPlayer.Character
+        local char = LocalPlayer.Character
         if char then
             for _, part in ipairs(char:GetDescendants()) do
                 if part:IsA("BasePart") then
@@ -234,10 +234,10 @@ MainTab:AddToggle({
     end
 })
 
--- GUI 最小化ボタン
+-- GUI切替
 local minimized = false
 MainTab:AddButton({
-    Name = "🔽 GUI 最小化/元に戻す",
+    Name = "🔽 GUI 最小化/再表示",
     Callback = function()
         minimized = not minimized
         Window.Enabled = not minimized
@@ -250,27 +250,20 @@ MainTab:AddButton({
     end
 })
 
--- プレイヤーTP（ドロップダウン）
+-- プレイヤーTP機能
 MainTab:AddDropdown({
     Name = "プレイヤーを選択してTP",
     Default = "",
-    Options = {}, -- 初期空
+    Options = {},
     Callback = function(selected)
         selectedPlayerName = selected
-        local target = game.Players:FindFirstChild(selectedPlayerName)
-        local lpChar = game.Players.LocalPlayer.Character
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and lpChar and lpChar:FindFirstChild("HumanoidRootPart") then
-            lpChar.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(2, 0, 2)
+        local target = Players:FindFirstChild(selected)
+        local myChar = LocalPlayer.Character
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            myChar.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(2,0,2)
             OrionLib:MakeNotification({
                 Name = "テレポート成功",
-                Content = selectedPlayerName .. " にテレポートしました！",
-                Image = "rbxassetid://4483345998",
-                Time = 4
-            })
-        else
-            OrionLib:MakeNotification({
-                Name = "テレポート失敗",
-                Content = "プレイヤーが見つかりません。",
+                Content = selected .. " にTPしました！",
                 Image = "rbxassetid://4483345998",
                 Time = 4
             })
@@ -278,22 +271,22 @@ MainTab:AddDropdown({
     end
 })
 
--- プレイヤー一覧更新
+-- ドロップダウン更新
 task.spawn(function()
     while true do
-        local options = {}
-        for _, player in ipairs(game.Players:GetPlayers()) do
-            if player ~= LocalPlayer then table.insert(options, player.Name) end
+        local names = {}
+        for _, plr in ipairs(Players:GetPlayers()) do
+            if plr ~= LocalPlayer then table.insert(names, plr.Name) end
         end
-        MainTab:UpdateDropdown("プレイヤーを選択してTP", options)
-        task.wait(5)
+        MainTab:UpdateDropdown("プレイヤーを選択してTP", names)
+        task.wait(3)
     end
 end)
 
 -- 起動通知
 OrionLib:MakeNotification({
     Name = "Masashi式スクリプト",
-    Content = "起動完了！スーパーユーティリティが使えるぞ💪",
+    Content = "起動完了！さあ楽しもう💪",
     Image = "rbxassetid://4483345998",
     Time = 5
 })
