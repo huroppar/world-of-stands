@@ -246,6 +246,55 @@ MainTab:AddToggle({
     end
 })
 
+-- 最小化ボタン機能
+local minimized = false
+MainTab:AddButton({
+    Name = "🔽 GUI 最小化/元に戻す",
+    Callback = function()
+        minimized = not minimized
+        Window.Enabled = not minimized
+        OrionLib:MakeNotification({
+            Name = "GUI切替",
+            Content = minimized and "GUIを最小化しました。" or "GUIを再表示しました。",
+            Image = "rbxassetid://4483345998",
+            Time = 3
+        })
+    end
+})
+
+-- プレイヤーTP機能（ドロップダウン選択）
+local selectedPlayerName = nil
+
+MainTab:AddDropdown({
+    Name = "プレイヤーを選択してTP",
+    Default = "",
+    Options = {}, -- 初期空
+    Callback = function(selected)
+        selectedPlayerName = selected
+        local target = game.Players:FindFirstChild(selectedPlayerName)
+        local lpChar = game.Players.LocalPlayer.Character
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") and lpChar and lpChar:FindFirstChild("HumanoidRootPart") then
+            lpChar.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(2, 0, 2)
+            OrionLib:MakeNotification({
+                Name = "テレポート成功",
+                Content = selectedPlayerName .. " にテレポートしました！",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
+        else
+            OrionLib:MakeNotification({
+                Name = "テレポート失敗",
+                Content = "プレイヤーが見つかりません。",
+                Image = "rbxassetid://4483345998",
+                Time = 4
+            })
+        end
+    end
+})
+
+-- プレイヤー一覧の定期更新
+task.spawn(function()
+
 -- 起動通知
 OrionLib:MakeNotification({
     Name = "Masashi式スクリプト",
