@@ -1,5 +1,5 @@
 -- OrionLibの読み込み
-local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
+local Rayfield = loadstring(game:HttpGet("https://sirius.menu/rayfield"))()
 
 -- ユーザー情報
 local LocalPlayer = game.Players.LocalPlayer
