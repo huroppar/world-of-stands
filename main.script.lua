@@ -1,171 +1,190 @@
--- OrionLibの読み込み（GitHubエラー対応版）
+--// OrionLib 読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 
--- ユーザー名と認証キー設定
-local BypassUsers = {
-	["Furoppersama"] = true,
-	["BNVGUE2"] = true,
-	["Furopparsama"] = true
-}
-local CorrectKey = "Masashi0407"
-local playerName = game.Players.LocalPlayer.Name
+--// GUI 初期化
+local Window = OrionLib:MakeWindow({Name = "Masashi式スクリプト", HidePremium = false, SaveConfig = true, ConfigFolder = "MasashiTools"})
+local Tab = Window:MakeTab({Name = "Main", Icon = "rbxassetid://4483345998", PremiumOnly = false})
 
--- GUIウィンドウの初期化（仮置き）
-local Window
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
 
--- 認証成功後にGUI作成
-local function initGUI()
-	Window = OrionLib:MakeWindow({Name = "🎯 スタンド厳選BOT", HidePremium = false, SaveConfig = true, ConfigFolder = "StandGachaGUI"})
+--// 共通変数
+local speedValue = 16
+local speedEnabled = false
+local infiniteJump = false
+local wallWalk = false
+local highlightEnabled = false
+local airTPEnabled = false
+local showTPButton = true
+local airTPInUse = false
+local savedPosition = nil
 
-	-- UI状態保存
-	_G.StandGachaRunning = false
-	_G.TargetStand = "Star Platinum"
+--// スピード機能
+Tab:AddToggle({
+    Name = "スピード変更 ON/OFF",
+    Default = false,
+    Callback = function(v)
+        speedEnabled = v
+    end
+})
 
-	local Tab = Window:MakeTab({
-		Name = "Main",
-		Icon = "rbxassetid://4483345998",
-		PremiumOnly = false
-	})
+Tab:AddSlider({
+    Name = "スピード調整",
+    Min = 1,
+    Max = 500,
+    Default = 16,
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(v)
+        speedValue = v
+    end
+})
 
-	Tab:AddTextbox({
-		Name = "目当てのスタンド名",
-		Default = "Star Platinum",
-		TextDisappear = false,
-		Callback = function(Value)
-			_G.TargetStand = Value
-		end
-	})
+Tab:AddTextbox({
+    Name = "スピード手入力",
+    Default = tostring(speedValue),
+    TextDisappear = false,
+    Callback = function(v)
+        local num = tonumber(v)
+        if num then
+            speedValue = math.clamp(num, 1, 500)
+        end
+    end
+})
 
-	Tab:AddToggle({
-		Name = "自動ガチャ ON/OFF",
-		Default = false,
-		Callback = function(Value)
-			_G.StandGachaRunning = Value
-			if Value then
-				startGachaLoop()
-			end
-		end
-	})
+-- スピード反映ループ
+RunService.RenderStepped:Connect(function()
+    if speedEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
+    end
+end)
 
-	-- GUI起動通知
-	OrionLib:MakeNotification({
-		Name = "Gacha BOT Ready!",
-		Content = "Masashi式ガチャスクリプト 起動完了！",
-		Image = "rbxassetid://4483345998",
-		Time = 5
-	})
-end
+--// 無限ジャンプ
+Tab:AddToggle({
+    Name = "無限ジャンプ ON/OFF",
+    Default = false,
+    Callback = function(v)
+        infiniteJump = v
+    end
+})
 
--- ガチャループ処理
-function startGachaLoop()
-	spawn(function()
-		local ArrowList = {"Legendary Arrow", "Shiny Arrow", "Stand Arrow"}
-		local player = game.Players.LocalPlayer
+-- 無限ジャンプ処理
+local UserInputService = game:GetService("UserInputService")
+UserInputService.JumpRequest:Connect(function()
+    if infiniteJump and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+        LocalPlayer.Character:ChangeState("Jumping")
+    end
+end)
 
-		local function getCurrentStand()
-			local s = player:FindFirstChild("StandName") or player:FindFirstChild("Data") and player.Data:FindFirstChild("Stand")
-			return s and s.Value or "Unknown"
-		end
+--// 空中TP 機能
+Tab:AddToggle({
+    Name = "空中TP ON/OFF",
+    Default = false,
+    Callback = function(v)
+        airTPEnabled = v
+    end
+})
 
-		local function useTool(name)
-			local tool = player.Backpack:FindFirstChild(name)
-			if tool then
-				tool.Parent = player.Character
-				wait(0.2)
-				tool:Activate()
-				return true
-			end
-			return false
-		end
+Tab:AddToggle({
+    Name = "空中TPボタン 表示/非表示",
+    Default = true,
+    Callback = function(v)
+        showTPButton = v
+        if TPButton then TPButton.Visible = v end
+    end
+})
 
-		while _G.StandGachaRunning do
-			local usedArrow = false
-			for _, arrow in ipairs(ArrowList) do
-				if useTool(arrow) then
-					usedArrow = true
-					break
-				end
-			end
+-- 空中TPボタン作成
+local ScreenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+local TPButton = Instance.new("TextButton")
+TPButton.Size = UDim2.new(0, 200, 0, 50)
+TPButton.Position = UDim2.new(0.5, -100, 1, -100)
+TPButton.Text = "空中TP"
+TPButton.BackgroundColor3 = Color3.fromRGB(80, 80, 255)
+TPButton.TextColor3 = Color3.new(1, 1, 1)
+TPButton.Draggable = true
+TPButton.Active = true
+TPButton.Visible = true
+TPButton.Parent = ScreenGui
 
-			if not usedArrow then
-				OrionLib:MakeNotification({
-					Name = "矢切れ！",
-					Content = "矢がなくなったので停止しました。",
-					Image = "rbxassetid://4483345998",
-					Time = 5
-				})
-				_G.StandGachaRunning = false
-				break
-			end
+TPButton.MouseButton1Click:Connect(function()
+    if not airTPEnabled then return end
+    local char = LocalPlayer.Character
+    if char and char:FindFirstChild("HumanoidRootPart") then
+        local hrp = char.HumanoidRootPart
+        if not airTPInUse then
+            savedPosition = hrp.Position
+            hrp.CFrame = CFrame.new(hrp.Position.X, 10000, hrp.Position.Z)
+            airTPInUse = true
+        else
+            hrp.CFrame = CFrame.new(savedPosition)
+            airTPInUse = false
+        end
+    end
+end)
 
-			wait(3)
+--// キャラクターハイライト
+Tab:AddToggle({
+    Name = "ハイライト（自分+敵） ON/OFF",
+    Default = false,
+    Callback = function(v)
+        highlightEnabled = v
 
-			if getCurrentStand() == _G.TargetStand then
-				OrionLib:MakeNotification({
-					Name = "成功！",
-					Content = "目当ての [" .. _G.TargetStand .. "] を引き当てたぞ！",
-					Image = "rbxassetid://4483345998",
-					Time = 8
-				})
-				_G.StandGachaRunning = false
-				break
-			else
-				if not useTool("Rokakaka") then
-					OrionLib:MakeNotification({
-						Name = "ロカカカ切れ！",
-						Content = "リセットできないので停止します。",
-						Image = "rbxassetid://4483345998",
-						Time = 5
-					})
-					_G.StandGachaRunning = false
-					break
-				end
-				wait(3)
-			end
-		end
-	end)
-end
+        for _, v in pairs(workspace:GetDescendants()) do
+            if v:IsA("Highlight") and (v.Name == "PlayerHL" or v.Name == "EnemyHL") then
+                v:Destroy()
+            end
+        end
 
--- 認証処理
-if BypassUsers[playerName] then
-	initGUI()
-else
-	local inputKey = ""
-	local AuthTab = OrionLib:MakeWindow({Name = "🔐 認証が必要です", HidePremium = false}):MakeTab({
-		Name = "Key認証",
-		Icon = "rbxassetid://6031071053",
-		PremiumOnly = false
-	})
+        if v then
+            -- 自分
+            local hl = Instance.new("Highlight")
+            hl.Name = "PlayerHL"
+            hl.FillColor = Color3.fromRGB(0, 255, 0)
+            hl.OutlineColor = Color3.fromRGB(0, 100, 0)
+            hl.Adornee = LocalPlayer.Character
+            hl.Parent = LocalPlayer.Character
 
-	AuthTab:AddTextbox({
-		Name = "キーを入力してください",
-		Default = "",
-		TextDisappear = false,
-		Callback = function(Value)
-			inputKey = Value
-		end
-	})
+            -- 敵（Humanoid付き）
+            for _, v in pairs(workspace:GetDescendants()) do
+                if v:IsA("Model") and v ~= LocalPlayer.Character and v:FindFirstChild("Humanoid") then
+                    local ehl = Instance.new("Highlight")
+                    ehl.Name = "EnemyHL"
+                    ehl.FillColor = Color3.fromRGB(255, 0, 0)
+                    ehl.OutlineColor = Color3.fromRGB(100, 0, 0)
+                    ehl.Adornee = v
+                    ehl.Parent = v
+                end
+            end
+        end
+    end
+})
 
-	AuthTab:AddButton({
-		Name = "キー認証",
-		Callback = function()
-			if inputKey == CorrectKey then
-				OrionLib:MakeNotification({
-					Name = "認証成功！",
-					Content = "ようこそ、" .. playerName .. "！",
-					Image = "rbxassetid://4483345998",
-					Time = 5
-				})
-				wait(0.5)
-				initGUI()
-			else
-				OrionLib:MakeNotification({
-					Name = "認証失敗",
-					Content = "キーが間違っています。",
-					Image = "rbxassetid://7733960981",
-					Time = 5
-				})
-			end
-		end
-	})
-end
+--// 壁貫通（Noclip）
+Tab:AddToggle({
+    Name = "壁貫通 ON/OFF",
+    Default = false,
+    Callback = function(v)
+        wallWalk = v
+    end
+})
+
+-- Noclip処理
+RunService.Stepped:Connect(function()
+    if wallWalk and LocalPlayer.Character then
+        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
+            if v:IsA("BasePart") then
+                v.CanCollide = false
+            end
+        end
+    end
+end)
+
+-- GUI起動通知
+OrionLib:MakeNotification({
+    Name = "Masashiツール起動",
+    Content = "すべての機能が有効です！",
+    Image = "rbxassetid://4483345998",
+    Time = 5
+})
