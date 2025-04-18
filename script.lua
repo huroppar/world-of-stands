@@ -107,6 +107,18 @@ floatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 floatingButton.Parent = screenGui
 floatingButton.Active = true
 floatingButton.Draggable = true
+floatingButton.Visible = teleportButtonVisible
+
+MainTab:AddToggle({  -- ← GUIの表示切り替え
+    Name = "空中TPボタン表示",
+    Default = true,
+    Callback = function(value)
+        teleportButtonVisible = value
+        if floatingButton then
+            floatingButton.Visible = value
+        end
+    end
+})
 
 local floating = false
 local originalPosition
