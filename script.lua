@@ -127,22 +127,29 @@ end)
 
 -- 敵BOT集め機能
 local function gatherEnemies()
+    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
     for _, enemy in pairs(workspace:GetDescendants()) do
         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") then
             local hrp = enemy.HumanoidRootPart
-            hrp.Anchored = true
-            hrp.CFrame = LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0, 0, -5)
-            enemy.Humanoid.WalkSpeed = 0
-            enemy.Humanoid.JumpPower = 0
-            if enemy:FindFirstChild("Target") then
-                enemy.Target.Value = nil
-            end
-            for _, s in pairs(enemy:GetChildren()) do
-                if s:IsA("Script") then s.Disabled = true end
+            local distance = (root.Position - hrp.Position).Magnitude
+            if distance <= gatherDistance then
+                hrp.Anchored = true
+                hrp.CFrame = root.CFrame * CFrame.new(0, 0, -5)
+                enemy.Humanoid.WalkSpeed = 0
+                enemy.Humanoid.JumpPower = 0
+                if enemy:FindFirstChild("Target") then
+                    enemy.Target.Value = nil
+                end
+                for _, s in pairs(enemy:GetChildren()) do
+                    if s:IsA("Script") then s.Disabled = true end
+                end
             end
         end
     end
 end
+
 
 MainTab:AddButton({
     Name = "敵を集める",
