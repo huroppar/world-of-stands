@@ -1,50 +1,45 @@
--- キーシステム
+-- キーシステム（※GUIで対応すべきなので一旦無効化）
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
+
 local allowedUsers = {
     ["Furoppersama"] = true,
     ["Furopparsama"] = true
 }
 
 if not allowedUsers[LocalPlayer.Name] then
-    local userInputService = game:GetService("UserInputService")
-    local keyCorrect = false
-    while not keyCorrect do
-        local input = userInputService:GetString("キーを入力してください：")
-        if input == "Masashi0407" then
-            keyCorrect = true
-        else
-            print("キーが間違っています。再試行してください。")
-        end
-    end
+    warn("許可されていないユーザーです")
+    return
 end
 
--- GUIライブラリの読み込み（OrionLibを使用）
+-- GUIライブラリの読み込み
 local OrionLib = loadstring(game:HttpGet("https://raw.githubusercontent.com/shlexware/Orion/main/source"))()
 local Window = OrionLib:MakeWindow({Name = "World of Stands Utility", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
 
--- メインタブの作成
-local MainTab = Window:MakeTab({
-    Name = "メイン",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
+local MainTab = Window:MakeTab({ Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false })
 
 -- スピード制御
 local speedEnabled = false
 local speedValue = 16
+local speedConnection
 
 MainTab:AddToggle({
     Name = "スピード有効化",
     Default = false,
     Callback = function(value)
         speedEnabled = value
-        if speedEnabled then
-            game:GetService("RunService").RenderStepped:Connect(function()
+        if value then
+            if speedConnection then speedConnection:Disconnect() end
+            speedConnection = game:GetService("RunService").RenderStepped:Connect(function()
                 if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
                     LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
                 end
             end)
+        else
+            if speedConnection then speedConnection:Disconnect() end
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.WalkSpeed = 16
+            end
         end
     end
 })
@@ -93,7 +88,7 @@ MainTab:AddToggle({
 game:GetService("RunService").Stepped:Connect(function()
     if noclipEnabled and LocalPlayer.Character then
         for _, part in pairs(LocalPlayer.Character:GetDescendants()) do
-            if part:IsA("BasePart") and part.CanCollide == true then
+            if part:IsA("BasePart") then
                 part.CanCollide = false
             end
         end
@@ -101,13 +96,16 @@ game:GetService("RunService").Stepped:Connect(function()
 end)
 
 -- 空中TPボタン
+local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+screenGui.Name = "TeleportGui"
+
 local floatingButton = Instance.new("TextButton")
 floatingButton.Size = UDim2.new(0, 100, 0, 50)
-floatingButton.Position = UDim2.new(0.5, -50, 1, -60)
+floatingButton.Position = UDim2.new(0.5, -50, 1, -100)
 floatingButton.Text = "空中TP"
-floatingButton.BackgroundColor3 = Color3.new(0, 0, 0)
-floatingButton.TextColor3 = Color3.new(1, 1, 1)
-floatingButton.Parent = game:GetService("CoreGui")
+floatingButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+floatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+floatingButton.Parent = screenGui
 floatingButton.Active = true
 floatingButton.Draggable = true
 
@@ -154,29 +152,33 @@ MainTab:AddButton({
     end
 })
 
--- プレイヤー一覧表示
+-- プレイヤー一覧
+local selectedPlayer = nil
+local dropdown
+
 local function getPlayerNames()
     local names = {}
     for _, plr in pairs(Players:GetPlayers()) do
-        if plr
-::contentReference[oaicite:0]{index=0}
-         if plr ~= LocalPlayer then
+        if plr ~= LocalPlayer then
             table.insert(names, plr.Name)
         end
     end
     return names
 end
 
-local selectedPlayer = nil
+local function createDropdown()
+    if dropdown then dropdown:Destroy() end
+    dropdown = MainTab:AddDropdown({
+        Name = "プレイヤーを選択",
+        Default = "",
+        Options = getPlayerNames(),
+        Callback = function(value)
+            selectedPlayer = value
+        end
+    })
+end
 
-MainTab:AddDropdown({
-    Name = "プレイヤーを選択",
-    Default = "",
-    Options = getPlayerNames(),
-    Callback = function(value)
-        selectedPlayer = value
-    end
-})
+createDropdown()
 
 MainTab:AddButton({
     Name = "選択したプレイヤーの近くにテレポート",
@@ -188,11 +190,10 @@ MainTab:AddButton({
     end
 })
 
--- プレイヤーリストを更新するボタン
 MainTab:AddButton({
     Name = "プレイヤーリストを更新",
     Callback = function()
-        local options = getPlayerNames()
+        createDropdown()
         OrionLib:MakeNotification({
             Name = "更新完了",
             Content = "プレイヤー一覧を更新しました！",
@@ -201,7 +202,7 @@ MainTab:AddButton({
     end
 })
 
--- スクリプト終了通知
+-- スクリプト完了通知
 OrionLib:MakeNotification({
     Name = "WOSユーティリティ",
     Content = "スクリプトの読み込みが完了しました！ - by Masashi",
