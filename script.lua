@@ -151,6 +151,32 @@ MainTab:AddButton({
     end
 })
 
+local gatherDistance = 50
+
+MainTab:AddSlider({
+    Name = "敵集め 距離（スライダー）",
+    Min = 10,
+    Max = 500,
+    Default = 50,
+    Increment = 10,
+    ValueName = "Studs",
+    Callback = function(value)
+        gatherDistance = value
+    end
+})
+
+MainTab:AddTextbox({
+    Name = "敵集め 距離（手入力）",
+    Default = "50",
+    TextDisappear = false,
+    Callback = function(text)
+        local num = tonumber(text)
+        if num and num >= 0 then
+            gatherDistance = num
+        end
+    end
+})
+
 -- プレイヤー一覧
 local selectedPlayer = nil
 local dropdown
