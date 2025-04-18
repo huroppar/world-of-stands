@@ -1,4 +1,4 @@
--- キーシステム（※GUIで対応すべきなので一旦無効化）
+-- 許可ユーザーのみ実行可（GUIベースで制御予定なら削除可）
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
@@ -12,12 +12,12 @@ if not allowedUsers[LocalPlayer.Name] then
     return
 end
 
--- GUIライブラリの読み込み
+-- OrionLib読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Window = OrionLib:MakeWindow({Name = "World of Stands Utility", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
 local MainTab = Window:MakeTab({ Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false })
 
--- スピード制御
+-- スピード
 local speedEnabled = false
 local speedValue = 16
 local speedConnection
@@ -58,7 +58,6 @@ MainTab:AddSlider({
 
 -- 無限ジャンプ
 local infiniteJumpEnabled = false
-
 MainTab:AddToggle({
     Name = "無限ジャンプ",
     Default = false,
@@ -73,9 +72,8 @@ game:GetService("UserInputService").JumpRequest:Connect(function()
     end
 end)
 
--- 壁貫通（Noclip）
+-- Noclip
 local noclipEnabled = false
-
 MainTab:AddToggle({
     Name = "壁貫通（Noclip）",
     Default = false,
@@ -94,7 +92,8 @@ game:GetService("RunService").Stepped:Connect(function()
     end
 end)
 
--- 空中TPボタン
+-- 空中TP
+local teleportButtonVisible = true
 local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 screenGui.Name = "TeleportGui"
 
@@ -109,7 +108,7 @@ floatingButton.Active = true
 floatingButton.Draggable = true
 floatingButton.Visible = teleportButtonVisible
 
-MainTab:AddToggle({  -- ← GUIの表示切り替え
+MainTab:AddToggle({
     Name = "空中TPボタン表示",
     Default = true,
     Callback = function(value)
@@ -128,49 +127,42 @@ floatingButton.MouseButton1Click:Connect(function()
         local hrp = LocalPlayer.Character.HumanoidRootPart
         if not floating then
             originalPosition = hrp.Position
-            hrp.Anchored = true -- ← 落下防止
+            hrp.Anchored = true
             hrp.CFrame = hrp.CFrame + Vector3.new(0, 50, 0)
             floating = true
         else
-            hrp.Anchored = false -- ← 元に戻す
+            hrp.Anchored = false
             hrp.CFrame = CFrame.new(originalPosition)
             floating = false
         end
     end
 end)
 
-
+-- 敵を集める
 local gatherDistance = 50
 local RunService = game:GetService("RunService")
 local gatheredEnemies = {}
 local gathering = false
 
--- 敵を集める関数
 local function startGatheringEnemies()
     gathering = true
     table.clear(gatheredEnemies)
-
     local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not myHRP then return end
 
     for _, model in pairs(workspace:GetDescendants()) do
-        if model:IsA("Model") and model:FindFirstChild("Humanoid") and model:FindFirstChild("HumanoidRootPart") then
-            -- 自分自身じゃないか？
-            if model ~= LocalPlayer.Character then
-                -- 会話NPCじゃないか？（ここカスタム可能）
-                if not model:FindFirstChild("Dialogue") and not model:FindFirstChild("QuestBubble") then
-                    local enemyHRP = model.HumanoidRootPart
-                    local dist = (enemyHRP.Position - myHRP.Position).Magnitude
-                    if dist <= gatherDistance then
-                        table.insert(gatheredEnemies, model)
-                    end
+        if model:IsA("Model") and model:FindFirstChild("Humanoid") and model:FindFirstChild("HumanoidRootPart") and model ~= LocalPlayer.Character then
+            if not model:FindFirstChild("Dialogue") and not model:FindFirstChild("QuestBubble") then
+                local enemyHRP = model.HumanoidRootPart
+                local dist = (enemyHRP.Position - myHRP.Position).Magnitude
+                if dist <= gatherDistance then
+                    table.insert(gatheredEnemies, model)
                 end
             end
         end
     end
 end
 
--- 毎フレーム、敵を自分の近くに移動させ続ける
 RunService.Heartbeat:Connect(function()
     if gathering then
         local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
@@ -179,7 +171,7 @@ RunService.Heartbeat:Connect(function()
         for _, enemy in pairs(gatheredEnemies) do
             if enemy and enemy:FindFirstChild("HumanoidRootPart") then
                 local eHRP = enemy.HumanoidRootPart
-                eHRP.CFrame = myHRP.CFrame * CFrame.new(0, 0, -5) -- 自分の正面5スタッドに寄せる
+                eHRP.CFrame = myHRP.CFrame * CFrame.new(0, 0, -5)
             end
         end
     end
@@ -209,8 +201,6 @@ MainTab:AddSlider({
     end
 })
 
-
-
 MainTab:AddTextbox({
     Name = "敵集め 距離（手入力）",
     Default = "50",
@@ -223,7 +213,7 @@ MainTab:AddTextbox({
     end
 })
 
--- プレイヤー一覧
+-- プレイヤーTP機能
 local selectedPlayer = nil
 local dropdown
 
@@ -273,7 +263,7 @@ MainTab:AddButton({
     end
 })
 
--- スクリプト完了通知
+-- 最後に通知
 OrionLib:MakeNotification({
     Name = "WOSユーティリティ",
     Content = "スクリプトの読み込みが完了しました！ - by Masashi",
