@@ -1,204 +1,144 @@
--- ✅ 『World of Stands Most Useful Script』 完全修正版 by Masashi
--- 対応内容: スピード入力とスライダー連動、参加中プレイヤー一覧、空中TPボタン、壁貫通維持、GUI最小化、攻撃後のスピード低下修正
+--[[
+    World of Stands Most Useful Script - Rebuild
+    Author: Masashi
+    Key: Masashi0407
+--]]
 
+if not game:IsLoaded() then game.Loaded:Wait() end
 if _G.__WOS_GUI_RUNNING then return end
 _G.__WOS_GUI_RUNNING = true
 
--- ライブラリ読み込み
-local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
+local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local TeleportService = game:GetService("TeleportService")
-local Camera = workspace.CurrentCamera
+local TweenService = game:GetService("TweenService")
 
--- 状態変数
-local SpeedValue = 16
-local SpeedEnabled = false
-local AirTPEnabled = false
-local AirTP_Stage = 0
-local AirTP_LastPosition = nil
-local NoclipEnabled = false
-local Transparent = false
+local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 
--- GUI構築
-local Window = OrionLib:MakeWindow({
-    Name = "🌟 World of Stands - Masashi Edition",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "WorldOfStands_Masashi"
+--// Key System
+local allowedUsers = {
+    ["Furoppersama"] = true,
+    ["Furopparsama"] = true
+}
+local correctKey = "Masashi0407"
+if not allowedUsers[LocalPlayer.Name] then
+    local inputKey = OrionLib:Prompt("Key Required", "Enter your key to use the script:")
+    while inputKey ~= correctKey do
+        OrionLib:Notify("Wrong Key", "Try again.", 3)
+        inputKey = OrionLib:Prompt("Key Required", "Enter your key to use the script:")
+    end
+    OrionLib:Notify("Access Granted", "Welcome!", 3)
+end
+
+--// GUI Setup
+local Window = OrionLib:MakeWindow({Name = "🌟 WOS | Masashi Hub", HidePremium = false, SaveConfig = true, ConfigFolder = "MasashiWOS"})
+
+--// Speed Control
+local SpeedTab = Window:MakeTab({Name = "Speed", Icon = "rbxassetid://6026568198", PremiumOnly = false})
+local speedValue = 16
+local speedEnabled = false
+
+SpeedTab:AddToggle({
+    Name = "Speed Toggle",
+    Default = false,
+    Callback = function(v)
+        speedEnabled = v
+    end
 })
 
--- ✅ Movement タブ
-local MovementTab = Window:MakeTab({
-    Name = "🚀 Movement",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- スピードスライダー & 手入力連動
-MovementTab:AddSlider({
-    Name = "WalkSpeed",
+SpeedTab:AddSlider({
+    Name = "Speed (1~500)",
     Min = 1,
     Max = 500,
-    Default = SpeedValue,
-    Increment = 1,
-    ValueName = "Speed",
-    Callback = function(Value)
-        SpeedValue = Value
-        if SpeedEnabled then
-            LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
-        end
+    Default = 16,
+    Callback = function(v)
+        speedValue = v
     end
 })
 
-MovementTab:AddTextbox({
-    Name = "Set Speed (1~500)",
-    Default = tostring(SpeedValue),
+SpeedTab:AddTextbox({
+    Name = "Manual Speed Input",
+    Default = tostring(speedValue),
     TextDisappear = false,
-    Callback = function(Value)
-        local num = tonumber(Value)
-        if num and num >= 1 and num <= 500 then
-            SpeedValue = num
-            if SpeedEnabled then
-                LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
+    Callback = function(v)
+        local num = tonumber(v)
+        if num then
+            speedValue = math.clamp(num, 1, 500)
+        end
+    end
+})
+
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if speedEnabled and LocalPlayer.Character then
+            local hum = LocalPlayer.Character:FindFirstChildWhichIsA("Humanoid")
+            if hum and hum.WalkSpeed ~= speedValue then
+                hum.WalkSpeed = speedValue
             end
         end
-    end
-})
-
-MovementTab:AddToggle({
-    Name = "🟢 Enable Speed",
-    Default = false,
-    Callback = function(Value)
-        SpeedEnabled = Value
-        if SpeedEnabled then
-            LocalPlayer.Character.Humanoid.WalkSpeed = SpeedValue
-        else
-            LocalPlayer.Character.Humanoid.WalkSpeed = 16
-        end
-    end
-})
-
--- 無限ジャンプ
-MovementTab:AddToggle({
-    Name = "🟡 Infinite Jump",
-    Default = false,
-    Callback = function(toggle)
-        InfiniteJumpEnabled = toggle
-    end
-})
-UserInputService.JumpRequest:Connect(function()
-    if InfiniteJumpEnabled then
-        LocalPlayer.Character:FindFirstChildOfClass("Humanoid"):ChangeState("Jumping")
-    end
+    end)
 end)
 
--- 空中TPボタン
-local AirTPBtn = nil
-local function toggleAirTPButton(show)
-    if show then
-        if not AirTPBtn then
-            AirTPBtn = Instance.new("TextButton")
-            AirTPBtn.Text = "空中TP"
-            AirTPBtn.Size = UDim2.new(0, 100, 0, 40)
-            AirTPBtn.Position = UDim2.new(0.5, -50, 0.6, 0)
-            AirTPBtn.AnchorPoint = Vector2.new(0.5, 0.5)
-            AirTPBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 255)
-            AirTPBtn.TextColor3 = Color3.new(1,1,1)
-            AirTPBtn.Parent = game:GetService("CoreGui")
-            AirTPBtn.MouseButton1Click:Connect(function()
-                if AirTP_Stage == 0 then
-                    AirTP_LastPosition = LocalPlayer.Character.HumanoidRootPart.Position
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(0, 10000, 0)
-                    AirTP_Stage = 1
-                else
-                    LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(AirTP_LastPosition)
-                    AirTP_Stage = 0
-                end
-            end)
-        end
-    elseif AirTPBtn then
-        AirTPBtn:Destroy()
-        AirTPBtn = nil
-    end
-end
+--// Player List
+local TeleportTab = Window:MakeTab({Name = "Teleport", Icon = "rbxassetid://6031094678", PremiumOnly = false})
+local playerNames = {}
 
-MovementTab:AddToggle({
-    Name = "🛸 Air TP Mode",
-    Default = false,
-    Callback = function(Value)
-        toggleAirTPButton(Value)
-    end
-})
-
--- 壁貫通
-RunService.Stepped:Connect(function()
-    if NoclipEnabled and LocalPlayer.Character then
-        for _, v in pairs(LocalPlayer.Character:GetDescendants()) do
-            if v:IsA("BasePart") and v.CanCollide then
-                v.CanCollide = false
-            end
-        end
-    end
-end)
-
-MovementTab:AddToggle({
-    Name = "🔓 Wall Noclip",
-    Default = false,
-    Callback = function(Value)
-        NoclipEnabled = Value
-    end
-})
-
--- ✅ Players タブ
-local PlayerTab = Window:MakeTab({
-    Name = "👥 Players",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
-PlayerTab:AddDropdown({
-    Name = "🧍 Teleport to Player",
-    Options = {},
-    Callback = function(selectedName)
-        local target = Players:FindFirstChild(selectedName)
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            LocalPlayer.Character:MoveTo(target.Character.HumanoidRootPart.Position + Vector3.new(3,0,0))
-        end
-    end
-})
-
--- プレイヤー一覧更新
-local function updatePlayersList()
-    local names = {}
+local function updatePlayers()
+    table.clear(playerNames)
     for _, p in ipairs(Players:GetPlayers()) do
         if p ~= LocalPlayer then
-            table.insert(names, p.Name)
+            table.insert(playerNames, p.Name)
         end
     end
-    PlayerTab.Flags["🧍 Teleport to Player"].Options = names
 end
 
-Players.PlayerAdded:Connect(updatePlayersList)
-Players.PlayerRemoving:Connect(updatePlayersList)
-updatePlayersList()
+updatePlayers()
+Players.PlayerAdded:Connect(updatePlayers)
+Players.PlayerRemoving:Connect(updatePlayers)
 
--- GUI最小化切り替え
-Window:AddBind({
-    Name = "Toggle GUI",
-    Default = Enum.KeyCode.RightShift,
-    Hold = false,
-    Callback = function()
-        Window.Enabled = not Window.Enabled
+TeleportTab:AddDropdown({
+    Name = "Teleport to Player",
+    Default = "",
+    Options = playerNames,
+    Callback = function(selected)
+        local target = Players:FindFirstChild(selected)
+        if target and target.Character then
+            LocalPlayer.Character:PivotTo(target.Character:GetPivot() + Vector3.new(3, 0, 3))
+        end
     end
 })
 
-OrionLib:Init()
-OrionLib:MakeNotification({
-    Name = "World of Stands Script",
-    Content = "Masashi Edition 起動完了！",
-    Image = "rbxassetid://4483345998",
-    Time = 5
+--// Fly (Air TP) Button
+local flyTab = Window:MakeTab({Name = "Air Tools", Icon = "rbxassetid://6031260795", PremiumOnly = false})
+local flyBtn
+
+flyTab:AddButton({
+    Name = "Air Teleport",
+    Callback = function()
+        local char = LocalPlayer.Character
+        if not char then return end
+        local root = char:FindFirstChild("HumanoidRootPart")
+        if not root then return end
+        local originalCFrame = root.CFrame
+        root.Anchored = true
+        root.CFrame = root.CFrame + Vector3.new(0, 10000, 0)
+        wait(1)
+        root.Anchored = false
+        wait(0.5)
+        root.CFrame = originalCFrame
+    end
 })
+
+--// GUI Minimize
+local toggle = false
+UIS.InputBegan:Connect(function(input, processed)
+    if processed then return end
+    if input.KeyCode == Enum.KeyCode.RightControl then
+        toggle = not toggle
+        Window.Enabled = toggle
+    end
+end)
+
+OrionLib:Init()
