@@ -124,19 +124,44 @@ local originalPosition
 
 floatingButton.MouseButton1Click:Connect(function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = LocalPlayer.Character.HumanoidRootPart
+        local character = LocalPlayer.Character
+        local hrp = character.HumanoidRootPart
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+        
         if not floating then
             originalPosition = hrp.Position
-            hrp.Anchored = true
-            hrp.CFrame = hrp.CFrame + Vector3.new(0, 50, 0)
+
+            -- すべてのPartを一括で上に浮かせる
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Anchored = true
+                    part.CFrame = part.CFrame + Vector3.new(0, 50, 0)
+                end
+            end
+
+            if humanoid then
+                humanoid.PlatformStand = true
+            end
+
             floating = true
         else
-            hrp.Anchored = false
-            hrp.CFrame = CFrame.new(originalPosition)
+            -- 元の位置に戻す
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.CFrame = part.CFrame - Vector3.new(0, 50, 0)
+                    part.Anchored = false
+                end
+            end
+
+            if humanoid then
+                humanoid.PlatformStand = false
+            end
+
             floating = false
         end
     end
 end)
+
 
 -- 敵を集める
 local gatherDistance = 50
