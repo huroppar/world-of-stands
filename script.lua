@@ -13,7 +13,9 @@ if not allowedUsers[LocalPlayer.Name] then
 end
 
 -- GUIライブラリの読み込み
+
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
+
 local Window = OrionLib:MakeWindow({Name = "World of Stands Utility", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
 
 local MainTab = Window:MakeTab({ Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false })
