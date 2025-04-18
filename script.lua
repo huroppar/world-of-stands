@@ -140,56 +140,75 @@ floatingButton.MouseButton1Click:Connect(function()
 end)
 
 
--- 敵BOT集め機能
-local gatherDistance = 50 -- 初期距離（後でスライダーで更新される）
+local gatherDistance = 50
+local RunService = game:GetService("RunService")
+local gatheredEnemies = {}
+local gathering = false
 
-local function gatherEnemies()
+-- 敵を集める関数
+local function startGatheringEnemies()
+    gathering = true
+    table.clear(gatheredEnemies)
+
     local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not myHRP then return end
 
-    for _, enemy in pairs(workspace:GetDescendants()) do
-        if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") then
-            local enemyHRP = enemy.HumanoidRootPart
-            local distance = (enemyHRP.Position - myHRP.Position).Magnitude
-            if distance <= gatherDistance then
-                enemyHRP.Anchored = true
-                enemyHRP.CFrame = myHRP.CFrame * CFrame.new(0, 0, -5)
-                enemy.Humanoid.WalkSpeed = 0
-                enemy.Humanoid.JumpPower = 0
-                if enemy:FindFirstChild("Target") then
-                    enemy.Target.Value = nil
-                end
-                for _, s in pairs(enemy:GetChildren()) do
-                    if s:IsA("Script") then s.Disabled = true end
+    for _, model in pairs(workspace:GetDescendants()) do
+        if model:IsA("Model") and model:FindFirstChild("Humanoid") and model:FindFirstChild("HumanoidRootPart") then
+            -- 自分自身じゃないか？
+            if model ~= LocalPlayer.Character then
+                -- 会話NPCじゃないか？（ここカスタム可能）
+                if not model:FindFirstChild("Dialogue") and not model:FindFirstChild("QuestBubble") then
+                    local enemyHRP = model.HumanoidRootPart
+                    local dist = (enemyHRP.Position - myHRP.Position).Magnitude
+                    if dist <= gatherDistance then
+                        table.insert(gatheredEnemies, model)
+                    end
                 end
             end
         end
     end
 end
 
+-- 毎フレーム、敵を自分の近くに移動させ続ける
+RunService.Heartbeat:Connect(function()
+    if gathering then
+        local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+        if not myHRP then return end
 
+        for _, enemy in pairs(gatheredEnemies) do
+            if enemy and enemy:FindFirstChild("HumanoidRootPart") then
+                local eHRP = enemy.HumanoidRootPart
+                eHRP.CFrame = myHRP.CFrame * CFrame.new(0, 0, -5) -- 自分の正面5スタッドに寄せる
+            end
+        end
+    end
+end)
 
-MainTab:AddButton({
+MainTab:AddToggle({
     Name = "敵を集める",
-    Callback = function()
-        gatherEnemies()
+    Default = false,
+    Callback = function(val)
+        if val then
+            startGatheringEnemies()
+        else
+            gathering = false
+            gatheredEnemies = {}
+        end
     end
 })
-
-local gatherDistance = 50
 
 MainTab:AddSlider({
     Name = "敵集め距離",
     Min = 1,
     Max = 200,
     Default = 50,
-    Color = Color3.fromRGB(255, 0, 0),
     Increment = 1,
-    ValueName = "studs",
     Callback = function(value)
         gatherDistance = value
     end
 })
+
 
 
 MainTab:AddTextbox({
