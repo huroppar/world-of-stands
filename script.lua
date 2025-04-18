@@ -141,17 +141,19 @@ end)
 
 
 -- 敵BOT集め機能
+local gatherDistance = 50 -- 初期距離（後でスライダーで更新される）
+
 local function gatherEnemies()
-    local root = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not root then return end
+    local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not myHRP then return end
 
     for _, enemy in pairs(workspace:GetDescendants()) do
         if enemy:IsA("Model") and enemy:FindFirstChild("Humanoid") and enemy:FindFirstChild("HumanoidRootPart") then
-            local hrp = enemy.HumanoidRootPart
-            local distance = (root.Position - hrp.Position).Magnitude
+            local enemyHRP = enemy.HumanoidRootPart
+            local distance = (enemyHRP.Position - myHRP.Position).Magnitude
             if distance <= gatherDistance then
-                hrp.Anchored = true
-                hrp.CFrame = root.CFrame * CFrame.new(0, 0, -5)
+                enemyHRP.Anchored = true
+                enemyHRP.CFrame = myHRP.CFrame * CFrame.new(0, 0, -5)
                 enemy.Humanoid.WalkSpeed = 0
                 enemy.Humanoid.JumpPower = 0
                 if enemy:FindFirstChild("Target") then
@@ -166,6 +168,7 @@ local function gatherEnemies()
 end
 
 
+
 MainTab:AddButton({
     Name = "敵を集める",
     Callback = function()
@@ -176,16 +179,18 @@ MainTab:AddButton({
 local gatherDistance = 50
 
 MainTab:AddSlider({
-    Name = "敵集め 距離（スライダー）",
-    Min = 10,
-    Max = 500,
+    Name = "敵集め距離",
+    Min = 1,
+    Max = 200,
     Default = 50,
-    Increment = 10,
-    ValueName = "Studs",
+    Color = Color3.fromRGB(255, 0, 0),
+    Increment = 1,
+    ValueName = "studs",
     Callback = function(value)
         gatherDistance = value
     end
 })
+
 
 MainTab:AddTextbox({
     Name = "敵集め 距離（手入力）",
