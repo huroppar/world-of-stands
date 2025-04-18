@@ -128,14 +128,17 @@ floatingButton.MouseButton1Click:Connect(function()
         local hrp = LocalPlayer.Character.HumanoidRootPart
         if not floating then
             originalPosition = hrp.Position
-            hrp.CFrame = hrp.CFrame + Vector3.new(0, 100000, 0)
+            hrp.Anchored = true -- ← 落下防止
+            hrp.CFrame = hrp.CFrame + Vector3.new(0, 50, 0)
             floating = true
         else
+            hrp.Anchored = false -- ← 元に戻す
             hrp.CFrame = CFrame.new(originalPosition)
             floating = false
         end
     end
 end)
+
 
 -- 敵BOT集め機能
 local function gatherEnemies()
