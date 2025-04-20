@@ -292,7 +292,7 @@ MainTab:AddButton({
 })
 
 MainTab:AddButton({
-    Name = "透明化",
+    Name = "透明化(PC非推奨)",
     Callback = function()
         loadstring(game:HttpGet('https://pastebin.com/raw/3Rnd9rHf'))()
         -- 例: 敵に即時ダメージを与える、GUI表示、または外部コード取得など
