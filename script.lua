@@ -124,47 +124,58 @@ local floating = false
 local originalCFrame
 
 floatingButton.MouseButton1Click:Connect(function()
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local character = LocalPlayer.Character
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
         local hrp = character:FindFirstChild("HumanoidRootPart")
         local humanoid = character:FindFirstChildOfClass("Humanoid")
 
         if not floating then
             originalCFrame = hrp.CFrame
 
-            -- キャラ全体を超遠くに退避（敵から見えなくする）
-            character:SetPrimaryPartCFrame(CFrame.new(99999, 10000, 99999))
+            -- 上空へ移動
+            character:SetPrimaryPartCFrame(hrp.CFrame + Vector3.new(0, 10000, 0))
 
-            -- 一瞬消して敵のターゲット解除
-            character.Parent = nil
-            wait(0.1)
-            character.Parent = workspace
-
-            -- 完全静止のためにBodyVelocity
+            -- BodyVelocityで静止
             local bodyVel = Instance.new("BodyVelocity")
             bodyVel.Velocity = Vector3.new(0, 0, 0)
-            bodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bodyVel.MaxForce = Vector3.new(1e5, 1e5, 1e5)
             bodyVel.Name = "FloatForce"
             bodyVel.Parent = hrp
 
-            -- アンカーで固定
+            -- アンカー固定
             hrp.Anchored = true
 
-            -- 動けないように状態変更
+            -- 当たり判定を無効にする（CanCollideとTransparency変更）
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Transparency = 1
+                    part.CanCollide = false
+                end
+            end
+
             if humanoid then
                 humanoid:ChangeState(Enum.HumanoidStateType.Physics)
             end
 
             floating = true
         else
-            -- 戻す処理
+            -- 元に戻す
             local float = hrp:FindFirstChild("FloatForce")
             if float then
                 float:Destroy()
             end
 
+            -- アンカー解除＆戻す
             hrp.Anchored = false
             character:SetPrimaryPartCFrame(originalCFrame)
+
+            -- 当たり判定＆見た目を元に戻す
+            for _, part in ipairs(character:GetDescendants()) do
+                if part:IsA("BasePart") then
+                    part.Transparency = 0
+                    part.CanCollide = true
+                end
+            end
 
             if humanoid then
                 humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
@@ -174,6 +185,7 @@ floatingButton.MouseButton1Click:Connect(function()
         end
     end
 end)
+
 
 
 
