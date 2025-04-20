@@ -122,7 +122,6 @@ MainTab:AddToggle({
 
 local floating = false
 local originalCFrame
-local originalTransparency = {}
 
 floatingButton.MouseButton1Click:Connect(function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -133,56 +132,43 @@ floatingButton.MouseButton1Click:Connect(function()
         if not floating then
             originalCFrame = hrp.CFrame
 
-            -- 落下防止のBodyVelocityを追加
+            -- キャラ全体を超遠くに退避（敵から見えなくする）
+            character:SetPrimaryPartCFrame(CFrame.new(99999, 10000, 99999))
+
+            -- 一瞬消して敵のターゲット解除
+            character.Parent = nil
+            wait(0.1)
+            character.Parent = workspace
+
+            -- 完全静止のためにBodyVelocity
             local bodyVel = Instance.new("BodyVelocity")
             bodyVel.Velocity = Vector3.new(0, 0, 0)
             bodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
             bodyVel.Name = "FloatForce"
             bodyVel.Parent = hrp
 
-            -- 上空へ移動
-            hrp.CFrame = hrp.CFrame + Vector3.new(0, 10000, 0)
-
-            -- 静止
+            -- アンカーで固定
             hrp.Anchored = true
 
-            -- PlatformStand
+            -- 動けないように状態変更
             if humanoid then
-                humanoid.PlatformStand = true
+                humanoid:ChangeState(Enum.HumanoidStateType.Physics)
             end
-
-            -- キャラ透明化＆当たり判定無効化
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
-                    originalTransparency[part] = part.Transparency
-                    part.Transparency = 1
-                    part.CanCollide = false
-                end
-            end
-
-            -- HumanoidRootPartだけ遠くに避難（ヒットボックス回避）
-            hrp.Position = Vector3.new(99999, 10000, 99999)
 
             floating = true
         else
-            -- 戻る処理
+            -- 戻す処理
             local float = hrp:FindFirstChild("FloatForce")
-            if float then float:Destroy() end
+            if float then
+                float:Destroy()
+            end
+
             hrp.Anchored = false
-            hrp.CFrame = originalCFrame
+            character:SetPrimaryPartCFrame(originalCFrame)
 
             if humanoid then
-                humanoid.PlatformStand = false
+                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
             end
-
-            -- キャラ元に戻す
-            for part, trans in pairs(originalTransparency) do
-                if part and part:IsA("BasePart") then
-                    part.Transparency = trans
-                    part.CanCollide = true
-                end
-            end
-            originalTransparency = {}
 
             floating = false
         end
