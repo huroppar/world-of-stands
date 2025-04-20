@@ -125,32 +125,23 @@ local originalCFrame
 floatingButton.MouseButton1Click:Connect(function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
         local character = LocalPlayer.Character
-        local hrp = character.HumanoidRootPart
+        local hrp = character:FindFirstChild("HumanoidRootPart")
         local humanoid = character:FindFirstChildOfClass("Humanoid")
-        
+
         if not floating then
-            originalCFrame = hrp.CFrame -- 元のCFrameを保存（位置＋向き）
+            originalCFrame = hrp.CFrame
 
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.Anchored = true
-                    part.CFrame = part.CFrame + Vector3.new(0, 10000, 0)
-                end
-            end
+            -- Anchoredにはせず物理的にキャラをワープ
+            character:SetPrimaryPartCFrame(hrp.CFrame + Vector3.new(0, 10000, 0))
 
+            -- PlatformStandで空中静止
             if humanoid then
                 humanoid.PlatformStand = true
             end
 
             floating = true
         else
-            for _, part in pairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.Anchored = false
-                end
-            end
-
-            -- HumanoidRootPartのCFrameをもとにキャラを元の位置へ戻す
+            -- 元の位置に戻す
             character:SetPrimaryPartCFrame(originalCFrame)
 
             if humanoid then
