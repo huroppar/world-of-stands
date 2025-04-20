@@ -310,6 +310,98 @@ MainTab:AddButton({
     end
 })
 
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- GUI作成
+local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+screenGui.Name = "StealthGui"
+
+local stealthButton = Instance.new("TextButton")
+stealthButton.Size = UDim2.new(0, 120, 0, 50)
+stealthButton.Position = UDim2.new(0.5, -60, 1, -160)
+stealthButton.Text = "ステルスON"
+stealthButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+stealthButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+stealthButton.Parent = screenGui
+stealthButton.Active = true
+stealthButton.Draggable = true
+
+-- ステルス処理
+local isStealthed = false
+local originalPosition
+local cameraPart
+local floatForce
+
+stealthButton.MouseButton1Click:Connect(function()
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("HumanoidRootPart") and character:FindFirstChild("Humanoid") then
+        local hrp = character.HumanoidRootPart
+        local humanoid = character.Humanoid
+
+        if not isStealthed then
+            -- 保存位置
+            originalPosition = hrp.Position
+
+            -- カメラ固定用パート
+            cameraPart = Instance.new("Part")
+            cameraPart.Name = "CameraAnchor"
+            cameraPart.Anchored = true
+            cameraPart.CanCollide = false
+            cameraPart.Transparency = 1
+            cameraPart.Size = Vector3.new(1, 1, 1)
+            cameraPart.Position = hrp.Position -- カメラ位置をキャラクター位置に固定
+            cameraPart.Parent = workspace
+
+            -- カメラを固定
+            Camera.CameraType = Enum.CameraType.Scriptable
+            Camera.CFrame = CFrame.new(cameraPart.Position + Vector3.new(0, 5, 10), cameraPart.Position)
+
+            -- キャラを空中へ
+            hrp.CFrame = hrp.CFrame + Vector3.new(0, 500000, 0)
+
+            -- 落下防止
+            floatForce = Instance.new("BodyVelocity")
+            floatForce.Name = "FloatForce"
+            floatForce.Velocity = Vector3.new(0, 0, 0)
+            floatForce.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            floatForce.Parent = hrp
+
+            humanoid.PlatformStand = true
+
+            stealthButton.Text = "ステルスOFF"
+            isStealthed = true
+        else
+            -- ステルス解除
+            if originalPosition then
+                hrp.CFrame = CFrame.new(originalPosition)
+            end
+
+            -- 落下防止解除
+            if floatForce then
+                floatForce:Destroy()
+                floatForce = nil
+            end
+
+            humanoid.PlatformStand = false
+
+            -- カメラ戻す
+            Camera.CameraType = Enum.CameraType.Custom
+            Camera.CameraSubject = humanoid
+
+            if cameraPart then
+                cameraPart:Destroy()
+                cameraPart = nil
+            end
+
+            stealthButton.Text = "ステルスON"
+            isStealthed = false
+        end
+    end
+end)
+
+
 -- 最後に通知
 OrionLib:MakeNotification({
     Name = "WOSユーティリティ",
