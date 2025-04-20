@@ -131,18 +131,29 @@ floatingButton.MouseButton1Click:Connect(function()
         if not floating then
             originalCFrame = hrp.CFrame
 
-            -- Anchoredにはせず物理的にキャラをワープ
-            character:SetPrimaryPartCFrame(hrp.CFrame + Vector3.new(0, 10000, 0))
+            -- 落下防止のBodyVelocityを追加
+            local bodyVel = Instance.new("BodyVelocity")
+            bodyVel.Velocity = Vector3.new(0, 0, 0)
+            bodyVel.MaxForce = Vector3.new(0, math.huge, 0)
+            bodyVel.Name = "FloatForce"
+            bodyVel.Parent = hrp
 
-            -- PlatformStandで空中静止
+            -- サーバーにも認識される形で移動
+            hrp.CFrame = hrp.CFrame + Vector3.new(0, 10000, 0)
+
+            -- PlatformStandでその場静止
             if humanoid then
                 humanoid.PlatformStand = true
             end
 
             floating = true
         else
-            -- 元の位置に戻す
-            character:SetPrimaryPartCFrame(originalCFrame)
+            local float = hrp:FindFirstChild("FloatForce")
+            if float then
+                float:Destroy()
+            end
+
+            hrp.CFrame = originalCFrame
 
             if humanoid then
                 humanoid.PlatformStand = false
