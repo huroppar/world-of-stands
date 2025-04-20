@@ -333,6 +333,7 @@ local isStealthed = false
 local originalPosition
 local cameraPart
 local floatForce
+local originalCameraType
 
 stealthButton.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
@@ -344,6 +345,10 @@ stealthButton.MouseButton1Click:Connect(function()
             -- 保存位置
             originalPosition = hrp.Position
 
+            -- カメラのタイプを保存し、透明化時に自由に動けるようにする
+            originalCameraType = Camera.CameraType
+            Camera.CameraType = Enum.CameraType.Custom
+
             -- カメラ固定用パート
             cameraPart = Instance.new("Part")
             cameraPart.Name = "CameraAnchor"
@@ -354,11 +359,15 @@ stealthButton.MouseButton1Click:Connect(function()
             cameraPart.Position = hrp.Position
             cameraPart.Parent = workspace
 
-            -- カメラを固定（カメラの動き許可）
-            Camera.CameraType = Enum.CameraType.Custom
-            Camera.CFrame = CFrame.new(cameraPart.Position + Vector3.new(0, 5, 10), cameraPart.Position)
+            -- プレイヤーを透明にし、視覚的に隠す
+            character:FindFirstChild("Head").Transparency = 1
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("MeshPart") or part:IsA("Part") then
+                    part.Transparency = 1
+                end
+            end
 
-            -- キャラを空中へ
+            -- プレイヤーを移動
             hrp.CFrame = hrp.CFrame + Vector3.new(0, 500000, 0)
 
             -- 落下防止
@@ -368,9 +377,12 @@ stealthButton.MouseButton1Click:Connect(function()
             floatForce.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
             floatForce.Parent = hrp
 
-            -- 動きを止める（PlatformStand）
+            -- 攻撃を受けないように動きを停止
             humanoid.PlatformStand = true
+            humanoid.Health = humanoid.Health -- ダメージ受けないようにする
 
+            -- 視覚効果の調整
+            character.HumanoidRootPart.CanCollide = false  -- 当たり判定無効化
             stealthButton.Text = "ステルスOFF"
             isStealthed = true
         else
@@ -379,19 +391,31 @@ stealthButton.MouseButton1Click:Connect(function()
                 hrp.CFrame = CFrame.new(originalPosition)
             end
 
+            -- 透明化解除
+            for _, part in pairs(character:GetChildren()) do
+                if part:IsA("MeshPart") or part:IsA("Part") then
+                    part.Transparency = 0
+                end
+            end
+            character:FindFirstChild("Head").Transparency = 0
+
             -- 落下防止解除
             if floatForce then
                 floatForce:Destroy()
                 floatForce = nil
             end
 
-            -- 動き再開（PlatformStand解除）
+            -- 攻撃を受ける状態に戻す
             humanoid.PlatformStand = false
 
-            -- カメラ戻す
-            Camera.CameraType = Enum.CameraType.Custom
+            -- カメラを元に戻す
+            Camera.CameraType = originalCameraType
             Camera.CameraSubject = humanoid
 
+            -- 当たり判定を元に戻す
+            character.HumanoidRootPart.CanCollide = true
+
+            -- 視覚効果を元に戻す
             if cameraPart then
                 cameraPart:Destroy()
                 cameraPart = nil
