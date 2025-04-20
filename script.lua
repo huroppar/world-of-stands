@@ -135,12 +135,15 @@ floatingButton.MouseButton1Click:Connect(function()
             -- 落下防止のBodyVelocityを追加
             local bodyVel = Instance.new("BodyVelocity")
             bodyVel.Velocity = Vector3.new(0, 0, 0)
-            bodyVel.MaxForce = Vector3.new(0, math.huge, 0)
+            bodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
             bodyVel.Name = "FloatForce"
             bodyVel.Parent = hrp
 
-            -- サーバーにも認識される形で移動
+            -- 上空へ移動
             hrp.CFrame = hrp.CFrame + Vector3.new(0, 10000, 0)
+
+            -- 完全に静止（アンカー固定）
+            hrp.Anchored = true
 
             -- PlatformStandでその場静止
             if humanoid then
@@ -149,10 +152,14 @@ floatingButton.MouseButton1Click:Connect(function()
 
             floating = true
         else
+            -- 戻る処理
             local float = hrp:FindFirstChild("FloatForce")
             if float then
                 float:Destroy()
             end
+
+            -- アンカー解除
+            hrp.Anchored = false
 
             hrp.CFrame = originalCFrame
 
@@ -164,6 +171,7 @@ floatingButton.MouseButton1Click:Connect(function()
         end
     end
 end)
+
 
 
 
