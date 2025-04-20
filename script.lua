@@ -93,8 +93,7 @@ game:GetService("RunService").Stepped:Connect(function()
     end
 end)
 
--- 空中TP
-local teleportButtonVisible = true
+-- 空中TPボタン
 local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 screenGui.Name = "TeleportGui"
 
@@ -107,7 +106,6 @@ floatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 floatingButton.Parent = screenGui
 floatingButton.Active = true
 floatingButton.Draggable = true
-floatingButton.Visible = teleportButtonVisible
 
 MainTab:AddToggle({
     Name = "空中TPボタン表示",
@@ -121,75 +119,21 @@ MainTab:AddToggle({
 })
 
 local floating = false
-local originalCFrame
+local originalPosition
 
 floatingButton.MouseButton1Click:Connect(function()
-    local character = LocalPlayer.Character
-    if character and character:FindFirstChild("HumanoidRootPart") then
-        local hrp = character:FindFirstChild("HumanoidRootPart")
-        local humanoid = character:FindFirstChildOfClass("Humanoid")
-
+    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = LocalPlayer.Character.HumanoidRootPart
         if not floating then
-            originalCFrame = hrp.CFrame
-
-            -- 上空へ移動
-            character:SetPrimaryPartCFrame(hrp.CFrame + Vector3.new(0, 10000, 0))
-
-            -- BodyVelocityで静止
-            local bodyVel = Instance.new("BodyVelocity")
-            bodyVel.Velocity = Vector3.new(0, 0, 0)
-            bodyVel.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-            bodyVel.Name = "FloatForce"
-            bodyVel.Parent = hrp
-
-            -- アンカー固定
-            hrp.Anchored = true
-
-            -- 当たり判定を無効にする（CanCollideとTransparency変更）
-            for _, part in ipairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.Transparency = 1
-                    part.CanCollide = false
-                end
-            end
-
-            if humanoid then
-                humanoid:ChangeState(Enum.HumanoidStateType.Physics)
-            end
-
+            originalPosition = hrp.Position
+            hrp.CFrame = hrp.CFrame + Vector3.new(0, 50, 0)
             floating = true
         else
-            -- 元に戻す
-            local float = hrp:FindFirstChild("FloatForce")
-            if float then
-                float:Destroy()
-            end
-
-            -- アンカー解除＆戻す
-            hrp.Anchored = false
-            character:SetPrimaryPartCFrame(originalCFrame)
-
-            -- 当たり判定＆見た目を元に戻す
-            for _, part in ipairs(character:GetDescendants()) do
-                if part:IsA("BasePart") then
-                    part.Transparency = 0
-                    part.CanCollide = true
-                end
-            end
-
-            if humanoid then
-                humanoid:ChangeState(Enum.HumanoidStateType.GettingUp)
-            end
-
+            hrp.CFrame = CFrame.new(originalPosition)
             floating = false
         end
     end
 end)
-
-
-
-
-
 -- 敵を集める
 local gatherDistance = 50
 local RunService = game:GetService("RunService")
