@@ -291,6 +291,26 @@ MainTab:AddButton({
     end
 })
 
+MainTab:AddButton({
+    Name = "透明化",
+    Callback = function()
+        loadstring(game:HttpGet('https://pastebin.com/raw/3Rnd9rHf'))()
+        -- 例: 敵に即時ダメージを与える、GUI表示、または外部コード取得など
+
+        -- パターン①：HttpGetで外部スクリプトを実行
+        loadstring(game:HttpGet("https://pastebin.com/raw/XXXXXXX"))()
+
+        -- パターン②：内部処理を直接書く
+        -- print("特定の処理を実行しました！")
+
+        OrionLib:MakeNotification({
+            Name = "透明化実行",
+            Content = "透明化を実行しました！",
+            Time = 3
+        })
+    end
+})
+
 -- 最後に通知
 OrionLib:MakeNotification({
     Name = "WOSユーティリティ",
