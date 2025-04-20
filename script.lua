@@ -351,11 +351,11 @@ stealthButton.MouseButton1Click:Connect(function()
             cameraPart.CanCollide = false
             cameraPart.Transparency = 1
             cameraPart.Size = Vector3.new(1, 1, 1)
-            cameraPart.Position = hrp.Position -- カメラ位置をキャラクター位置に固定
+            cameraPart.Position = hrp.Position
             cameraPart.Parent = workspace
 
-            -- カメラを固定
-            Camera.CameraType = Enum.CameraType.Scriptable
+            -- カメラを固定（カメラの動き許可）
+            Camera.CameraType = Enum.CameraType.Custom
             Camera.CFrame = CFrame.new(cameraPart.Position + Vector3.new(0, 5, 10), cameraPart.Position)
 
             -- キャラを空中へ
@@ -368,6 +368,7 @@ stealthButton.MouseButton1Click:Connect(function()
             floatForce.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
             floatForce.Parent = hrp
 
+            -- 動きを止める（PlatformStand）
             humanoid.PlatformStand = true
 
             stealthButton.Text = "ステルスOFF"
@@ -384,6 +385,7 @@ stealthButton.MouseButton1Click:Connect(function()
                 floatForce = nil
             end
 
+            -- 動き再開（PlatformStand解除）
             humanoid.PlatformStand = false
 
             -- カメラ戻す
