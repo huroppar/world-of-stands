@@ -122,6 +122,7 @@ MainTab:AddToggle({
 
 local floating = false
 local originalCFrame
+local originalTransparency = {}
 
 floatingButton.MouseButton1Click:Connect(function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -142,30 +143,46 @@ floatingButton.MouseButton1Click:Connect(function()
             -- 上空へ移動
             hrp.CFrame = hrp.CFrame + Vector3.new(0, 10000, 0)
 
-            -- 完全に静止（アンカー固定）
+            -- 静止
             hrp.Anchored = true
 
-            -- PlatformStandでその場静止
+            -- PlatformStand
             if humanoid then
                 humanoid.PlatformStand = true
             end
+
+            -- キャラ透明化＆当たり判定無効化
+            for _, part in pairs(character:GetDescendants()) do
+                if part:IsA("BasePart") and part.Name ~= "HumanoidRootPart" then
+                    originalTransparency[part] = part.Transparency
+                    part.Transparency = 1
+                    part.CanCollide = false
+                end
+            end
+
+            -- HumanoidRootPartだけ遠くに避難（ヒットボックス回避）
+            hrp.Position = Vector3.new(99999, 10000, 99999)
 
             floating = true
         else
             -- 戻る処理
             local float = hrp:FindFirstChild("FloatForce")
-            if float then
-                float:Destroy()
-            end
-
-            -- アンカー解除
+            if float then float:Destroy() end
             hrp.Anchored = false
-
             hrp.CFrame = originalCFrame
 
             if humanoid then
                 humanoid.PlatformStand = false
             end
+
+            -- キャラ元に戻す
+            for part, trans in pairs(originalTransparency) do
+                if part and part:IsA("BasePart") then
+                    part.Transparency = trans
+                    part.CanCollide = true
+                end
+            end
+            originalTransparency = {}
 
             floating = false
         end
