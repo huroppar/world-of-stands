@@ -135,7 +135,7 @@ floatingButton.MouseButton1Click:Connect(function()
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
                     part.Anchored = true
-                    part.CFrame = part.CFrame + Vector3.new(0, 50, 0)
+                    part.CFrame = part.CFrame + Vector3.new(0, 10000, 0)
                 end
             end
 
