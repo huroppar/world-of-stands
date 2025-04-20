@@ -122,18 +122,49 @@ local floating = false
 local originalPosition
 
 floatingButton.MouseButton1Click:Connect(function()
-    if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = LocalPlayer.Character.HumanoidRootPart
+    local character = LocalPlayer.Character
+    if character and character:FindFirstChild("HumanoidRootPart") then
+        local hrp = character.HumanoidRootPart
+        local humanoid = character:FindFirstChildOfClass("Humanoid")
+
         if not floating then
             originalPosition = hrp.Position
+
+            -- 上空に移動
             hrp.CFrame = hrp.CFrame + Vector3.new(0, 500000, 0)
+
+            -- BodyVelocityで落下防止
+            local bodyVel = Instance.new("BodyVelocity")
+            bodyVel.Name = "FloatForce"
+            bodyVel.Velocity = Vector3.new(0, 0, 0)
+            bodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+            bodyVel.Parent = hrp
+
+            -- PlatformStandでその場静止
+            if humanoid then
+                humanoid.PlatformStand = true
+            end
+
             floating = true
         else
+            -- 戻す処理
             hrp.CFrame = CFrame.new(originalPosition)
+
+            -- 落下防止解除
+            local float = hrp:FindFirstChild("FloatForce")
+            if float then
+                float:Destroy()
+            end
+
+            if humanoid then
+                humanoid.PlatformStand = false
+            end
+
             floating = false
         end
     end
 end)
+
 -- 敵を集める
 local gatherDistance = 50
 local RunService = game:GetService("RunService")
