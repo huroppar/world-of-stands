@@ -281,7 +281,7 @@ floatingButton.MouseButton1Click:Connect(function()
         if not floating then
             originalPosition = hrp.Position
             hrp.Anchored = true -- ← 落下防止
-            hrp.CFrame = hrp.CFrame + Vector3.new(0, -5000, 0)
+            hrp.CFrame = hrp.CFrame + Vector3.new(0, 10000, 0)
             floating = true
         else
             hrp.Anchored = false -- ← 元に戻す
