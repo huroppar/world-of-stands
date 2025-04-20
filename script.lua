@@ -37,7 +37,7 @@ MainTab:AddToggle({
         else
             if speedConnection then speedConnection:Disconnect() end
             if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                LocalPlayer.Character.Humanoid.WalkSpeed = 16
+                LocalPlayer.Character.Humanoid.WalkSpeed = 30
             end
         end
     end
@@ -47,7 +47,7 @@ MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
     Max = 100,
-    Default = 16,
+    Default = 30,
     Color = Color3.fromRGB(255,255,255),
     Increment = 1,
     ValueName = "Speed",
