@@ -4,6 +4,7 @@ local LocalPlayer = Players.LocalPlayer
 
 local allowedUsers = {
     ["Furoppersama"] = true,
+    ["fsjsjnsnsnsnns"] = true,
     ["Furopparsama"] = true
 }
 
