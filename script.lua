@@ -148,7 +148,7 @@ floatingButton.MouseButton1Click:Connect(function()
             -- 元の位置に戻す
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    part.CFrame = part.CFrame - Vector3.new(0, 50, 0)
+                    part.CFrame = part.CFrame - Vector3.new(0, 10000, 0)
                     part.Anchored = false
                 end
             end
