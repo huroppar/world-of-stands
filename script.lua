@@ -120,7 +120,7 @@ MainTab:AddToggle({
 })
 
 local floating = false
-local originalPosition
+local originalCFrame
 
 floatingButton.MouseButton1Click:Connect(function()
     if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") then
@@ -129,9 +129,8 @@ floatingButton.MouseButton1Click:Connect(function()
         local humanoid = character:FindFirstChildOfClass("Humanoid")
         
         if not floating then
-            originalPosition = hrp.Position
+            originalCFrame = hrp.CFrame -- 元のCFrameを保存（位置＋向き）
 
-            -- すべてのPartを一括で上に浮かせる
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
                     part.Anchored = true
@@ -145,13 +144,14 @@ floatingButton.MouseButton1Click:Connect(function()
 
             floating = true
         else
-            -- 元の位置に戻す
             for _, part in pairs(character:GetDescendants()) do
                 if part:IsA("BasePart") then
-                    part.CFrame = part.CFrame - Vector3.new(0, 10000, 0)
                     part.Anchored = false
                 end
             end
+
+            -- HumanoidRootPartのCFrameをもとにキャラを元の位置へ戻す
+            character:SetPrimaryPartCFrame(originalCFrame)
 
             if humanoid then
                 humanoid.PlatformStand = false
@@ -161,6 +161,7 @@ floatingButton.MouseButton1Click:Connect(function()
         end
     end
 end)
+
 
 
 -- 敵を集める
