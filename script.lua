@@ -310,6 +310,64 @@ MainTab:AddButton({
     end
 })
 
+-- OrionLibを取得してる前提
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+-- ハイライト用変数
+local highlightEnabled = false
+
+-- ハイライト更新関数
+local function updatePlayerHighlights()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player ~= LocalPlayer and player.Character then
+            -- 古いハイライト削除
+            local old = player.Character:FindFirstChild("PlayerHighlight")
+            if old then
+                old:Destroy()
+            end
+
+            -- 有効時に新規追加
+            if highlightEnabled then
+                local highlight = Instance.new("Highlight")
+                highlight.Name = "PlayerHighlight"
+                highlight.Adornee = player.Character
+                highlight.FillColor = Color3.fromRGB(255, 0, 0)
+                highlight.FillTransparency = 0.4
+                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
+                highlight.OutlineTransparency = 0.1
+                highlight.Parent = player.Character
+            end
+        end
+    end
+end
+
+-- 新規プレイヤー対応
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(1)
+        updatePlayerHighlights()
+    end)
+end)
+
+-- 💠 Visualsタブ作成
+local visualsTab = Window:MakeTab({
+    Name = "Visuals",
+    Icon = "rbxassetid://6034287605", -- 好きなアイコンに変えてOK
+    PremiumOnly = false
+})
+
+-- 🔘 ハイライト切り替えトグル追加
+visualsTab:AddToggle({
+    Name = "他プレイヤーをハイライト",
+    Default = false,
+    Callback = function(value)
+        highlightEnabled = value
+        updatePlayerHighlights()
+    end
+})
+
+
 
 -- 最後に通知
 OrionLib:MakeNotification({
