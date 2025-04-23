@@ -314,52 +314,37 @@ MainTab:AddButton({
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
--- ハイライト用変数
 local highlightEnabled = false
+local playerHighlights = {}
 
--- ハイライト更新関数
 local function updatePlayerHighlights()
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            -- 古いハイライト削除
-            local old = player.Character:FindFirstChild("PlayerHighlight")
-            if old then
-                old:Destroy()
-            end
-
-            -- 有効時に新規追加
+        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
             if highlightEnabled then
-                local highlight = Instance.new("Highlight")
-                highlight.Name = "PlayerHighlight"
-                highlight.Adornee = player.Character
-                highlight.FillColor = Color3.fromRGB(255, 0, 0)
-                highlight.FillTransparency = 0.4
-                highlight.OutlineColor = Color3.fromRGB(255, 255, 255)
-                highlight.OutlineTransparency = 0.1
-                highlight.Parent = player.Character
+                if not playerHighlights[player] then
+                    local highlight = Instance.new("Highlight")
+                    highlight.Name = "PlayerHighlight"
+                    highlight.FillColor = Color3.fromRGB(255, 255, 0)
+                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+                    highlight.FillTransparency = 0.5
+                    highlight.OutlineTransparency = 0
+                    highlight.Adornee = player.Character
+                    highlight.Parent = player.Character
+                    playerHighlights[player] = highlight
+                end
+            else
+                if playerHighlights[player] then
+                    playerHighlights[player]:Destroy()
+                    playerHighlights[player] = nil
+                end
             end
         end
     end
 end
 
--- 新規プレイヤー対応
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        task.wait(1)
-        updatePlayerHighlights()
-    end)
-end)
-
--- 💠 Visualsタブ作成
-local visualsTab = Window:MakeTab({
-    Name = "Visuals",
-    Icon = "rbxassetid://6034287605", -- 好きなアイコンに変えてOK
-    PremiumOnly = false
-})
-
--- 🔘 ハイライト切り替えトグル追加
-visualsTab:AddToggle({
-    Name = "他プレイヤーをハイライト",
+-- GUIトグルに接続
+MainTab:AddToggle({
+    Name = "プレイヤーハイライト（ESP）",
     Default = false,
     Callback = function(value)
         highlightEnabled = value
@@ -367,74 +352,76 @@ visualsTab:AddToggle({
     end
 })
 
-local RunService = game:GetService("RunService")
+-- プレイヤーの追加・除去時にも更新
+Players.PlayerAdded:Connect(function()
+    task.wait(1)
+    updatePlayerHighlights()
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    if playerHighlights[player] then
+        playerHighlights[player]:Destroy()
+        playerHighlights[player] = nil
+    end
+end)
+
+-- プレイヤーが再スポーンしたときにハイライトを再適用
+Players.PlayerAdded:Connect(function(player)
+    player.CharacterAdded:Connect(function()
+        task.wait(1)  -- キャラクターが完全にロードされるのを待つ
+        updatePlayerHighlights()
+    end)
+end)
+
 local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-local Camera = workspace.CurrentCamera
+local selectedPlayer = nil  -- 現在ターゲットしているプレイヤー
+local autoAimEnabled = true  -- オートエイムが有効かどうか
 
--- エイムロック用変数
-local aimlockEnabled = false
-local selectedPlayerName = nil
-
--- ターゲット更新関数
-local function getTargetPlayer()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player.Name == selectedPlayerName and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            return player
-        end
+-- GUIでプレイヤーを選択できるようにする（例：ドロップダウンリスト）
+local playerDropdown = MainTab:AddDropdown({
+    Name = "ターゲットプレイヤー選択",
+    Options = {},  -- ここにプレイヤーリストを動的に追加する
+    Default = nil,
+    Callback = function(playerName)
+        selectedPlayer = Players:FindFirstChild(playerName)
     end
-    return nil
-end
+})
 
--- エイムロック処理
+-- プレイヤーリストを更新
+Players.PlayerAdded:Connect(function(player)
+    -- プレイヤーが追加されたときにドロップダウンに追加
+    playerDropdown:AddOption(player.Name)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+    -- プレイヤーが離れたときにドロップダウンから削除
+    playerDropdown:RemoveOption(player.Name)
+end)
+
+-- オートエイムの処理
 RunService.RenderStepped:Connect(function()
-    if aimlockEnabled and selectedPlayerName then
-        local target = getTargetPlayer()
-        if target then
-            local targetPos = target.Character.HumanoidRootPart.Position
-            local camPos = Camera.CFrame.Position
-            local newLook = CFrame.new(camPos, targetPos)
-            Camera.CFrame = CFrame.new(camPos, camPos + (targetPos - camPos).Unit)
-        end
+    if not autoAimEnabled or not selectedPlayer then
+        return  -- オートエイムが無効か、ターゲットが選ばれていない場合は処理をしない
+    end
+
+    -- 自分のキャラクターがあるか確認
+    local myChar = LocalPlayer.Character
+    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then
+        return  -- 自分のキャラクターが存在しない場合、処理をしない
+    end
+
+    -- ターゲットにするプレイヤーのキャラクターがあるか確認
+    local targetChar = selectedPlayer.Character
+    if targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
+        -- カメラがターゲットプレイヤーに向くように設定
+        workspace.CurrentCamera.CFrame = CFrame.new(
+            workspace.CurrentCamera.CFrame.Position,
+            targetChar.HumanoidRootPart.Position
+        )
     end
 end)
-
--- 👁 Visualsタブに追加する部分
-visualsTab:AddDropdown({
-    Name = "ターゲットプレイヤーを選択",
-    Default = "",
-    Options = {}, -- 後でプレイヤーで自動更新される
-    Callback = function(value)
-        selectedPlayerName = value
-    end
-})
-
-visualsTab:AddToggle({
-    Name = "エイムロックON/OFF",
-    Default = false,
-    Callback = function(state)
-        aimlockEnabled = state
-    end
-})
-
--- 🧠 プレイヤーリストを定期更新（毎秒）
-task.spawn(function()
-    while true do
-        local names = {}
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer then
-                table.insert(names, p.Name)
-            end
-        end
-        pcall(function()
-            visualsTab:UpdateDropdown("ターゲットプレイヤーを選択", {
-                Options = names
-            })
-        end)
-        task.wait(1)
-    end
-end)
-
 
 
 -- 最後に通知
