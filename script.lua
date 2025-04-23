@@ -367,6 +367,74 @@ visualsTab:AddToggle({
     end
 })
 
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- エイムロック用変数
+local aimlockEnabled = false
+local selectedPlayerName = nil
+
+-- ターゲット更新関数
+local function getTargetPlayer()
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Name == selectedPlayerName and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+            return player
+        end
+    end
+    return nil
+end
+
+-- エイムロック処理
+RunService.RenderStepped:Connect(function()
+    if aimlockEnabled and selectedPlayerName then
+        local target = getTargetPlayer()
+        if target then
+            local targetPos = target.Character.HumanoidRootPart.Position
+            local camPos = Camera.CFrame.Position
+            local newLook = CFrame.new(camPos, targetPos)
+            Camera.CFrame = CFrame.new(camPos, camPos + (targetPos - camPos).Unit)
+        end
+    end
+end)
+
+-- 👁 Visualsタブに追加する部分
+visualsTab:AddDropdown({
+    Name = "ターゲットプレイヤーを選択",
+    Default = "",
+    Options = {}, -- 後でプレイヤーで自動更新される
+    Callback = function(value)
+        selectedPlayerName = value
+    end
+})
+
+visualsTab:AddToggle({
+    Name = "エイムロックON/OFF",
+    Default = false,
+    Callback = function(state)
+        aimlockEnabled = state
+    end
+})
+
+-- 🧠 プレイヤーリストを定期更新（毎秒）
+task.spawn(function()
+    while true do
+        local names = {}
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer then
+                table.insert(names, p.Name)
+            end
+        end
+        pcall(function()
+            visualsTab:UpdateDropdown("ターゲットプレイヤーを選択", {
+                Options = names
+            })
+        end)
+        task.wait(1)
+    end
+end)
+
 
 
 -- 最後に通知
