@@ -342,36 +342,14 @@ local function updatePlayerHighlights()
     end
 end
 
--- GUIトグルに接続
-MainTab:AddToggle({
-    Name = "プレイヤーハイライト（ESP）",
-    Default = false,
-    Callback = function(value)
-        highlightEnabled = value
-        updatePlayerHighlights()
-    end
-})
-
--- プレイヤーの追加・除去時にも更新
-Players.PlayerAdded:Connect(function()
-    task.wait(1)
-    updatePlayerHighlights()
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    if playerHighlights[player] then
-        playerHighlights[player]:Destroy()
-        playerHighlights[player] = nil
-    end
-end)
-
--- プレイヤーが再スポーンしたときにハイライトを再適用
-Players.PlayerAdded:Connect(function(player)
-    player.CharacterAdded:Connect(function()
-        task.wait(1)  -- キャラクターが完全にロードされるのを待つ
-        updatePlayerHighlights()
-    end)
-end)
+VisualTab:Toggle("Character Highlight", function(state)
+getgenv().enabled = state --Toggle on/off
+getgenv().filluseteamcolor = true --Toggle fill color using player team color on/off
+getgenv().outlineuseteamcolor = true --Toggle outline color using player team color on/off
+getgenv().fillcolor = Color3.new(0, 0, 0) --Change fill color, no need to edit if using team color
+getgenv().outlinecolor = Color3.new(1, 1, 1) --Change outline color, no need to edit if using team color
+getgenv().filltrans = 0.5 --Change fill transparency
+getgenv().outlinetrans = 0.5 --Change outline transparency
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
