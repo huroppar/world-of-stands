@@ -317,10 +317,21 @@ local LocalPlayer = Players.LocalPlayer
 local highlightEnabled = false
 local playerHighlights = {}
 
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local playerHighlights = {}
+local highlightEnabled = true -- ←これが必要
+
 local function updatePlayerHighlights()
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            if highlightEnabled then
+        if player ~= LocalPlayer 
+           and player.Character 
+           and player.Character:FindFirstChild("HumanoidRootPart") then
+
+            local isErasingTime = player.Character:FindFirstChild("TimeErase")
+            local inTimeErase = isErasingTime and isErasingTime.Value
+
+            if highlightEnabled and not inTimeErase then
                 if not playerHighlights[player] then
                     local highlight = Instance.new("Highlight")
                     highlight.Name = "PlayerHighlight"
@@ -328,7 +339,6 @@ local function updatePlayerHighlights()
                     highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
                     highlight.FillTransparency = 0.5
                     highlight.OutlineTransparency = 0
-                    highlight.Adornee = player.Character
                     highlight.Parent = player.Character
                     playerHighlights[player] = highlight
                 end
@@ -340,6 +350,10 @@ local function updatePlayerHighlights()
             end
         end
     end
+end
+
+if highlightEnabled and not (player.Character:FindFirstChild("TimeErase") and player.Character.TimeErase.Value) then
+    -- ハイライトつける処理
 end
 
 
