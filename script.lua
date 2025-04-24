@@ -324,33 +324,37 @@ local highlightEnabled = true -- ←これが必要
 
 local function updatePlayerHighlights()
     for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            -- キングクリムゾンのTimeErase中かどうかをチェック
-            local isTimeErasing = player.Character:FindFirstChild("TimeErase")
-            local inTimeErase = isTimeErasing and isTimeErasing.Value
+        if player ~= LocalPlayer then
+            local character = player.Character or player.CharacterAdded:Wait()
+            local hrp = character:FindFirstChild("HumanoidRootPart")
+            
+            if hrp then
+                local isTimeErasing = character:FindFirstChild("TimeErase")
+                local inTimeErase = isTimeErasing and isTimeErasing.Value
 
-            if highlightEnabled and not inTimeErase then
-                if not playerHighlights[player] then
-                    local highlight = Instance.new("Highlight")
-                    highlight.Name = "PlayerHighlight"
-                    highlight.FillColor = Color3.fromRGB(255, 255, 0)
-                    highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
-                    highlight.FillTransparency = 0.5
-                    highlight.OutlineTransparency = 0
-                    highlight.Adornee = player.Character
-                    highlight.Parent = player.Character
-                    playerHighlights[player] = highlight
-                end
-            else
-                -- ハイライトを消す処理
-                if playerHighlights[player] then
-                    playerHighlights[player]:Destroy()
-                    playerHighlights[player] = nil
+                if highlightEnabled and not inTimeErase then
+                    if not playerHighlights[player] then
+                        local highlight = Instance.new("Highlight")
+                        highlight.Name = "PlayerHighlight"
+                        highlight.FillColor = Color3.fromRGB(255, 255, 0)
+                        highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+                        highlight.FillTransparency = 0.5
+                        highlight.OutlineTransparency = 0
+                        highlight.Adornee = character
+                        highlight.Parent = character
+                        playerHighlights[player] = highlight
+                    end
+                else
+                    if playerHighlights[player] then
+                        playerHighlights[player]:Destroy()
+                        playerHighlights[player] = nil
+                    end
                 end
             end
         end
     end
 end
+
 
 
 local Players = game:GetService("Players")
