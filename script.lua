@@ -314,57 +314,70 @@ MainTab:AddButton({
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local highlightEnabled = true
 local playerHighlights = {}
+local highlightEnabled = true -- GUIトグルで切り替える用
 
--- ハイライト更新関数
+-- ハイライトの更新関数
 local function updatePlayerHighlights()
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer then
-            local character = player.Character
-            if character and character:FindFirstChild("HumanoidRootPart") then
-                local isTimeErasing = character:FindFirstChild("TimeErase")
-                local inTimeErase = isTimeErasing and isTimeErasing.Value
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			local isTimeErasing = player.Character:FindFirstChild("TimeErase") and player.Character.TimeErase.Value
 
-                if highlightEnabled and not inTimeErase then
-                    if not playerHighlights[player] then
-                        local highlight = Instance.new("Highlight")
-                        highlight.Name = "PlayerHighlight"
-                        highlight.FillColor = Color3.fromRGB(255, 255, 0)
-                        highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
-                        highlight.FillTransparency = 0.5
-                        highlight.OutlineTransparency = 0
-                        highlight.Adornee = character
-                        highlight.Parent = character
-                        playerHighlights[player] = highlight
-                    end
-                else
-                    if playerHighlights[player] then
-                        playerHighlights[player]:Destroy()
-                        playerHighlights[player] = nil
-                    end
-                end
-            end
-        end
-    end
+			if highlightEnabled and not isTimeErasing then
+				if not playerHighlights[player] then
+					local highlight = Instance.new("Highlight")
+					highlight.Name = "PlayerHighlight"
+					highlight.FillColor = Color3.fromRGB(255, 255, 0)
+					highlight.OutlineColor = Color3.fromRGB(0, 0, 0)
+					highlight.FillTransparency = 0.5
+					highlight.OutlineTransparency = 0
+					highlight.Adornee = player.Character
+					highlight.Parent = player.Character
+					playerHighlights[player] = highlight
+				end
+			else
+				if playerHighlights[player] then
+					playerHighlights[player]:Destroy()
+					playerHighlights[player] = nil
+				end
+			end
+		end
+	end
 end
 
--- 定期更新（0.5秒ごと）
-task.spawn(function()
-    while true do
-        updatePlayerHighlights()
-        task.wait(0.5)
-    end
+-- GUIからオンオフ切り替え
+MainTab:AddToggle({
+	Name = "プレイヤーハイライト",
+	Default = true,
+	Callback = function(value)
+		highlightEnabled = value
+		updatePlayerHighlights()
+	end
+})
+
+-- キャラがリスポーンした時にもハイライト更新
+local function setupCharacterListener(player)
+	player.CharacterAdded:Connect(function()
+		task.wait(1)
+		updatePlayerHighlights()
+	end)
+end
+
+-- 既存プレイヤーに接続
+for _, player in ipairs(Players:GetPlayers()) do
+	setupCharacterListener(player)
+end
+
+-- 新しく入ったプレイヤーに対応
+Players.PlayerAdded:Connect(function(player)
+	setupCharacterListener(player)
 end)
 
--- GUIにトグル追加（OrionLibが必要）
-MainTab:AddToggle({
-    Name = "プレイヤーハイライト表示",
-    Default = true,
-    Callback = function(value)
-        highlightEnabled = value
-    end
-})
+-- 定期的にチェック（TimeErase中に切り替わるケースにも対応）
+while true do
+	task.wait(1)
+	updatePlayerHighlights()
+end
 
 
 -- 最後に通知
