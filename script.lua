@@ -314,21 +314,15 @@ MainTab:AddButton({
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 
-local highlightEnabled = false
+local highlightEnabled = true
 local playerHighlights = {}
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local playerHighlights = {}
-local highlightEnabled = true -- ←これが必要
-
+-- ハイライト更新関数
 local function updatePlayerHighlights()
     for _, player in ipairs(Players:GetPlayers()) do
         if player ~= LocalPlayer then
-            local character = player.Character or player.CharacterAdded:Wait()
-            local hrp = character:FindFirstChild("HumanoidRootPart")
-            
-            if hrp then
+            local character = player.Character
+            if character and character:FindFirstChild("HumanoidRootPart") then
                 local isTimeErasing = character:FindFirstChild("TimeErase")
                 local inTimeErase = isTimeErasing and isTimeErasing.Value
 
@@ -355,57 +349,22 @@ local function updatePlayerHighlights()
     end
 end
 
+-- 定期更新（0.5秒ごと）
+task.spawn(function()
+    while true do
+        updatePlayerHighlights()
+        task.wait(0.5)
+    end
+end)
 
-
-local Players = game:GetService("Players")
-local RunService = game:GetService("RunService")
-local LocalPlayer = Players.LocalPlayer
-local selectedPlayer = nil  -- 現在ターゲットしているプレイヤー
-local autoAimEnabled = true  -- オートエイムが有効かどうか
-
--- GUIでプレイヤーを選択できるようにする（例：ドロップダウンリスト）
-local playerDropdown = MainTab:AddDropdown({
-    Name = "ターゲットプレイヤー選択",
-    Options = {},  -- ここにプレイヤーリストを動的に追加する
-    Default = nil,
-    Callback = function(playerName)
-        selectedPlayer = Players:FindFirstChild(playerName)
+-- GUIにトグル追加（OrionLibが必要）
+MainTab:AddToggle({
+    Name = "プレイヤーハイライト表示",
+    Default = true,
+    Callback = function(value)
+        highlightEnabled = value
     end
 })
-
--- プレイヤーリストを更新
-Players.PlayerAdded:Connect(function(player)
-    -- プレイヤーが追加されたときにドロップダウンに追加
-    playerDropdown:AddOption(player.Name)
-end)
-
-Players.PlayerRemoving:Connect(function(player)
-    -- プレイヤーが離れたときにドロップダウンから削除
-    playerDropdown:RemoveOption(player.Name)
-end)
-
--- オートエイムの処理
-RunService.RenderStepped:Connect(function()
-    if not autoAimEnabled or not selectedPlayer then
-        return  -- オートエイムが無効か、ターゲットが選ばれていない場合は処理をしない
-    end
-
-    -- 自分のキャラクターがあるか確認
-    local myChar = LocalPlayer.Character
-    if not myChar or not myChar:FindFirstChild("HumanoidRootPart") then
-        return  -- 自分のキャラクターが存在しない場合、処理をしない
-    end
-
-    -- ターゲットにするプレイヤーのキャラクターがあるか確認
-    local targetChar = selectedPlayer.Character
-    if targetChar and targetChar:FindFirstChild("HumanoidRootPart") then
-        -- カメラがターゲットプレイヤーに向くように設定
-        workspace.CurrentCamera.CFrame = CFrame.new(
-            workspace.CurrentCamera.CFrame.Position,
-            targetChar.HumanoidRootPart.Position
-        )
-    end
-end)
 
 
 -- 最後に通知
