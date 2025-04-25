@@ -322,14 +322,20 @@ local function applyHighlight(player)
 	local character = player.Character
 	if not character then return end
 
-	-- キャラが完全にロードされるまで待つ
 	local hrp = character:WaitForChild("HumanoidRootPart", 5)
 	if not hrp then return end
 
 	local isTimeErasing = character:FindFirstChild("TimeErase") and character.TimeErase.Value
 
+	-- ハイライト有効かつTimeErase中じゃないときだけ表示
 	if highlightEnabled and not isTimeErasing then
-		if not playerHighlights[player] then
+		-- 再スポーン後でキャラが変わったときにも対応
+		local existingHighlight = playerHighlights[player]
+		if not existingHighlight or existingHighlight.Adornee ~= character then
+			if existingHighlight then
+				existingHighlight:Destroy()
+			end
+
 			local highlight = Instance.new("Highlight")
 			highlight.Name = "PlayerHighlight"
 			highlight.FillColor = Color3.fromRGB(255, 255, 0)
@@ -347,6 +353,7 @@ local function applyHighlight(player)
 		end
 	end
 end
+
 
 -- 全プレイヤーのハイライトを更新
 local function updatePlayerHighlights()
