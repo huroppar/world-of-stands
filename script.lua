@@ -464,12 +464,19 @@ while true do
 end
 
 -- リセットボタン作成
-window:Button("キャラクターリセット", function()
-    local humanoid = character:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.Health = 0  -- 強制的にキャラクターをリセット
+MainTab:AddButton({
+    Name = "キャラクターリセット",  -- ボタンのラベル名
+    Callback = function()
+        local player = game.Players.LocalPlayer
+        local character = player.Character or player.CharacterAdded:Wait()
+
+        local humanoid = character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.Health = 0  -- 強制的にキャラクターをリセット
+        end
     end
-end)
+})
+
 -- 最後に通知
 OrionLib:MakeNotification({
     Name = "WOSユーティリティ",
