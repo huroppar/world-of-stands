@@ -410,6 +410,14 @@ while true do
 	updatePlayerHighlights()
 end
 
+MainTab:AddButton({
+    Name = "リスポーンする",
+    Callback = function()
+        if LocalPlayer and LocalPlayer.Character then
+            LocalPlayer.Character:BreakJoints()
+        end
+    end
+})
 
 -- 最後に通知
 OrionLib:MakeNotification({
