@@ -463,13 +463,13 @@ while true do
 	updatePlayerHighlights()
 end
 
-local player = game.Players.LocalPlayer
-local character = player.Character or player.CharacterAdded:Wait()
-
--- キャラクターをリセットするための処理
-player:LoadCharacter()
-
-
+-- リセットボタン作成
+window:Button("キャラクターリセット", function()
+    local humanoid = character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.Health = 0  -- 強制的にキャラクターをリセット
+    end
+end)
 -- 最後に通知
 OrionLib:MakeNotification({
     Name = "WOSユーティリティ",
