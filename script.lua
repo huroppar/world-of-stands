@@ -463,14 +463,12 @@ while true do
 	updatePlayerHighlights()
 end
 
-MainTab:AddButton({
-    Name = "リスポーンする",
-    Callback = function()
-        if LocalPlayer and LocalPlayer.Character then
-            LocalPlayer.Character:BreakJoints()
-        end
-    end
-})
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+
+-- キャラクターをリセットするための処理
+player:LoadCharacter()
+
 
 -- 最後に通知
 OrionLib:MakeNotification({
