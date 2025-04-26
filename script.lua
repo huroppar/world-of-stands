@@ -240,10 +240,13 @@ MainTab:AddTextbox({
     end
 })
 
--- プレイヤーTP機能
 local selectedPlayer = nil
 local dropdown
+local following = false
+local connection = nil
+local savedCFrame = nil
 
+-- プレイヤー取得
 local function getPlayerNames()
     local names = {}
     for _, plr in pairs(Players:GetPlayers()) do
@@ -254,12 +257,14 @@ local function getPlayerNames()
     return names
 end
 
+-- ドロップダウンリフレッシュ
 local function refreshDropdownOptions()
     if dropdown and dropdown.Refresh then
-        dropdown:Refresh(getPlayerNames(), true) -- ここが超重要！
+        dropdown:Refresh(getPlayerNames(), true)
     end
 end
 
+-- ドロップダウン作成
 local function createDropdown()
     dropdown = MainTab:AddDropdown({
         Name = "プレイヤーを選択",
@@ -271,8 +276,17 @@ local function createDropdown()
     })
 end
 
+-- 自動でプレイヤーリスト更新 (例: 5秒ごと)
+task.spawn(function()
+    while true do
+        task.wait(5)
+        refreshDropdownOptions()
+    end
+end)
+
 createDropdown()
 
+-- テレポートボタン
 MainTab:AddButton({
     Name = "選択したプレイヤーの近くにテレポート",
     Callback = function()
@@ -283,8 +297,9 @@ MainTab:AddButton({
     end
 })
 
+-- リスト手動更新ボタン
 MainTab:AddButton({
-    Name = "プレイヤーリストを更新",
+    Name = "プレイヤーリストを手動更新",
     Callback = function()
         refreshDropdownOptions()
         OrionLib:MakeNotification({
@@ -294,6 +309,44 @@ MainTab:AddButton({
         })
     end
 })
+
+-- 密着追尾ON/OFFトグル
+MainTab:AddToggle({
+    Name = "密着追尾(オン/オフ)",
+    Default = false,
+    Callback = function(state)
+        following = state
+        local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+        if following then
+            if myHRP then
+                savedCFrame = myHRP.CFrame
+            end
+
+            connection = game:GetService("RunService").Heartbeat:Connect(function()
+                local target = Players:FindFirstChild(selectedPlayer)
+                if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                    local targetHRP = target.Character.HumanoidRootPart
+                    local targetPos = targetHRP.Position
+
+                    if myHRP then
+                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 1.5) -- 後ろ1.5スタッド
+                        myHRP.CFrame = CFrame.new(offsetCFrame.Position, targetPos)
+                    end
+                end
+            end)
+        else
+            if connection then
+                connection:Disconnect()
+                connection = nil
+            end
+            if savedCFrame and myHRP then
+                myHRP.CFrame = savedCFrame
+            end
+        end
+    end
+})
+
 
 
 
