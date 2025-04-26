@@ -243,6 +243,9 @@ MainTab:AddTextbox({
 -- プレイヤーTP機能
 local selectedPlayer = nil
 local dropdown
+local dropdownSection = MainTab:AddSection({
+    Name = "プレイヤーTP"
+}) -- ドロップダウン専用セクションを作る！
 
 local function getPlayerNames()
     local names = {}
@@ -255,8 +258,11 @@ local function getPlayerNames()
 end
 
 local function createDropdown()
-    if dropdown then dropdown:Destroy() end
-    dropdown = MainTab:AddDropdown({
+    if dropdown then
+        dropdownSection:Remove(dropdown) -- セクションから除去！
+        dropdown = nil
+    end
+    dropdown = dropdownSection:AddDropdown({
         Name = "プレイヤーを選択",
         Default = "",
         Options = getPlayerNames(),
@@ -289,6 +295,7 @@ MainTab:AddButton({
         })
     end
 })
+
 
 MainTab:AddButton({
     Name = "透明化(PC非推奨)",
