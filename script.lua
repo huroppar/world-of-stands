@@ -243,9 +243,6 @@ MainTab:AddTextbox({
 -- プレイヤーTP機能
 local selectedPlayer = nil
 local dropdown
-local dropdownSection = MainTab:AddSection({
-    Name = "プレイヤーTP"
-}) -- ドロップダウン専用セクションを作る！
 
 local function getPlayerNames()
     local names = {}
@@ -257,12 +254,14 @@ local function getPlayerNames()
     return names
 end
 
-local function createDropdown()
-    if dropdown then
-        dropdownSection:Remove(dropdown) -- セクションから除去！
-        dropdown = nil
+local function refreshDropdownOptions()
+    if dropdown and dropdown.Refresh then
+        dropdown:Refresh(getPlayerNames(), true) -- ここが超重要！
     end
-    dropdown = dropdownSection:AddDropdown({
+end
+
+local function createDropdown()
+    dropdown = MainTab:AddDropdown({
         Name = "プレイヤーを選択",
         Default = "",
         Options = getPlayerNames(),
@@ -287,7 +286,7 @@ MainTab:AddButton({
 MainTab:AddButton({
     Name = "プレイヤーリストを更新",
     Callback = function()
-        createDropdown()
+        refreshDropdownOptions()
         OrionLib:MakeNotification({
             Name = "更新完了",
             Content = "プレイヤー一覧を更新しました！",
@@ -295,6 +294,7 @@ MainTab:AddButton({
         })
     end
 })
+
 
 
 MainTab:AddButton({
