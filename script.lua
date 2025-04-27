@@ -29,6 +29,8 @@ KirbyButton.BackgroundTransparency = 1
 KirbyButton.Image = "rbxassetid://77339698" -- ニコニコカービィ
 KirbyButton.Visible = false
 KirbyButton.Parent = game:GetService("CoreGui")
+KirbyButton.Active = true
+KirbyButton.Draggable = true
 
 -- カービィ押したらGUI表示
 KirbyButton.MouseButton1Click:Connect(function()
