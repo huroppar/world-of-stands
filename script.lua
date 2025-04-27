@@ -27,10 +27,13 @@ KirbyButton.Size = UDim2.new(0, 50, 0, 50)
 KirbyButton.Position = UDim2.new(0, 10, 0, 10) -- 左上に表示
 KirbyButton.BackgroundTransparency = 1
 KirbyButton.Image = "rbxassetid://77339698" -- ニコニコカービィ
-KirbyButton.Visible = false
+KirbyButton.Visible = true -- ←ここ！最初から見えるようにする！
 KirbyButton.Parent = game:GetService("CoreGui")
 KirbyButton.Active = true
 KirbyButton.Draggable = true
+
+-- 最初はWindowを非表示にする
+Window.Enabled = false
 
 -- カービィ押したらGUI表示
 KirbyButton.MouseButton1Click:Connect(function()
