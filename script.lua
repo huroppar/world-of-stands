@@ -355,7 +355,7 @@ MainTab:AddToggle({
                     local targetPos = targetHRP.Position
 
                     if myHRP then
-                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 5) -- 後ろ1.5スタッド
+                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 7) -- 後ろ1.5スタッド
                         myHRP.CFrame = CFrame.new(offsetCFrame.Position, targetPos)
                     end
                 end
