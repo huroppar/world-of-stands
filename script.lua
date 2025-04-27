@@ -12,7 +12,7 @@ if not allowedUsers[LocalPlayer.Name] then
     warn("許可されていないユーザーです")
     return
 end
-
+asdawdadadadadada
 
 
 -- OrionLib読み込み
