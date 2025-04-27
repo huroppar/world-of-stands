@@ -13,11 +13,28 @@ if not allowedUsers[LocalPlayer.Name] then
     return
 end
 
+
+
 -- OrionLib読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Window = OrionLib:MakeWindow({Name = "World of Stands Utility", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
 local MainTab = Window:MakeTab({ Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false })
 
+-- カービィボタンを作成
+local KirbyButton = Instance.new("ImageButton")
+KirbyButton.Name = "KirbyButton"
+KirbyButton.Size = UDim2.new(0, 50, 0, 50)
+KirbyButton.Position = UDim2.new(0, 10, 0, 10) -- 左上に表示
+KirbyButton.BackgroundTransparency = 1
+KirbyButton.Image = "rbxassetid://77339698" -- ニコニコカービィ
+KirbyButton.Visible = false
+KirbyButton.Parent = game:GetService("CoreGui")
+
+-- カービィ押したらGUI表示
+KirbyButton.MouseButton1Click:Connect(function()
+    Window.Enabled = true
+    KirbyButton.Visible = false
+end)
 -- スピード
 local speedEnabled = false
 local speedValue = 16
@@ -477,6 +494,9 @@ MainTab:AddButton({
     end
 })
 
+-- ×ボタン押したとき
+Window.Enabled = false
+KirbyButton.Visible = true
 -- 最後に通知
 OrionLib:MakeNotification({
     Name = "WOSユーティリティ",
