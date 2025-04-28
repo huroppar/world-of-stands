@@ -43,11 +43,13 @@ KirbyButton.MouseButton1Click:Connect(function()
     KirbyButton.Visible = false
 end)
 
--- スピード
+-- スピード変数
 local speedEnabled = false
-local speedValue = 16
+local speedValue = 30
 local speedConnection
+local speedSlider -- スライダーを外から触れるようにする
 
+-- スピード有効化トグル
 MainTab:AddToggle({
     Name = "スピード有効化",
     Default = false,
@@ -69,16 +71,46 @@ MainTab:AddToggle({
     end
 })
 
-MainTab:AddSlider({
+-- 色をグラデーションで返す関数
+local function getGradientColor(value)
+    local ratio = value / 2000
+    if ratio < 0.5 then
+        -- 青→黄
+        local t = ratio * 2
+        return Color3.new(0, t, 1 - t) -- 青(0,0,1)から黄(1,1,0)
+    else
+        -- 黄→赤
+        local t = (ratio - 0.5) * 2
+        return Color3.new(1, 1 - t, 0) -- 黄(1,1,0)から赤(1,0,0)
+    end
+end
+
+-- スピードスライダー
+speedSlider = MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
-    Max = 100,
+    Max = 2000,
     Default = 30,
-    Color = Color3.fromRGB(255,255,255),
+    Color = getGradientColor(30),
     Increment = 1,
     ValueName = "Speed",
     Callback = function(value)
         speedValue = value
+        if speedSlider and speedSlider:Set then
+            speedSlider:Set("Color", getGradientColor(value))
+        end
+    end
+})
+
+-- PC上限ボタン
+MainTab:AddButton({
+    Name = "PC上限 (Speed 45)",
+    Callback = function()
+        speedValue = 45
+        if speedSlider and speedSlider:Set then
+            speedSlider:Set("Value", 45)
+            speedSlider:Set("Color", getGradientColor(45))
+        end
     end
 })
 
@@ -406,62 +438,42 @@ MainTab:AddToggle({
 })
 
 
-local aimToggle = false
-local aimConnection = nil
-local selectedPlayer = nil
-local dropdown
+-- オートエイム変数
+local autoAimEnabled = false
+local autoAimConnection = nil
 
--- プレイヤー取得
-local function getPlayerNames()
-    local names = {}
-    for _, plr in pairs(Players:GetPlayers()) do
-        if plr ~= LocalPlayer then
-            table.insert(names, plr.Name)
+-- オートエイム機能
+local function startAutoAim()
+    if autoAimConnection then autoAimConnection:Disconnect() end
+    autoAimConnection = game:GetService("RunService").RenderStepped:Connect(function()
+        if not autoAimEnabled then return end
+
+        local target = Players:FindFirstChild(selectedPlayer)
+        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            local targetPos = target.Character.HumanoidRootPart.Position
+            workspace.CurrentCamera.CFrame = CFrame.lookAt(workspace.CurrentCamera.CFrame.Position, targetPos)
         end
+    end)
+end
+
+-- オートエイム切る
+local function stopAutoAim()
+    if autoAimConnection then
+        autoAimConnection:Disconnect()
+        autoAimConnection = nil
     end
-    return names
 end
 
--- ドロップダウン作成
-local function createDropdown()
-    dropdown = MainTab:AddDropdown({
-        Name = "プレイヤーを選択",
-        Default = "",
-        Options = getPlayerNames(),
-        Callback = function(value)
-            selectedPlayer = value
-        end
-    })
-end
-
-createDropdown()
-
--- オートエイムON/OFFトグル
+-- オートエイム用トグルボタン追加
 MainTab:AddToggle({
-    Name = "オートエイム (オン/オフ)",
+    Name = "オートエイム(オン/オフ)",
     Default = false,
     Callback = function(state)
-        aimToggle = state
-
-        if aimToggle then
-            aimConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                local target = Players:FindFirstChild(selectedPlayer)
-                if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-                    local targetHRP = target.Character.HumanoidRootPart
-                    local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-
-                    if myHRP then
-                        -- ターゲットにエイムを合わせる
-                        local direction = (targetHRP.Position - myHRP.Position).unit
-                        LocalPlayer.Character:PivotTo(CFrame.lookAt(myHRP.Position, targetHRP.Position))
-                    end
-                end
-            end)
+        autoAimEnabled = state
+        if autoAimEnabled then
+            startAutoAim()
         else
-            if aimConnection then
-                aimConnection:Disconnect()
-                aimConnection = nil
-            end
+            stopAutoAim()
         end
     end
 })
