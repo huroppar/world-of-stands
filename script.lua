@@ -392,10 +392,6 @@ MainTab:AddToggle({
     end
 })
 
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-local MainTab = -- ここはあなたのMainTab変数を使ってね
-local OrionLib = -- ここもあなたのOrionLib変数を使ってね
 
 local viewing = false
 local originalCameraCFrame = nil
