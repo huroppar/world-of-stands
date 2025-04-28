@@ -15,7 +15,7 @@ Window.Enabled = true
 
 -- スピード
 local speedEnabled = false
-local speedValue = 16
+local speedValue = 30
 local speedConnection
 
 MainTab:AddToggle({
@@ -43,7 +43,7 @@ MainTab:AddToggle({
 MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
-    Max = 100,
+    Max = 1000,
     Default = 30,
     Color = Color3.fromRGB(255,255,255),
     Increment = 1,
@@ -61,7 +61,7 @@ MainTab:AddTextbox({
     TextDisappear = false,
     Callback = function(text)
         local num = tonumber(text)
-        if num and num >= 1 and num <= 100 then
+        if num and num >= 1 and num <= 1000 then
             -- 手入力で変更した値をスライダーにも反映
             speedValue = num
             -- スライダーの値を更新
