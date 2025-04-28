@@ -39,25 +39,10 @@ MainTab:AddToggle({
     end
 })
 
--- スピード手入力
+local speedSlider
 local speedTextbox
-speedTextbox = MainTab:AddTextbox({
-    Name = "スピード（手入力）",
-    Default = "30",
-    TextDisappear = false,
-    Callback = function(text)
-        local num = tonumber(text)
-        if num and num >= 1 then
-            speedValue = num
-            if speedSlider then
-                speedSlider:Set(num)
-            end
-        end
-    end
-})
 
--- スピード調整スライダー
-local speedSlider = MainTab:AddSlider({
+speedSlider = MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
     Max = 100,
@@ -73,48 +58,20 @@ local speedSlider = MainTab:AddSlider({
     end
 })
 
-
-
--- スライダーと手入力の連動用にテキストボックス作成
-local speedTextbox = Instance.new("TextBox")
-speedTextbox.Size = UDim2.new(0, 100, 0, 30)
-speedTextbox.Position = UDim2.new(0.5, -50, 0, 0)
-speedTextbox.Text = tostring(speedValue)
-speedTextbox.Parent = screenGui
-speedTextbox.TextColor3 = Color3.fromRGB(255, 255, 255)
-speedTextbox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-speedTextbox.TextScaled = true
-speedTextbox.TextAlign = Enum.TextXAlignment.Center
-
--- スマホ対応：スライダーのタッチイベント
-local function onSliderTouched(touchPosition)
-    local sliderSize = speedSlider.Size.X.Scale
-    local newValue = math.clamp((touchPosition.X - speedSlider.Position.X.Scale) / sliderSize * (speedSlider.Max - speedSlider.Min), speedSlider.Min, speedSlider.Max)
-    speedSlider:SetValue(newValue)
-end
-
--- スライダーにタッチイベントを追加
-speedSlider.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch then
-        onSliderTouched(input.Position)
-    end
-end)
-
--- 無限ジャンプ
-local infiniteJumpEnabled = false
-MainTab:AddToggle({
-    Name = "無限ジャンプ",
-    Default = false,
-    Callback = function(value)
-        infiniteJumpEnabled = value
+speedTextbox = MainTab:AddTextbox({
+    Name = "スピード（手入力）",
+    Default = "30",
+    TextDisappear = false,
+    Callback = function(text)
+        local num = tonumber(text)
+        if num and num >= 1 then
+            speedValue = num
+            if speedSlider then
+                speedSlider:Set(num)
+            end
+        end
     end
 })
-
-game:GetService("UserInputService").JumpRequest:Connect(function()
-    if infiniteJumpEnabled and LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-        LocalPlayer.Character.Humanoid:ChangeState(Enum.HumanoidStateType.Jumping)
-    end
-end)
 
 -- Noclip
 local noclipEnabled = false
