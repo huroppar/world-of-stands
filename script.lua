@@ -390,9 +390,15 @@ MainTab:AddToggle({
     end
 })
 
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local MainTab = -- ここはあなたのMainTab変数を使ってね
+local OrionLib = -- ここもあなたのOrionLib変数を使ってね
+
 local viewing = false
 local originalCameraCFrame = nil
 local originalCharacterCFrame = nil
+local originalCameraType = nil
 local humanoidConnection = nil
 
 MainTab:AddButton({
@@ -413,48 +419,57 @@ MainTab:AddButton({
         local humanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
 
         if not myHRP or not humanoid then
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "自分のキャラクター情報が取得できません！",
+                Time = 3
+            })
             return
         end
 
--- 保存
-originalCameraCFrame = workspace.CurrentCamera.CFrame
-originalCharacterCFrame = myHRP.CFrame
-
--- カメラ制御モードを保存
-local originalCameraType = workspace.CurrentCamera.CameraType
-
--- カメラだけ移動する前に Scriptable にする
-workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
-workspace.CurrentCamera.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, -10)
-
--- キャラは空中に移動
-myHRP.CFrame = CFrame.new(0, 9999, 0)
-
-viewing = true
-
--- ジャンプ検知
-humanoidConnection = humanoid.StateChanged:Connect(function(old, new)
-    if viewing and new == Enum.HumanoidStateType.Jumping then
-        -- 元に戻す
-        if myHRP and originalCharacterCFrame then
-            myHRP.CFrame = originalCharacterCFrame
-        end
-        if originalCameraCFrame then
-            workspace.CurrentCamera.CFrame = originalCameraCFrame
+        if viewing then
+            -- すでに視点モード中なら無視
+            return
         end
 
-        -- カメラモードも元に戻す
-        workspace.CurrentCamera.CameraType = originalCameraType
+        -- 保存
+        originalCameraCFrame = workspace.CurrentCamera.CFrame
+        originalCharacterCFrame = myHRP.CFrame
+        originalCameraType = workspace.CurrentCamera.CameraType
 
-        -- リセット
-        viewing = false
-        if humanoidConnection then
-            humanoidConnection:Disconnect()
-            humanoidConnection = nil
-        end
+        -- カメラ制御をScriptableにしてターゲットの後ろから見る
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
+        workspace.CurrentCamera.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, -10)
+
+        -- 自キャラはめちゃ高い空中へ移動（当たり判定を消すため）
+        myHRP.CFrame = CFrame.new(0, 9999, 0)
+
+        viewing = true
+
+        -- ジャンプ検知
+        humanoidConnection = humanoid.StateChanged:Connect(function(_, newState)
+            if viewing and newState == Enum.HumanoidStateType.Jumping then
+                -- 復帰処理
+                if myHRP and originalCharacterCFrame then
+                    myHRP.CFrame = originalCharacterCFrame
+                end
+                if originalCameraCFrame then
+                    workspace.CurrentCamera.CFrame = originalCameraCFrame
+                end
+                if originalCameraType then
+                    workspace.CurrentCamera.CameraType = originalCameraType
+                end
+
+                -- リセット
+                viewing = false
+                if humanoidConnection then
+                    humanoidConnection:Disconnect()
+                    humanoidConnection = nil
+                end
+            end
+        end)
     end
-end)
-
+})
 
 
 
