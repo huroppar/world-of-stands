@@ -366,7 +366,7 @@ MainTab:AddButton({
     end
 })
 
--- 密着追尾ON/OFFトグル
+
 -- 密着追尾ON/OFFトグル
 MainTab:AddToggle({
     Name = "密着追尾(オン/オフ)",
@@ -388,7 +388,7 @@ MainTab:AddToggle({
 
                     if myHRP then
                         -- targetHRPの位置を常に追いかけ、後ろに張り付く
-                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, -7)  -- 後ろ7スタッドに調整
+                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 7)  -- 後ろ7スタッドに調整
                         myHRP.CFrame = CFrame.new(offsetCFrame.Position, targetPos)
                     end
                 end
@@ -406,30 +406,58 @@ MainTab:AddToggle({
 })
 
 
+local aimToggle = false
+local aimConnection = nil
+local selectedPlayer = nil
+local dropdown
+
+-- プレイヤー取得
+local function getPlayerNames()
+    local names = {}
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= LocalPlayer then
+            table.insert(names, plr.Name)
+        end
+    end
+    return names
+end
+
+-- ドロップダウン作成
+local function createDropdown()
+    dropdown = MainTab:AddDropdown({
+        Name = "プレイヤーを選択",
+        Default = "",
+        Options = getPlayerNames(),
+        Callback = function(value)
+            selectedPlayer = value
+        end
+    })
+end
+
+createDropdown()
+
 -- オートエイムON/OFFトグル
 MainTab:AddToggle({
-    Name = "オートエイム(オン/オフ)",
+    Name = "オートエイム (オン/オフ)",
     Default = false,
     Callback = function(state)
         aimToggle = state
+
         if aimToggle then
-            -- オートエイム開始
-            local myHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
             aimConnection = game:GetService("RunService").Heartbeat:Connect(function()
-                if selectedPlayer then
-                    local target = Players:FindFirstChild(selectedPlayer)
-                    if target and target.Character and target.Character:FindFirstChild("Head") then
-                        local targetHead = target.Character.Head
-                        if myHead then
-                            -- エイムをターゲットの頭に合わせる
-                            local lookAtCFrame = CFrame.lookAt(myHead.Position, targetHead.Position)
-                            myHead.CFrame = CFrame.new(myHead.Position, lookAtCFrame.Position)
-                        end
+                local target = Players:FindFirstChild(selectedPlayer)
+                if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+                    local targetHRP = target.Character.HumanoidRootPart
+                    local myHRP = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+
+                    if myHRP then
+                        -- ターゲットにエイムを合わせる
+                        local direction = (targetHRP.Position - myHRP.Position).unit
+                        LocalPlayer.Character:PivotTo(CFrame.lookAt(myHRP.Position, targetHRP.Position))
                     end
                 end
             end)
         else
-            -- オートエイム停止
             if aimConnection then
                 aimConnection:Disconnect()
                 aimConnection = nil
@@ -437,6 +465,7 @@ MainTab:AddToggle({
         end
     end
 })
+
 
 MainTab:AddButton({
     Name = "透明化(PC非推奨)",
