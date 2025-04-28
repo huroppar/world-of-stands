@@ -265,6 +265,24 @@ MainTab:AddTextbox({
     end
 })
 
+-- メインタブにトグル追加
+MainTab:AddToggle({
+    Name = "連続で敵を集める",
+    Default = false,
+    Callback = function(Value)
+        CollectEnemies = Value
+        if CollectEnemies then
+            -- ONになったらループ開始
+            task.spawn(function()
+                while CollectEnemies do
+                    GatherEnemies()
+                    task.wait(0.5) -- 0.5秒待つ
+                end
+            end)
+        end
+    end
+})
+
 local selectedPlayer = nil
 local dropdown
 local following = false
