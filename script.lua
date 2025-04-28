@@ -39,6 +39,7 @@ MainTab:AddToggle({
     end
 })
 
+-- スピード調整と手入力連動
 MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
@@ -49,8 +50,50 @@ MainTab:AddSlider({
     ValueName = "Speed",
     Callback = function(value)
         speedValue = value
+        -- スライダーが変更された時に手入力のテキストボックスも更新
+        speedTextbox.Text = tostring(value)
     end
 })
+
+MainTab:AddTextbox({
+    Name = "スピード手入力",
+    Default = "30",
+    TextDisappear = false,
+    Callback = function(text)
+        local num = tonumber(text)
+        if num and num >= 1 and num <= 100 then
+            -- 手入力で変更した値をスライダーにも反映
+            speedValue = num
+            -- スライダーの値を更新
+            speedSlider:SetValue(num)
+        end
+    end
+})
+
+-- スライダーと手入力の連動用にテキストボックス作成
+local speedTextbox = Instance.new("TextBox")
+speedTextbox.Size = UDim2.new(0, 100, 0, 30)
+speedTextbox.Position = UDim2.new(0.5, -50, 0, 0)
+speedTextbox.Text = tostring(speedValue)
+speedTextbox.Parent = screenGui
+speedTextbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+speedTextbox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+speedTextbox.TextScaled = true
+speedTextbox.TextAlign = Enum.TextXAlignment.Center
+
+-- スマホ対応：スライダーのタッチイベント
+local function onSliderTouched(touchPosition)
+    local sliderSize = speedSlider.Size.X.Scale
+    local newValue = math.clamp((touchPosition.X - speedSlider.Position.X.Scale) / sliderSize * (speedSlider.Max - speedSlider.Min), speedSlider.Min, speedSlider.Max)
+    speedSlider:SetValue(newValue)
+end
+
+-- スライダーにタッチイベントを追加
+speedSlider.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        onSliderTouched(input.Position)
+    end
+end)
 
 -- 無限ジャンプ
 local infiniteJumpEnabled = false
@@ -221,6 +264,7 @@ MainTab:AddToggle({
     end
 })
 
+-- 敵集めスライダーと手入力連動
 MainTab:AddSlider({
     Name = "敵集め距離",
     Min = 1,
@@ -229,21 +273,49 @@ MainTab:AddSlider({
     Increment = 1,
     Callback = function(value)
         gatherDistance = value
+        -- スライダーの変更をテキストボックスにも反映
+        enemyTextbox.Text = tostring(value)
     end
 })
 
 MainTab:AddTextbox({
-    Name = "敵集め 距離（手入力）",
+    Name = "敵集め距離（手入力）",
     Default = "50",
     TextDisappear = false,
     Callback = function(text)
         local num = tonumber(text)
-        if num and num >= 0 then
+        if num and num >= 1 and num <= 200 then
+            -- 手入力で変更された距離をスライダーに反映
             gatherDistance = num
+            enemySlider:SetValue(num)
         end
     end
 })
 
+-- スライダーと手入力の連動用にテキストボックス作成
+local enemyTextbox = Instance.new("TextBox")
+enemyTextbox.Size = UDim2.new(0, 100, 0, 30)
+enemyTextbox.Position = UDim2.new(0.5, -50, 0, 50)
+enemyTextbox.Text = tostring(gatherDistance)
+enemyTextbox.Parent = screenGui
+enemyTextbox.TextColor3 = Color3.fromRGB(255, 255, 255)
+enemyTextbox.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+enemyTextbox.TextScaled = true
+enemyTextbox.TextAlign = Enum.TextXAlignment.Center
+
+-- 敵集めスライダーのタッチイベント
+local function onEnemySliderTouched(touchPosition)
+    local sliderSize = enemySlider.Size.X.Scale
+    local newValue = math.clamp((touchPosition.X - enemySlider.Position.X.Scale) / sliderSize * (enemySlider.Max - enemySlider.Min), enemySlider.Min, enemySlider.Max)
+    enemySlider:SetValue(newValue)
+end
+
+-- スライダーにタッチイベントを追加
+enemySlider.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch then
+        onEnemySliderTouched(input.Position)
+    end
+end)
 local CollectEnemies = false
 
 -- メインタブにトグル追加
