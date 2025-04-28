@@ -390,6 +390,65 @@ MainTab:AddToggle({
     end
 })
 
+local viewing = false
+local originalCameraCFrame = nil
+local originalCharacterCFrame = nil
+local humanoidConnection = nil
+
+MainTab:AddButton({
+    Name = "選択中のプレイヤー先に視点移動 (ジャンプで戻る)",
+    Callback = function()
+        local target = Players:FindFirstChild(selectedPlayer)
+        if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "選択したプレイヤーが見つかりません！",
+                Time = 3
+            })
+            return
+        end
+
+        local myChar = LocalPlayer.Character
+        local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        local humanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
+
+        if not myHRP or not humanoid then
+            return
+        end
+
+        -- 保存
+        originalCameraCFrame = workspace.CurrentCamera.CFrame
+        originalCharacterCFrame = myHRP.CFrame
+
+        -- カメラだけ移動
+        workspace.CurrentCamera.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0, 5, -10)
+
+        -- キャラは空中に移動
+        myHRP.CFrame = CFrame.new(0, 9999, 0)
+
+        viewing = true
+
+        -- ジャンプ検知
+        humanoidConnection = humanoid.StateChanged:Connect(function(old, new)
+            if viewing and new == Enum.HumanoidStateType.Jumping then
+                -- 元に戻す
+                if myHRP and originalCharacterCFrame then
+                    myHRP.CFrame = originalCharacterCFrame
+                end
+                if originalCameraCFrame then
+                    workspace.CurrentCamera.CFrame = originalCameraCFrame
+                end
+
+                -- リセット
+                viewing = false
+                if humanoidConnection then
+                    humanoidConnection:Disconnect()
+                    humanoidConnection = nil
+                end
+            end
+        end)
+    end
+})
 
 
 
