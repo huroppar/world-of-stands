@@ -39,23 +39,6 @@ MainTab:AddToggle({
     end
 })
 
--- スピード調整スライダー
-local speedSlider = MainTab:AddSlider({
-    Name = "スピード調整",
-    Min = 1,
-    Max = 100,
-    Default = 30,
-    Color = Color3.fromRGB(255,255,255),
-    Increment = 1,
-    ValueName = "Speed",
-    Callback = function(value)
-        speedValue = value
-        if speedTextbox then
-            speedTextbox:Set(text)
-        end
-    end
-})
-
 -- スピード手入力
 local speedTextbox
 speedTextbox = MainTab:AddTextbox({
@@ -72,6 +55,24 @@ speedTextbox = MainTab:AddTextbox({
         end
     end
 })
+
+-- スピード調整スライダー
+local speedSlider = MainTab:AddSlider({
+    Name = "スピード調整",
+    Min = 1,
+    Max = 100,
+    Default = 30,
+    Color = Color3.fromRGB(255,255,255),
+    Increment = 1,
+    ValueName = "Speed",
+    Callback = function(value)
+        speedValue = value
+        if speedTextbox then
+            speedTextbox:Set(tostring(value))
+        end
+    end
+})
+
 
 
 -- スライダーと手入力の連動用にテキストボックス作成
