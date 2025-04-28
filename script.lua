@@ -1,18 +1,3 @@
--- 許可ユーザーのみ実行可（GUIベースで制御予定なら削除可）
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local allowedUsers = {
-    ["Furoppersama"] = true,
-    ["fsjsjnsnsnsnns"] = true,
-    ["Furopparsama"] = true
-}
-
-if not allowedUsers[LocalPlayer.Name] then
-    warn("許可されていないユーザーです")
-    return
-end
-
 -- OrionLib読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Window = OrionLib:MakeWindow({
