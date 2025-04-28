@@ -367,6 +367,7 @@ MainTab:AddButton({
 })
 
 -- 密着追尾ON/OFFトグル
+-- 密着追尾ON/OFFトグル
 MainTab:AddToggle({
     Name = "密着追尾(オン/オフ)",
     Default = false,
@@ -386,7 +387,8 @@ MainTab:AddToggle({
                     local targetPos = targetHRP.Position
 
                     if myHRP then
-                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 7) -- 後ろ1.5スタッド
+                        -- targetHRPの位置を常に追いかけ、後ろに張り付く
+                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, -7)  -- 後ろ7スタッドに調整
                         myHRP.CFrame = CFrame.new(offsetCFrame.Position, targetPos)
                     end
                 end
@@ -402,6 +404,7 @@ MainTab:AddToggle({
         end
     end
 })
+
 
 -- オートエイムON/OFFトグル
 MainTab:AddToggle({
