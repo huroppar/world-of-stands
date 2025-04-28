@@ -265,6 +265,8 @@ MainTab:AddTextbox({
     end
 })
 
+local CollectEnemies = false
+
 -- メインタブにトグル追加
 MainTab:AddToggle({
     Name = "連続で敵を集める",
