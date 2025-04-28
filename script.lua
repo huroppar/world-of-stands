@@ -76,7 +76,7 @@ MainTab:AddToggle({
 })
 
 -- スピードスライダー
-speedSliderObject = MainTab:AddSlider({
+local speedSliderObject = MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
     Max = 2000,
