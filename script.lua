@@ -44,7 +44,7 @@ KirbyButton.Parent = ScreenGui
 KirbyButton.Active = true
 KirbyButton.Draggable = true
 
-Window.Enabled = false
+Window.Enabled = true
 KirbyButton.MouseButton1Click:Connect(function()
     Window.Enabled = true
     KirbyButton.Visible = false
