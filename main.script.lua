@@ -1,17 +1,5 @@
-ocal Players = game:GetService("Players")
+local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
-
-local allowedUsers = {
-    ["Furoppersama"] = true,
-    ["fsjsjnsnsnsnns"] = true,
-    ["Furopparsama"] = true
-}
-
-if not allowedUsers[LocalPlayer.Name] then
-    warn("許可されていないユーザーです")
-    return
-end
-
 -- OrionLib読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Window = OrionLib:MakeWindow({Name = "World of Stands Utility", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
@@ -22,26 +10,8 @@ local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KirbyScreenGui"
 ScreenGui.Parent = game:GetService("CoreGui") -- CoreGuiに入れる（今度はOK！）
 
--- カービィボタンを作成
-local KirbyButton = Instance.new("ImageButton")
-KirbyButton.Name = "KirbyButton"
-KirbyButton.Size = UDim2.new(0, 50, 0, 50)
-KirbyButton.Position = UDim2.new(0, 10, 0, 10) -- 左上に表示
-KirbyButton.BackgroundTransparency = 1
-KirbyButton.Image = "rbxassetid://77339698" -- ニコニコカービィ
-KirbyButton.Parent = ScreenGui -- ←今度はScreenGuiに入れる
-KirbyButton.Active = true
-KirbyButton.Draggable = true
-
 -- 最初はWindowを非表示にする
-Window.Enabled = false
-
--- カービィ押したらGUI表示
-KirbyButton.MouseButton1Click:Connect(function()
-    Window.Enabled = true
-    KirbyButton.Visible = false
-end)
-
+Window.Enabled = true
 -- スピード
 local speedEnabled = false
 local speedValue = 16
@@ -71,7 +41,7 @@ MainTab:AddToggle({
 MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
-    Max = 100,
+    Max = 1000,
     Default = 30,
     Color = Color3.fromRGB(255,255,255),
     Increment = 1,
@@ -399,82 +369,6 @@ MainTab:AddToggle({
         end
     end
 })
-
-
-local viewing = false
-local originalCameraCFrame = nil
-local originalCharacterCFrame = nil
-local originalCameraType = nil
-local humanoidConnection = nil
-
-MainTab:AddButton({
-    Name = "選択中のプレイヤー先に視点移動 (ジャンプで戻る)",
-    Callback = function()
-        local target = Players:FindFirstChild(selectedPlayer)
-        if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
-            OrionLib:MakeNotification({
-                Name = "エラー",
-                Content = "選択したプレイヤーが見つかりません！",
-                Time = 3
-            })
-            return
-        end
-
-        local myChar = LocalPlayer.Character
-        local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-        local humanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
-
-        if not myHRP or not humanoid then
-            OrionLib:MakeNotification({
-                Name = "エラー",
-                Content = "自分のキャラクター情報が取得できません！",
-                Time = 3
-            })
-            return
-        end
-
-        if viewing then
-            return
-        end
-
-        originalCameraCFrame = workspace.CurrentCamera.CFrame
-        originalCharacterCFrame = myHRP.CFrame
-        originalCameraType = workspace.CurrentCamera.CameraType
-
-        workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
-        workspace.CurrentCamera.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, -10)
-
-        -- キャラクターの位置は変更しない
-        myHRP.CFrame = originalCharacterCFrame  -- この部分を変更せずそのままにしておく
-
-        viewing = true
-
-        humanoidConnection = humanoid.StateChanged:Connect(function(_, newState)
-            if viewing and newState == Enum.HumanoidStateType.Jumping then
-                -- 視点を元に戻す
-                if myHRP and originalCharacterCFrame then
-                    myHRP.CFrame = originalCharacterCFrame
-                end
-                if originalCameraCFrame then
-                    workspace.CurrentCamera.CFrame = originalCameraCFrame
-                end
-                if originalCameraType then
-                    workspace.CurrentCamera.CameraType = originalCameraType
-                end
-
-                -- リセット
-                viewing = false
-                if humanoidConnection then
-                    humanoidConnection:Disconnect()
-                    humanoidConnection = nil
-                end
-            end
-        end)
-    end
-})
-
-
-
 
 MainTab:AddButton({
     Name = "透明化(PC非推奨)",
