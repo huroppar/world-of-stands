@@ -16,13 +16,11 @@ local MainTab = Window:MakeTab({
 -- 初めからウィンドウを表示するように設定
 Window.Enabled = true
 
--- スピード管理
+-- スピード
 local speedEnabled = false
-local speedValue = 30
+local speedValue = 16
 local speedConnection
-local speedSliderObject
 
--- スピード有効化トグル
 MainTab:AddToggle({
     Name = "スピード有効化",
     Default = false,
@@ -44,34 +42,16 @@ MainTab:AddToggle({
     end
 })
 
--- スピードスライダー
-speedSliderObject = MainTab:AddSlider({
+MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
-    Max = 2000,
+    Max = 100,
     Default = 30,
-    Color = getGradientColor(30),
+    Color = Color3.fromRGB(255,255,255),
     Increment = 1,
     ValueName = "Speed",
     Callback = function(value)
         speedValue = value
-        -- 色もリアルタイム更新
-        if speedSliderObject and speedSliderObject.Set then
-            speedSliderObject:Set("Color", getGradientColor(value))
-        end
-    end
-})
-
--- PC上限ボタン
-MainTab:AddButton({
-    Name = "PC上限 (Speed 45)",
-    Callback = function()
-        speedValue = 45
-        -- スライダーも更新する
-        if speedSliderObject and speedSliderObject.Set then
-            speedSliderObject:Set("Value", 45)
-            speedSliderObject:Set("Color", getGradientColor(45))
-        end
     end
 })
 
