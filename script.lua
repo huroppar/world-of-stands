@@ -354,7 +354,7 @@ MainTab:AddToggle({
                     local targetPos = targetHRP.Position
 
                     if myHRP then
-                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 7) -- 後ろ1.5スタッド
+                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 5) -- 後ろ1.5スタッド
                         myHRP.CFrame = CFrame.new(offsetCFrame.Position, targetPos)
                     end
                 end
@@ -370,81 +370,6 @@ MainTab:AddToggle({
         end
     end
 })
-
-
-local viewing = false
-local originalCameraCFrame = nil
-local originalCharacterCFrame = nil
-local originalCameraType = nil
-local humanoidConnection = nil
-
-MainTab:AddButton({
-    Name = "選択中のプレイヤー先に視点移動 (ジャンプで戻る)",
-    Callback = function()
-        local target = Players:FindFirstChild(selectedPlayer)
-        if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
-            OrionLib:MakeNotification({
-                Name = "エラー",
-                Content = "選択したプレイヤーが見つかりません！",
-                Time = 3
-            })
-            return
-        end
-
-        local myChar = LocalPlayer.Character
-        local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
-        local humanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
-
-        if not myHRP or not humanoid then
-            OrionLib:MakeNotification({
-                Name = "エラー",
-                Content = "自分のキャラクター情報が取得できません！",
-                Time = 3
-            })
-            return
-        end
-
-        if viewing then
-            return
-        end
-
-        originalCameraCFrame = workspace.CurrentCamera.CFrame
-        originalCharacterCFrame = myHRP.CFrame
-        originalCameraType = workspace.CurrentCamera.CameraType
-
-        workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
-        workspace.CurrentCamera.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, -10)
-
-        -- キャラクターの位置は変更しない
-        myHRP.CFrame = originalCharacterCFrame  -- この部分を変更せずそのままにしておく
-
-        viewing = true
-
-        humanoidConnection = humanoid.StateChanged:Connect(function(_, newState)
-            if viewing and newState == Enum.HumanoidStateType.Jumping then
-                -- 視点を元に戻す
-                if myHRP and originalCharacterCFrame then
-                    myHRP.CFrame = originalCharacterCFrame
-                end
-                if originalCameraCFrame then
-                    workspace.CurrentCamera.CFrame = originalCameraCFrame
-                end
-                if originalCameraType then
-                    workspace.CurrentCamera.CameraType = originalCameraType
-                end
-
-                -- リセット
-                viewing = false
-                if humanoidConnection then
-                    humanoidConnection:Disconnect()
-                    humanoidConnection = nil
-                end
-            end
-        end)
-    end
-})
-
-
 
 
 MainTab:AddButton({
