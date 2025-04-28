@@ -1,23 +1,17 @@
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
 -- OrionLib読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-local Window = OrionLib:MakeWindow({
-    Name = "おっぱい",
-    HidePremium = false,
-    SaveConfig = true,
-    ConfigFolder = "ちんこ"
-})
+local Window = OrionLib:MakeWindow({Name = "World of Stands Utility", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
+local MainTab = Window:MakeTab({ Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false })
 
-local MainTab = Window:MakeTab({
-    Name = "メイン",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
+-- ScreenGuiを作成
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "KirbyScreenGui"
+ScreenGui.Parent = game:GetService("CoreGui") -- CoreGuiに入れる（今度はOK！）
 
--- 初めからウィンドウを表示するように設定
+-- 最初はWindowを非表示にする
 Window.Enabled = true
-
--- プレイヤーの取得
-local LocalPlayer = game.Players.LocalPlayer
 
 -- スピード
 local speedEnabled = false
@@ -30,26 +24,16 @@ MainTab:AddToggle({
     Callback = function(value)
         speedEnabled = value
         if value then
-            -- スピード無効化を有効にする
             if speedConnection then speedConnection:Disconnect() end
             speedConnection = game:GetService("RunService").RenderStepped:Connect(function()
-                local character = LocalPlayer.Character
-                if character and character:FindFirstChild("Humanoid") then
-                    local humanoid = character:FindFirstChild("Humanoid")
-                    if humanoid then
-                        humanoid.WalkSpeed = speedValue
-                    end
+                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                    LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
                 end
             end)
         else
-            -- スピード無効化を無効にする
             if speedConnection then speedConnection:Disconnect() end
-            local character = LocalPlayer.Character
-            if character and character:FindFirstChild("Humanoid") then
-                local humanoid = character:FindFirstChild("Humanoid")
-                if humanoid then
-                    humanoid.WalkSpeed = 30  -- デフォルトのスピード
-                end
+            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+                LocalPlayer.Character.Humanoid.WalkSpeed = 30
             end
         end
     end
@@ -67,7 +51,6 @@ MainTab:AddSlider({
         speedValue = value
     end
 })
-
 
 -- 無限ジャンプ
 local infiniteJumpEnabled = false
@@ -286,8 +269,6 @@ local dropdown
 local following = false
 local connection = nil
 local savedCFrame = nil
-local aimToggle = false
-local aimConnection = nil
 
 -- プレイヤー取得
 local function getPlayerNames()
@@ -353,7 +334,6 @@ MainTab:AddButton({
     end
 })
 
-
 -- 密着追尾ON/OFFトグル
 MainTab:AddToggle({
     Name = "密着追尾(オン/オフ)",
@@ -374,8 +354,7 @@ MainTab:AddToggle({
                     local targetPos = targetHRP.Position
 
                     if myHRP then
-                        -- targetHRPの位置を常に追いかけ、後ろに張り付く
-                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 5)  -- 後ろ7スタッドに調整
+                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 7) -- 後ろ1.5スタッド
                         myHRP.CFrame = CFrame.new(offsetCFrame.Position, targetPos)
                     end
                 end
@@ -393,45 +372,79 @@ MainTab:AddToggle({
 })
 
 
--- オートエイム変数
-local autoAimEnabled = false
-local autoAimConnection = nil
+local viewing = false
+local originalCameraCFrame = nil
+local originalCharacterCFrame = nil
+local originalCameraType = nil
+local humanoidConnection = nil
 
--- オートエイム機能
-local function startAutoAim()
-    if autoAimConnection then autoAimConnection:Disconnect() end
-    autoAimConnection = game:GetService("RunService").RenderStepped:Connect(function()
-        if not autoAimEnabled then return end
-
+MainTab:AddButton({
+    Name = "選択中のプレイヤー先に視点移動 (ジャンプで戻る)",
+    Callback = function()
         local target = Players:FindFirstChild(selectedPlayer)
-        if target and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
-            local targetPos = target.Character.HumanoidRootPart.Position
-            workspace.CurrentCamera.CFrame = CFrame.lookAt(workspace.CurrentCamera.CFrame.Position, targetPos)
+        if not target or not target.Character or not target.Character:FindFirstChild("HumanoidRootPart") then
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "選択したプレイヤーが見つかりません！",
+                Time = 3
+            })
+            return
         end
-    end)
-end
 
--- オートエイム切る
-local function stopAutoAim()
-    if autoAimConnection then
-        autoAimConnection:Disconnect()
-        autoAimConnection = nil
-    end
-end
+        local myChar = LocalPlayer.Character
+        local myHRP = myChar and myChar:FindFirstChild("HumanoidRootPart")
+        local humanoid = myChar and myChar:FindFirstChildOfClass("Humanoid")
 
--- オートエイム用トグルボタン追加
-MainTab:AddToggle({
-    Name = "オートエイム(オン/オフ)",
-    Default = false,
-    Callback = function(state)
-        autoAimEnabled = state
-        if autoAimEnabled then
-            startAutoAim()
-        else
-            stopAutoAim()
+        if not myHRP or not humanoid then
+            OrionLib:MakeNotification({
+                Name = "エラー",
+                Content = "自分のキャラクター情報が取得できません！",
+                Time = 3
+            })
+            return
         end
+
+        if viewing then
+            return
+        end
+
+        originalCameraCFrame = workspace.CurrentCamera.CFrame
+        originalCharacterCFrame = myHRP.CFrame
+        originalCameraType = workspace.CurrentCamera.CameraType
+
+        workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
+        workspace.CurrentCamera.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, -10)
+
+        -- キャラクターの位置は変更しない
+        myHRP.CFrame = originalCharacterCFrame  -- この部分を変更せずそのままにしておく
+
+        viewing = true
+
+        humanoidConnection = humanoid.StateChanged:Connect(function(_, newState)
+            if viewing and newState == Enum.HumanoidStateType.Jumping then
+                -- 視点を元に戻す
+                if myHRP and originalCharacterCFrame then
+                    myHRP.CFrame = originalCharacterCFrame
+                end
+                if originalCameraCFrame then
+                    workspace.CurrentCamera.CFrame = originalCameraCFrame
+                end
+                if originalCameraType then
+                    workspace.CurrentCamera.CameraType = originalCameraType
+                end
+
+                -- リセット
+                viewing = false
+                if humanoidConnection then
+                    humanoidConnection:Disconnect()
+                    humanoidConnection = nil
+                end
+            end
+        end)
     end
 })
+
+
 
 
 MainTab:AddButton({
@@ -546,92 +559,6 @@ while true do
 	task.wait(1)
 	updatePlayerHighlights()
 end
-
--- 敵プレイヤー検出と名前表示機能の追加
-local nameTagToggle = false
-local nameTagConnections = {}
-
--- GUIにトグルを追加
-MainTab:AddToggle({
-    Name = "100スタッド以内の敵プレイヤー名表示",
-    Default = false,
-    Callback = function(state)
-        nameTagToggle = state
-        if nameTagToggle then
-            -- 100スタッド以内の敵プレイヤー名表示を開始
-            updateNameTags()
-        else
-            -- すべての名前タグを削除
-            clearNameTags()
-        end
-    end
-})
-
--- 100スタッド以内の敵プレイヤーを検出して名前を表示
-function updateNameTags()
-    for _, player in pairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            local enemyHRP = player.Character.HumanoidRootPart
-            local distance = (LocalPlayer.Character.HumanoidRootPart.Position - enemyHRP.Position).magnitude
-
-            if distance <= 100 then
-                -- 100スタッド以内の敵プレイヤーには名前を表示
-                showNameTag(player, enemyHRP)
-            end
-        end
-    end
-end
-
--- プレイヤー名のタグを表示する
-function showNameTag(player, enemyHRP)
-    -- すでにタグが表示されているか確認
-    if nameTagConnections[player.UserId] then
-        return
-    end
-
-    local nameTag = Instance.new("BillboardGui")
-    nameTag.Parent = enemyHRP
-    nameTag.Adornee = enemyHRP
-    nameTag.Size = UDim2.new(0, 200, 0, 50)
-    nameTag.StudsOffset = Vector3.new(0, 3, 0)  -- プレイヤーの頭上に配置
-
-    local textLabel = Instance.new("TextLabel")
-    textLabel.Parent = nameTag
-    textLabel.Text = player.Name
-    textLabel.TextSize = 18
-    textLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-    textLabel.BackgroundTransparency = 1
-    textLabel.TextStrokeTransparency = 0.8
-    textLabel.TextStrokeColor3 = Color3.fromRGB(0, 0, 0)
-
-    -- 名前タグの接続を保存
-    nameTagConnections[player.UserId] = nameTag
-end
-
--- 名前タグを削除
-function clearNameTags()
-    for userId, nameTag in pairs(nameTagConnections) do
-        if nameTag then
-            nameTag:Destroy()
-        end
-    end
-    nameTagConnections = {}
-end
-
--- プレイヤーが離れた場合に名前タグを削除
-Players.PlayerRemoving:Connect(function(player)
-    if nameTagConnections[player.UserId] then
-        nameTagConnections[player.UserId]:Destroy()
-        nameTagConnections[player.UserId] = nil
-    end
-end)
-
--- 定期的に100スタッド以内の敵をチェックする
-game:GetService("RunService").Heartbeat:Connect(function()
-    if nameTagToggle then
-        updateNameTags()
-    end
-end)
 
 -- リセットボタン作成
 MainTab:AddButton({
