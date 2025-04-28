@@ -416,39 +416,45 @@ MainTab:AddButton({
             return
         end
 
-        -- 保存
-        originalCameraCFrame = workspace.CurrentCamera.CFrame
-        originalCharacterCFrame = myHRP.CFrame
+-- 保存
+originalCameraCFrame = workspace.CurrentCamera.CFrame
+originalCharacterCFrame = myHRP.CFrame
 
-        -- カメラだけ移動
-        workspace.CurrentCamera.CFrame = target.Character.HumanoidRootPart.CFrame + Vector3.new(0, 5, -10)
+-- カメラ制御モードを保存
+local originalCameraType = workspace.CurrentCamera.CameraType
 
-        -- キャラは空中に移動
-        myHRP.CFrame = CFrame.new(0, 9999, 0)
+-- カメラだけ移動する前に Scriptable にする
+workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
+workspace.CurrentCamera.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, -10)
 
-        viewing = true
+-- キャラは空中に移動
+myHRP.CFrame = CFrame.new(0, 9999, 0)
 
-        -- ジャンプ検知
-        humanoidConnection = humanoid.StateChanged:Connect(function(old, new)
-            if viewing and new == Enum.HumanoidStateType.Jumping then
-                -- 元に戻す
-                if myHRP and originalCharacterCFrame then
-                    myHRP.CFrame = originalCharacterCFrame
-                end
-                if originalCameraCFrame then
-                    workspace.CurrentCamera.CFrame = originalCameraCFrame
-                end
+viewing = true
 
-                -- リセット
-                viewing = false
-                if humanoidConnection then
-                    humanoidConnection:Disconnect()
-                    humanoidConnection = nil
-                end
-            end
-        end)
+-- ジャンプ検知
+humanoidConnection = humanoid.StateChanged:Connect(function(old, new)
+    if viewing and new == Enum.HumanoidStateType.Jumping then
+        -- 元に戻す
+        if myHRP and originalCharacterCFrame then
+            myHRP.CFrame = originalCharacterCFrame
+        end
+        if originalCameraCFrame then
+            workspace.CurrentCamera.CFrame = originalCameraCFrame
+        end
+
+        -- カメラモードも元に戻す
+        workspace.CurrentCamera.CameraType = originalCameraType
+
+        -- リセット
+        viewing = false
+        if humanoidConnection then
+            humanoidConnection:Disconnect()
+            humanoidConnection = nil
+        end
     end
-})
+end)
+
 
 
 
