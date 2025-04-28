@@ -388,7 +388,7 @@ MainTab:AddToggle({
 
                     if myHRP then
                         -- targetHRPの位置を常に追いかけ、後ろに張り付く
-                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 7)  -- 後ろ7スタッドに調整
+                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 5)  -- 後ろ7スタッドに調整
                         myHRP.CFrame = CFrame.new(offsetCFrame.Position, targetPos)
                     end
                 end
