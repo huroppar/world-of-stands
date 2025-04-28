@@ -275,7 +275,7 @@ MainTab:AddToggle({
             -- ONになったらループ開始
             task.spawn(function()
                 while CollectEnemies do
-                    GatherEnemies()
+                    startGatheringEnemies() -- ← ここをGatherEnemies()じゃなくてstartGatheringEnemies()に！
                     task.wait(0.5) -- 0.5秒待つ
                 end
             end)
