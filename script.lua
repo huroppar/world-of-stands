@@ -1,36 +1,31 @@
--- 許可ユーザーのみ実行可（GUIベースで制御予定なら削除可）
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
-
-local allowedUsers = {
-    ["Furoppersama"] = true,
-    ["fsjsjnsnsnsnns"] = true,
-    ["Furopparsama"] = true
-}
-
-if not allowedUsers[LocalPlayer.Name] then
-    warn("許可されていないユーザーです")
-    return
-end
-
 -- OrionLib読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
-local Window = OrionLib:MakeWindow({Name = "World of Stands Utility", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
-local MainTab = Window:MakeTab({ Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false })
+local Window = OrionLib:MakeWindow({
+    Name = "World of Stands Utility",
+    HidePremium = false,
+    SaveConfig = true,
+    ConfigFolder = "WOS_Config"
+})
+
+local MainTab = Window:MakeTab({
+    Name = "メイン",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
 -- ScreenGuiを作成
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KirbyScreenGui"
-ScreenGui.Parent = game:GetService("CoreGui") -- CoreGuiに入れる（今度はOK！）
+ScreenGui.Parent = game:GetService("CoreGui")
 
 -- カービィボタンを作成
 local KirbyButton = Instance.new("ImageButton")
 KirbyButton.Name = "KirbyButton"
 KirbyButton.Size = UDim2.new(0, 50, 0, 50)
-KirbyButton.Position = UDim2.new(0, 10, 0, 10) -- 左上に表示
+KirbyButton.Position = UDim2.new(0, 10, 0, 10)
 KirbyButton.BackgroundTransparency = 1
-KirbyButton.Image = "rbxassetid://77339698" -- ニコニコカービィ
-KirbyButton.Parent = ScreenGui -- ←今度はScreenGuiに入れる
+KirbyButton.Image = "rbxassetid://77339698"
+KirbyButton.Parent = ScreenGui
 KirbyButton.Active = true
 KirbyButton.Draggable = true
 
@@ -47,7 +42,20 @@ end)
 local speedEnabled = false
 local speedValue = 30
 local speedConnection
-local speedSlider -- スライダーを外から触れるようにする
+
+-- 色をグラデーションで返す関数
+local function getGradientColor(value)
+    local ratio = value / 2000
+    if ratio < 0.5 then
+        -- 青→黄
+        local t = ratio * 2
+        return Color3.new(0, t, 1 - t)
+    else
+        -- 黄→赤
+        local t = (ratio - 0.5) * 2
+        return Color3.new(1, 1 - t, 0)
+    end
+end
 
 -- スピード有効化トグル
 MainTab:AddToggle({
@@ -71,22 +79,8 @@ MainTab:AddToggle({
     end
 })
 
--- 色をグラデーションで返す関数
-local function getGradientColor(value)
-    local ratio = value / 2000
-    if ratio < 0.5 then
-        -- 青→黄
-        local t = ratio * 2
-        return Color3.new(0, t, 1 - t) -- 青(0,0,1)から黄(1,1,0)
-    else
-        -- 黄→赤
-        local t = (ratio - 0.5) * 2
-        return Color3.new(1, 1 - t, 0) -- 黄(1,1,0)から赤(1,0,0)
-    end
-end
-
 -- スピードスライダー
-speedSlider = MainTab:AddSlider({
+MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
     Max = 2000,
@@ -96,23 +90,17 @@ speedSlider = MainTab:AddSlider({
     ValueName = "Speed",
     Callback = function(value)
         speedValue = value
-        if speedSlider and speedSlider:Set then
-            speedSlider:Set("Color", getGradientColor(value))
-        end
     end
 })
 
--- PC上限ボタン
+-- PC上限ボタン（Speed 45）
 MainTab:AddButton({
     Name = "PC上限 (Speed 45)",
     Callback = function()
         speedValue = 45
-        if speedSlider and speedSlider:Set then
-            speedSlider:Set("Value", 45)
-            speedSlider:Set("Color", getGradientColor(45))
-        end
     end
 })
+
 
 -- 無限ジャンプ
 local infiniteJumpEnabled = false
