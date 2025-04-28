@@ -299,6 +299,8 @@ local dropdown
 local following = false
 local connection = nil
 local savedCFrame = nil
+local aimToggle = false
+local aimConnection = nil
 
 -- プレイヤー取得
 local function getPlayerNames()
@@ -401,6 +403,37 @@ MainTab:AddToggle({
     end
 })
 
+-- オートエイムON/OFFトグル
+MainTab:AddToggle({
+    Name = "オートエイム(オン/オフ)",
+    Default = false,
+    Callback = function(state)
+        aimToggle = state
+        if aimToggle then
+            -- オートエイム開始
+            local myHead = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Head")
+            aimConnection = game:GetService("RunService").Heartbeat:Connect(function()
+                if selectedPlayer then
+                    local target = Players:FindFirstChild(selectedPlayer)
+                    if target and target.Character and target.Character:FindFirstChild("Head") then
+                        local targetHead = target.Character.Head
+                        if myHead then
+                            -- エイムをターゲットの頭に合わせる
+                            local lookAtCFrame = CFrame.lookAt(myHead.Position, targetHead.Position)
+                            myHead.CFrame = CFrame.new(myHead.Position, lookAtCFrame.Position)
+                        end
+                    end
+                end
+            end)
+        else
+            -- オートエイム停止
+            if aimConnection then
+                aimConnection:Disconnect()
+                aimConnection = nil
+            end
+        end
+    end
+})
 
 MainTab:AddButton({
     Name = "透明化(PC非推奨)",
