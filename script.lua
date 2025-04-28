@@ -22,7 +22,7 @@ local speedValue = 16
 local speedConnection
 
 MainTab:AddToggle({
-    Name = "スピード有効化",
+    Name = "スピード無効化",
     Default = false,
     Callback = function(value)
         speedEnabled = value
