@@ -13,45 +13,14 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- ScreenGui作成
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KirbyScreenGui"
-ScreenGui.Parent = game:GetService("CoreGui")
-
--- カービィボタン作成
-local KirbyButton = Instance.new("ImageButton")
-KirbyButton.Name = "KirbyButton"
-KirbyButton.Size = UDim2.new(0, 50, 0, 50)
-KirbyButton.Position = UDim2.new(0, 10, 0, 10)
-KirbyButton.BackgroundTransparency = 1
-KirbyButton.Image = "rbxassetid://77339698"
-KirbyButton.Parent = ScreenGui
-KirbyButton.Active = true
-KirbyButton.Draggable = true
-
+-- 初めからウィンドウを表示するように設定
 Window.Enabled = true
-KirbyButton.MouseButton1Click:Connect(function()
-    Window.Enabled = true
-    KirbyButton.Visible = false
-end)
 
 -- スピード管理
 local speedEnabled = false
 local speedValue = 30
 local speedConnection
-local speedSliderObject -- ← スライダーのオブジェクトを保持
-
--- 色をグラデーションで返す
-local function getGradientColor(value)
-    local ratio = value / 2000
-    if ratio < 0.5 then
-        local t = ratio * 2
-        return Color3.new(0, t, 1 - t)
-    else
-        local t = (ratio - 0.5) * 2
-        return Color3.new(1, 1 - t, 0)
-    end
-end
+local speedSliderObject
 
 -- スピード有効化トグル
 MainTab:AddToggle({
@@ -76,7 +45,7 @@ MainTab:AddToggle({
 })
 
 -- スピードスライダー
-local speedSliderObject = MainTab:AddSlider({
+speedSliderObject = MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
     Max = 2000,
