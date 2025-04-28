@@ -16,6 +16,9 @@ local MainTab = Window:MakeTab({
 -- 初めからウィンドウを表示するように設定
 Window.Enabled = true
 
+-- プレイヤーの取得
+local LocalPlayer = game.Players.LocalPlayer
+
 -- スピード
 local speedEnabled = false
 local speedValue = 16
@@ -27,16 +30,26 @@ MainTab:AddToggle({
     Callback = function(value)
         speedEnabled = value
         if value then
+            -- スピード無効化を有効にする
             if speedConnection then speedConnection:Disconnect() end
             speedConnection = game:GetService("RunService").RenderStepped:Connect(function()
-                if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                    LocalPlayer.Character.Humanoid.WalkSpeed = speedValue
+                local character = LocalPlayer.Character
+                if character and character:FindFirstChild("Humanoid") then
+                    local humanoid = character:FindFirstChild("Humanoid")
+                    if humanoid then
+                        humanoid.WalkSpeed = speedValue
+                    end
                 end
             end)
         else
+            -- スピード無効化を無効にする
             if speedConnection then speedConnection:Disconnect() end
-            if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
-                LocalPlayer.Character.Humanoid.WalkSpeed = 30
+            local character = LocalPlayer.Character
+            if character and character:FindFirstChild("Humanoid") then
+                local humanoid = character:FindFirstChild("Humanoid")
+                if humanoid then
+                    humanoid.WalkSpeed = 30  -- デフォルトのスピード
+                end
             end
         end
     end
