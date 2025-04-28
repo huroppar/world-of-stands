@@ -386,7 +386,8 @@ MainTab:AddToggle({
                     local targetPos = targetHRP.Position
 
                     if myHRP then
-                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, 7) -- 後ろ1.5スタッド
+                        -- targetHRPの位置を常に追いかけるため、CFrameで後ろに張り付く
+                        local offsetCFrame = targetHRP.CFrame * CFrame.new(0, 0, -7) -- 後ろに7スタッド
                         myHRP.CFrame = CFrame.new(offsetCFrame.Position, targetPos)
                     end
                 end
@@ -402,6 +403,7 @@ MainTab:AddToggle({
         end
     end
 })
+
 
 -- オートエイムON/OFFトグル
 MainTab:AddToggle({
