@@ -170,6 +170,14 @@ floatingButton.MouseButton1Click:Connect(function()
                 humanoid.PlatformStand = true
             end
 
+            -- 足場作成
+            local ground = Instance.new("Part")
+            ground.Size = Vector3.new(10, 1, 10)
+            ground.Position = hrp.Position - Vector3.new(0, 5, 0)
+            ground.Anchored = true
+            ground.CanCollide = true
+            ground.Parent = workspace
+
             floating = true
         else
             -- 戻す処理
@@ -189,6 +197,7 @@ floatingButton.MouseButton1Click:Connect(function()
         end
     end
 end)
+
 
 -- 敵を集める
 local gatherDistance = 50
@@ -426,28 +435,24 @@ MainTab:AddButton({
         end
 
         if viewing then
-            -- すでに視点モード中なら無視
             return
         end
 
-        -- 保存
         originalCameraCFrame = workspace.CurrentCamera.CFrame
         originalCharacterCFrame = myHRP.CFrame
         originalCameraType = workspace.CurrentCamera.CameraType
 
-        -- カメラ制御をScriptableにしてターゲットの後ろから見る
         workspace.CurrentCamera.CameraType = Enum.CameraType.Scriptable
         workspace.CurrentCamera.CFrame = target.Character.HumanoidRootPart.CFrame * CFrame.new(0, 5, -10)
 
-        -- 自キャラはめちゃ高い空中へ移動（当たり判定を消すため）
-        myHRP.CFrame = CFrame.new(0, 9999, 0)
+        -- キャラクターの位置は変更しない
+        myHRP.CFrame = originalCharacterCFrame  -- この部分を変更せずそのままにしておく
 
         viewing = true
 
-        -- ジャンプ検知
         humanoidConnection = humanoid.StateChanged:Connect(function(_, newState)
             if viewing and newState == Enum.HumanoidStateType.Jumping then
-                -- 復帰処理
+                -- 視点を元に戻す
                 if myHRP and originalCharacterCFrame then
                     myHRP.CFrame = originalCharacterCFrame
                 end
@@ -468,6 +473,7 @@ MainTab:AddButton({
         end)
     end
 })
+
 
 
 
