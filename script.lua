@@ -1,10 +1,10 @@
 -- OrionLib読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Window = OrionLib:MakeWindow({
-    Name = "World of Stands Utility",
+    Name = "おっぱい",
     HidePremium = false,
     SaveConfig = true,
-    ConfigFolder = "WOS_Config"
+    ConfigFolder = "ちんこ"
 })
 
 local MainTab = Window:MakeTab({
@@ -25,7 +25,7 @@ local speedValue = 16
 local speedConnection
 
 MainTab:AddToggle({
-    Name = "スピード無効化",
+    Name = "スピード有効化",
     Default = false,
     Callback = function(value)
         speedEnabled = value
