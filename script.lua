@@ -1,3 +1,18 @@
+-- 許可ユーザーのみ実行可（GUIベースで制御予定なら削除可）
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+
+local allowedUsers = {
+    ["Furoppersama"] = true,
+    ["fsjsjnsnsnsnns"] = true,
+    ["Furopparsama"] = true
+}
+
+if not allowedUsers[LocalPlayer.Name] then
+    warn("許可されていないユーザーです")
+    return
+end
+
 -- OrionLib読み込み
 local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Window = OrionLib:MakeWindow({
@@ -13,12 +28,12 @@ local MainTab = Window:MakeTab({
     PremiumOnly = false
 })
 
--- ScreenGuiを作成
+-- ScreenGui作成
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KirbyScreenGui"
 ScreenGui.Parent = game:GetService("CoreGui")
 
--- カービィボタンを作成
+-- カービィボタン作成
 local KirbyButton = Instance.new("ImageButton")
 KirbyButton.Name = "KirbyButton"
 KirbyButton.Size = UDim2.new(0, 50, 0, 50)
@@ -29,29 +44,25 @@ KirbyButton.Parent = ScreenGui
 KirbyButton.Active = true
 KirbyButton.Draggable = true
 
--- 最初はWindowを非表示にする
 Window.Enabled = false
-
--- カービィ押したらGUI表示
 KirbyButton.MouseButton1Click:Connect(function()
     Window.Enabled = true
     KirbyButton.Visible = false
 end)
 
--- スピード変数
+-- スピード管理
 local speedEnabled = false
 local speedValue = 30
 local speedConnection
+local speedSliderObject -- ← スライダーのオブジェクトを保持
 
--- 色をグラデーションで返す関数
+-- 色をグラデーションで返す
 local function getGradientColor(value)
     local ratio = value / 2000
     if ratio < 0.5 then
-        -- 青→黄
         local t = ratio * 2
         return Color3.new(0, t, 1 - t)
     else
-        -- 黄→赤
         local t = (ratio - 0.5) * 2
         return Color3.new(1, 1 - t, 0)
     end
@@ -80,7 +91,7 @@ MainTab:AddToggle({
 })
 
 -- スピードスライダー
-MainTab:AddSlider({
+speedSliderObject = MainTab:AddSlider({
     Name = "スピード調整",
     Min = 1,
     Max = 2000,
@@ -90,14 +101,23 @@ MainTab:AddSlider({
     ValueName = "Speed",
     Callback = function(value)
         speedValue = value
+        -- 色もリアルタイム更新
+        if speedSliderObject and speedSliderObject.Set then
+            speedSliderObject:Set("Color", getGradientColor(value))
+        end
     end
 })
 
--- PC上限ボタン（Speed 45）
+-- PC上限ボタン
 MainTab:AddButton({
     Name = "PC上限 (Speed 45)",
     Callback = function()
         speedValue = 45
+        -- スライダーも更新する
+        if speedSliderObject and speedSliderObject.Set then
+            speedSliderObject:Set("Value", 45)
+            speedSliderObject:Set("Color", getGradientColor(45))
+        end
     end
 })
 
