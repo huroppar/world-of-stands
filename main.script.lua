@@ -498,6 +498,25 @@ MainTab:AddButton({
 })
 
 
+-- 再表示用ボタン（常に画面に表示）
+local reopenButtonGui = Instance.new("ScreenGui")
+reopenButtonGui.Name = "ReopenGui"
+reopenButtonGui.ResetOnSpawn = false
+reopenButtonGui.Parent = game:GetService("CoreGui") -- CoreGuiに入れると安全
+
+local reopenButton = Instance.new("TextButton")
+reopenButton.Size = UDim2.new(0, 100, 0, 40)
+reopenButton.Position = UDim2.new(0, 10, 0, 10) -- 左上あたり
+reopenButton.Text = "UI再表示"
+reopenButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+reopenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+reopenButton.Parent = reopenButtonGui
+
+-- UI再表示処理（Windowを再表示）
+reopenButton.MouseButton1Click:Connect(function()
+    OrionLib:Toggle(true)  -- trueで開く、falseで閉じる
+end)
+
 -- 最後に通知
 OrionLib:MakeNotification({
     Name = "WOSユーティリティ",
