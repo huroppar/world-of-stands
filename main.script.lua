@@ -13,7 +13,7 @@ local ChestTab = Window:MakeTab({
 })
 
 -- チェスト番号を追跡する変数
-local currentChestNumber = 24  -- 初期のチェスト番号（例えば24番）
+local currentChestNumber = 1  -- 初期のチェスト番号（例えば24番）
 
 -- 指定した番号のチェストを見つける関数
 local function findChestByNumber(number)
