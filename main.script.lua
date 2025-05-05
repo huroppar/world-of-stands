@@ -517,10 +517,21 @@ reopenButton.MouseButton1Click:Connect(function()
     OrionLib:Toggle(true)  -- trueで開く、falseで閉じる
 end)
 
-local player = game.Players.LocalPlayer
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
 local character = player.Character
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-local maxDistance = 50  -- 周囲の探索範囲
+
+-- OrionLibの設定
+local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
+local Window = OrionLib:MakeWindow({Name = "wos script", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
+
+-- 新しいタブ「チェスト」を作成
+local ChestTab = Window:MakeTab({
+    Name = "チェスト",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
 
 -- チェスト番号を追跡する変数
 local currentChestNumber = 24  -- 初期のチェスト番号（例えば24番）
@@ -548,55 +559,39 @@ local function teleportToChest(chest)
     end
 end
 
--- ボタンを押した時に次のチェストにテレポートする
-local function onButtonPress()
-    -- 次のチェストを見つけてテレポート
-    currentChestNumber = currentChestNumber + 1  -- 次の番号に移動
-    local nextChest = findChestByNumber(currentChestNumber)
-    teleportToChest(nextChest)
-end
-
--- PlayerGuiを取得して、ScreenGuiを確認または作成する
-local playerGui = player:WaitForChild("PlayerGui")
-
--- もしPlayerGuiにScreenGuiがなければ新しく作成する
-local screenGui = playerGui:FindFirstChild("ScreenGui")
-if not screenGui then
-    screenGui = Instance.new("ScreenGui")
-    screenGui.Name = "ScreenGui"
-    screenGui.Parent = playerGui
-end
-
 -- ボタンを作成
 local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 250, 0, 60)
-button.Position = UDim2.new(0.5, -125, 0.5, -30)
+button.Size = UDim2.new(0, 200, 0, 50)
+button.Position = UDim2.new(0.5, -100, 0.5, -25)
 button.Text = "次のチェストにテレポート"
-button.BackgroundColor3 = Color3.fromRGB(0, 122, 255)
-button.TextColor3 = Color3.fromRGB(255, 255, 255)
-button.Font = Enum.Font.GothamBold
-button.TextSize = 20
-button.Parent = screenGui  -- ScreenGuiにボタンを親として設定
-button.Visible = true -- 最初は表示
+button.Visible = false  -- 初期は非表示
+button.Parent = player:WaitForChild("PlayerGui")  -- PlayerGuiにボタンを配置
 
 -- ボタンが押された時に次のチェストにテレポートする
-button.MouseButton1Click:Connect(onButtonPress)
-
--- GUI表示非表示切り替え
-local buttonToggle = Instance.new("TextButton")
-buttonToggle.Size = UDim2.new(0, 200, 0, 50)
-buttonToggle.Position = UDim2.new(0.5, -100, 0.6, -25)
-buttonToggle.Text = "チェストボタン表示切替"
-buttonToggle.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-buttonToggle.TextColor3 = Color3.fromRGB(255, 255, 255)
-buttonToggle.Font = Enum.Font.GothamBold
-buttonToggle.TextSize = 20
-buttonToggle.Parent = screenGui
-
-buttonToggle.MouseButton1Click:Connect(function()
-    -- ボタンの表示・非表示を切り替え
-    button.Visible = not button.Visible
+button.MouseButton1Click:Connect(function()
+    currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
+    local nextChest = findChestByNumber(currentChestNumber)
+    teleportToChest(nextChest)
 end)
+
+-- チェストタブにボタンの表示非表示を切り替えるトグルを追加
+ChestTab:AddToggle({
+    Name = "チェストボタン表示",
+    Default = false,
+    Callback = function(value)
+        button.Visible = value  -- トグルの状態に応じてボタンの表示/非表示を切り替え
+    end
+})
+
+-- 次のチェストにテレポートするボタン
+ChestTab:AddButton({
+    Name = "次のチェストにテレポート",
+    Callback = function()
+        currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
+        local nextChest = findChestByNumber(currentChestNumber)
+        teleportToChest(nextChest)
+    end
+})
 
 -- 最後に通知
 OrionLib:MakeNotification({
