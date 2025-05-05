@@ -200,7 +200,7 @@ game:GetService("RunService").Stepped:Connect(function()
 end)
 
 -- 空中TPボタン
-local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("CoreGui"))
+local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("ScreenGui"))
 screenGui.Name = "TeleportGui"
 
 local floatingButton = Instance.new("TextButton")
