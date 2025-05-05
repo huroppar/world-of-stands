@@ -34,7 +34,7 @@ local function teleportToChest(chest)
             local teleportPosition = chestPosition + Vector3.new(0, 10, 0)  -- 5ユニット上に移動
 
             -- プレイヤーをその位置にテレポート
-            player.Character:SetPrimaryPartCFrame(CFrame.new(teleportPosition))
+            LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(teleportPosition))
             print("テレポートしました: " .. chest.Name)
         end
     else
@@ -45,10 +45,11 @@ end
 -- チェストボタンの表示非表示を切り替える変数
 local buttonVisible = false
 
--- ボタンを作成 (ScreenGuiに配置)
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+-- ScreenGuiを作成（1回で十分）
+local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
 screenGui.Name = "TeleportGui"
 
+-- ボタンを作成 (ScreenGuiに配置)
 local floatingButton = Instance.new("TextButton")
 floatingButton.Size = UDim2.new(0, 200, 0, 50)
 floatingButton.Position = UDim2.new(0.5, -100, 0.5, -25)
@@ -111,13 +112,9 @@ ChestTab:AddButton({
     end
 })
 
--- ScreenGuiを作成
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "KirbyScreenGui"
-ScreenGui.Parent = game:GetService("CoreGui") -- CoreGuiに入れる（今度はOK！）
-
 -- 最初はWindowを非表示にする
 Window.Enabled = true
+
 -- スピード
 local speedEnabled = false
 local speedValue = 16
