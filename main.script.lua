@@ -5,6 +5,112 @@ local OrionLib = loadstring(game:HttpGet("https://pastebin.com/raw/WRUyYTdY"))()
 local Window = OrionLib:MakeWindow({Name = "wos script", HidePremium = false, SaveConfig = true, ConfigFolder = "WOS_Config"})
 local MainTab = Window:MakeTab({ Name = "メイン", Icon = "rbxassetid://4483345998", PremiumOnly = false })
 
+-- 新しいタブ「チェスト」を作成
+local ChestTab = Window:MakeTab({
+    Name = "チェスト",
+    Icon = "rbxassetid://4483345998",
+    PremiumOnly = false
+})
+
+-- チェスト番号を追跡する変数
+local currentChestNumber = 24  -- 初期のチェスト番号（例えば24番）
+
+-- 指定した番号のチェストを見つける関数
+local function findChestByNumber(number)
+    for _, object in ipairs(game.Workspace:GetChildren()) do
+        if object:IsA("Model") and object.Name == tostring(number) then
+            return object
+        end
+    end
+    return nil
+end
+
+-- チェストにテレポートする処理
+local function teleportToChest(chest)
+    if chest then
+        -- チェストの位置にテレポート（チェストの上に）
+        if chest.PrimaryPart then
+            local chestPosition = chest.PrimaryPart.Position  -- チェストの位置
+            local teleportPosition = chestPosition + Vector3.new(0, 10, 0)  -- 5ユニット上に移動
+
+            -- プレイヤーをその位置にテレポート
+            player.Character:SetPrimaryPartCFrame(CFrame.new(teleportPosition))
+            print("テレポートしました: " .. chest.Name)
+        end
+    else
+        print("指定されたチェストが見つかりませんでした。")
+    end
+end
+
+-- チェストボタンの表示非表示を切り替える変数
+local buttonVisible = false
+
+-- ボタンを作成 (ScreenGuiに配置)
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "TeleportGui"
+
+local floatingButton = Instance.new("TextButton")
+floatingButton.Size = UDim2.new(0, 200, 0, 50)
+floatingButton.Position = UDim2.new(0.5, -100, 0.5, -25)
+floatingButton.Text = "次のチェストにテレポート"
+floatingButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+floatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+floatingButton.Parent = screenGui
+floatingButton.Visible = buttonVisible
+
+-- ボタンが押された時に次のチェストにテレポートする
+floatingButton.MouseButton1Click:Connect(function()
+    currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
+    local nextChest = findChestByNumber(currentChestNumber)
+    teleportToChest(nextChest)
+end)
+
+-- チェストタブにボタンの表示非表示を切り替えるトグルを追加
+ChestTab:AddToggle({
+    Name = "チェストボタン表示",
+    Default = false,
+    Callback = function(value)
+        buttonVisible = value  -- トグルの状態に応じてボタンの表示/非表示を切り替え
+        floatingButton.Visible = buttonVisible
+    end
+})
+
+-- ボタンをドラッグできるようにする
+local dragging = false
+local dragInput
+local startPos
+
+floatingButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        startPos = input.Position
+    end
+end)
+
+floatingButton.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - startPos
+        floatingButton.Position = UDim2.new(floatingButton.Position.X.Scale, floatingButton.Position.X.Offset + delta.X, floatingButton.Position.Y.Scale, floatingButton.Position.Y.Offset + delta.Y)
+        startPos = input.Position
+    end
+end)
+
+floatingButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+-- 次のチェストにテレポートするボタン
+ChestTab:AddButton({
+    Name = "次のチェストにテレポート",
+    Callback = function()
+        currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
+        local nextChest = findChestByNumber(currentChestNumber)
+        teleportToChest(nextChest)
+    end
+})
+
 -- ScreenGuiを作成
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "KirbyScreenGui"
@@ -482,119 +588,6 @@ while true do
 	task.wait(1)
 	updatePlayerHighlights()
 end
-
-
-
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local character = player.Character
-local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
-
--- 新しいタブ「チェスト」を作成
-local ChestTab = Window:MakeTab({
-    Name = "チェスト",
-    Icon = "rbxassetid://4483345998",
-    PremiumOnly = false
-})
-
--- チェスト番号を追跡する変数
-local currentChestNumber = 24  -- 初期のチェスト番号（例えば24番）
-
--- 指定した番号のチェストを見つける関数
-local function findChestByNumber(number)
-    for _, object in ipairs(game.Workspace:GetChildren()) do
-        if object:IsA("Model") and object.Name == tostring(number) then
-            return object
-        end
-    end
-    return nil
-end
-
--- チェストにテレポートする処理
-local function teleportToChest(chest)
-    if chest then
-        -- チェストの位置にテレポート（チェストの上に）
-        if chest.PrimaryPart then
-            local chestPosition = chest.PrimaryPart.Position  -- チェストの位置
-            local teleportPosition = chestPosition + Vector3.new(0, 10, 0)  -- 5ユニット上に移動
-
-            -- プレイヤーをその位置にテレポート
-            player.Character:SetPrimaryPartCFrame(CFrame.new(teleportPosition))
-            print("テレポートしました: " .. chest.Name)
-        end
-    else
-        print("指定されたチェストが見つかりませんでした。")
-    end
-end
-
--- チェストボタンの表示非表示を切り替える変数
-local buttonVisible = false
-
--- ボタンを作成 (ScreenGuiに配置)
-local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
-screenGui.Name = "TeleportGui"
-
-local floatingButton = Instance.new("TextButton")
-floatingButton.Size = UDim2.new(0, 200, 0, 50)
-floatingButton.Position = UDim2.new(0.5, -100, 0.5, -25)
-floatingButton.Text = "次のチェストにテレポート"
-floatingButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-floatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-floatingButton.Parent = screenGui
-floatingButton.Visible = buttonVisible
-
--- ボタンが押された時に次のチェストにテレポートする
-floatingButton.MouseButton1Click:Connect(function()
-    currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
-    local nextChest = findChestByNumber(currentChestNumber)
-    teleportToChest(nextChest)
-end)
-
--- チェストタブにボタンの表示非表示を切り替えるトグルを追加
-ChestTab:AddToggle({
-    Name = "チェストボタン表示",
-    Default = false,
-    Callback = function(value)
-        buttonVisible = value  -- トグルの状態に応じてボタンの表示/非表示を切り替え
-        floatingButton.Visible = buttonVisible
-    end
-})
-
--- ボタンをドラッグできるようにする
-local dragging = false
-local dragInput
-local startPos
-
-floatingButton.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        startPos = input.Position
-    end
-end)
-
-floatingButton.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-        local delta = input.Position - startPos
-        floatingButton.Position = UDim2.new(floatingButton.Position.X.Scale, floatingButton.Position.X.Offset + delta.X, floatingButton.Position.Y.Scale, floatingButton.Position.Y.Offset + delta.Y)
-        startPos = input.Position
-    end
-end)
-
-floatingButton.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-
--- 次のチェストにテレポートするボタン
-ChestTab:AddButton({
-    Name = "次のチェストにテレポート",
-    Callback = function()
-        currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
-        local nextChest = findChestByNumber(currentChestNumber)
-        teleportToChest(nextChest)
-    end
-})
 
 -- リセットボタン作成
 MainTab:AddButton({
