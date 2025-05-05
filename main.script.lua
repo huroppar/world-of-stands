@@ -64,7 +64,7 @@ floatingButton.MouseButton1Click:Connect(function()
     currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
 
     -- 40に達したら1に戻す
-    if currentChestNumber > 30 then
+    if currentChestNumber > 40 then
         currentChestNumber = 1
     end
 
@@ -115,7 +115,7 @@ ChestTab:AddButton({
         currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
 
         -- 40に達したら1に戻す
-        if currentChestNumber > 30 then
+        if currentChestNumber > 40 then
             currentChestNumber = 1
         end
 
@@ -202,13 +202,14 @@ end)
 -- 空中TPボタン
 local airTpButton = Instance.new("TextButton")
 airTpButton.Size = UDim2.new(0, 100, 0, 50)
-airTpButton.Position = UDim2.new(0.5, -50, 0.5, -100)  -- 位置を画面中央に設定
+airTpButton.Position = UDim2.new(0.5, -50, 1, -100)
 airTpButton.Text = "空中TP"
 airTpButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 airTpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 airTpButton.Parent = screenGui
 airTpButton.Active = true
 airTpButton.Draggable = true
+
 
 
 
