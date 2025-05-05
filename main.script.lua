@@ -498,7 +498,7 @@ local ChestTab = Window:MakeTab({
 })
 
 -- チェスト番号を追跡する変数
-local currentChestNumber = 24  -- 初期のチェスト番号（例えば24番）
+local currentChestNumber = 1  -- 初期のチェスト番号（例えば24番）
 
 -- 指定した番号のチェストを見つける関数
 local function findChestByNumber(number)
@@ -515,7 +515,10 @@ local function teleportToChest(chest)
     if chest then
         -- チェストの位置にテレポート
         if chest.PrimaryPart then
-            player.Character:SetPrimaryPartCFrame(chest.PrimaryPart.CFrame)
+            -- チェストの上に少し移動させる
+            local chestPosition = chest.PrimaryPart.Position
+            local teleportPosition = chestPosition + Vector3.new(0, 5, 0)  -- 上方向に5ユニット（調整可能）
+            player.Character:SetPrimaryPartCFrame(CFrame.new(teleportPosition))
             print("テレポートしました: " .. chest.Name)
         end
     else
