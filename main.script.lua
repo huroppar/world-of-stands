@@ -62,6 +62,12 @@ floatingButton.Visible = buttonVisible
 -- ボタンが押された時に次のチェストにテレポートする
 floatingButton.MouseButton1Click:Connect(function()
     currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
+
+    -- 40に達したら1に戻す
+    if currentChestNumber > 30 then
+        currentChestNumber = 1
+    end
+
     local nextChest = findChestByNumber(currentChestNumber)
     teleportToChest(nextChest)
 end)
@@ -107,6 +113,12 @@ ChestTab:AddButton({
     Name = "次のチェストにテレポート",
     Callback = function()
         currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
+
+        -- 40に達したら1に戻す
+        if currentChestNumber > 30 then
+            currentChestNumber = 1
+        end
+
         local nextChest = findChestByNumber(currentChestNumber)
         teleportToChest(nextChest)
     end
@@ -114,6 +126,7 @@ ChestTab:AddButton({
 
 -- 最初はWindowを非表示にする
 Window.Enabled = true
+
 
 -- スピード
 local speedEnabled = false
