@@ -483,6 +483,8 @@ while true do
 	updatePlayerHighlights()
 end
 
+
+
 local Players = game:GetService("Players")
 local player = Players.LocalPlayer
 local character = player.Character
@@ -521,16 +523,24 @@ local function teleportToChest(chest)
     end
 end
 
--- ボタンを作成
-local button = Instance.new("TextButton")
-button.Size = UDim2.new(0, 200, 0, 50)
-button.Position = UDim2.new(0.5, -100, 0.5, -25)
-button.Text = "次のチェストにテレポート"
-button.Visible = false  -- 初期は非表示
-button.Parent = player:WaitForChild("PlayerGui")  -- PlayerGuiにボタンを配置
+-- チェストボタンの表示非表示を切り替える変数
+local buttonVisible = false
+
+-- ボタンを作成 (ScreenGuiに配置)
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "TeleportGui"
+
+local floatingButton = Instance.new("TextButton")
+floatingButton.Size = UDim2.new(0, 200, 0, 50)
+floatingButton.Position = UDim2.new(0.5, -100, 0.5, -25)
+floatingButton.Text = "次のチェストにテレポート"
+floatingButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+floatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+floatingButton.Parent = screenGui
+floatingButton.Visible = buttonVisible
 
 -- ボタンが押された時に次のチェストにテレポートする
-button.MouseButton1Click:Connect(function()
+floatingButton.MouseButton1Click:Connect(function()
     currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
     local nextChest = findChestByNumber(currentChestNumber)
     teleportToChest(nextChest)
@@ -541,9 +551,36 @@ ChestTab:AddToggle({
     Name = "チェストボタン表示",
     Default = false,
     Callback = function(value)
-        button.Visible = value  -- トグルの状態に応じてボタンの表示/非表示を切り替え
+        buttonVisible = value  -- トグルの状態に応じてボタンの表示/非表示を切り替え
+        floatingButton.Visible = buttonVisible
     end
 })
+
+-- ボタンをドラッグできるようにする
+local dragging = false
+local dragInput
+local startPos
+
+floatingButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        startPos = input.Position
+    end
+end)
+
+floatingButton.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local delta = input.Position - startPos
+        floatingButton.Position = UDim2.new(floatingButton.Position.X.Scale, floatingButton.Position.X.Offset + delta.X, floatingButton.Position.Y.Scale, floatingButton.Position.Y.Offset + delta.Y)
+        startPos = input.Position
+    end
+end)
+
+floatingButton.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
 
 -- 次のチェストにテレポートするボタン
 ChestTab:AddButton({
