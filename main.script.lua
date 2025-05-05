@@ -31,7 +31,7 @@ local function teleportToChest(chest)
         -- チェストの位置にテレポート（チェストの上に）
         if chest.PrimaryPart then
             local chestPosition = chest.PrimaryPart.Position  -- チェストの位置
-            local teleportPosition = chestPosition + Vector3.new(0, 10, 0)  -- 5ユニット上に移動
+            local teleportPosition = chestPosition + Vector3.new(0, 7, 0)  -- 5ユニット上に移動
 
             -- プレイヤーをその位置にテレポート
             LocalPlayer.Character:SetPrimaryPartCFrame(CFrame.new(teleportPosition))
@@ -64,7 +64,7 @@ floatingButton.MouseButton1Click:Connect(function()
     currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
 
     -- 40に達したら1に戻す
-    if currentChestNumber > 40 then
+    if currentChestNumber > 30 then
         currentChestNumber = 1
     end
 
@@ -115,7 +115,7 @@ ChestTab:AddButton({
         currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
 
         -- 40に達したら1に戻す
-        if currentChestNumber > 40 then
+        if currentChestNumber > 30 then
             currentChestNumber = 1
         end
 
