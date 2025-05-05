@@ -211,18 +211,14 @@ airTpButton.Active = true
 airTpButton.Draggable = true
 
 
-
-
 MainTab:AddToggle({
     Name = "空中TPボタン表示",
     Default = true,
     Callback = function(value)
-        teleportButtonVisible = value
-        if floatingButton then
-            floatingButton.Visible = value
-        end
+        airTpButton.Visible = value
     end
 })
+
 
 local floating = false
 local originalPosition
