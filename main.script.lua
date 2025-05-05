@@ -45,8 +45,8 @@ end
 -- チェストボタンの表示非表示を切り替える変数
 local buttonVisible = false
 
--- ScreenGuiを作成（1回で十分）
-local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("CoreGui"))
+-- ScreenGuiを作成（CoreGuiに配置してプレイヤーが死んでも消えないようにする）
+local screenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 screenGui.Name = "TeleportGui"
 
 -- ボタンを作成 (ScreenGuiに配置)
@@ -64,7 +64,7 @@ floatingButton.MouseButton1Click:Connect(function()
     currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
 
     -- 40に達したら1に戻す
-    if currentChestNumber > 30 then
+    if currentChestNumber > 40 then
         currentChestNumber = 1
     end
 
@@ -115,7 +115,7 @@ ChestTab:AddButton({
         currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
 
         -- 40に達したら1に戻す
-        if currentChestNumber > 30 then
+        if currentChestNumber > 40 then
             currentChestNumber = 1
         end
 
@@ -126,6 +126,7 @@ ChestTab:AddButton({
 
 -- 最初はWindowを非表示にする
 Window.Enabled = true
+
 
 
 -- スピード
