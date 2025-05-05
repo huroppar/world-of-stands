@@ -46,7 +46,7 @@ end
 local buttonVisible = false
 
 -- ScreenGuiを作成（CoreGuiに配置してプレイヤーが死んでも消えないようにする）
-local screenGui = Instance.new("ScreenGui", game:GetService("ScreenGui"))
+local screenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 screenGui.Name = "TeleportGui"
 
 -- ボタンを作成 (ScreenGuiに配置)
@@ -64,7 +64,7 @@ floatingButton.MouseButton1Click:Connect(function()
     currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
 
     -- 40に達したら1に戻す
-    if currentChestNumber > 40 then
+    if currentChestNumber > 30 then
         currentChestNumber = 1
     end
 
@@ -115,7 +115,7 @@ ChestTab:AddButton({
         currentChestNumber = currentChestNumber + 1  -- 次のチェストへ
 
         -- 40に達したら1に戻す
-        if currentChestNumber > 40 then
+        if currentChestNumber > 30 then
             currentChestNumber = 1
         end
 
@@ -200,7 +200,7 @@ game:GetService("RunService").Stepped:Connect(function()
 end)
 
 -- 空中TPボタン
-local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("CoreGui"))
+local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("ScreenGui"))
 screenGui.Name = "TeleportGui"
 
 local floatingButton = Instance.new("TextButton")
