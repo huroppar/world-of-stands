@@ -46,7 +46,7 @@ end
 local buttonVisible = false
 
 -- ScreenGuiを作成（1回で十分）
-local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("CoreGui"))
 screenGui.Name = "TeleportGui"
 
 -- ボタンを作成 (ScreenGuiに配置)
@@ -204,7 +204,7 @@ game:GetService("RunService").Stepped:Connect(function()
 end)
 
 -- 空中TPボタン
-local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("CoreGui"))
 screenGui.Name = "TeleportGui"
 
 local floatingButton = Instance.new("TextButton")
