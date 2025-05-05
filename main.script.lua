@@ -200,18 +200,16 @@ game:GetService("RunService").Stepped:Connect(function()
 end)
 
 -- 空中TPボタン
-local screenGui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("ScreenGui"))
-screenGui.Name = "TeleportGui"
+local airTpButton = Instance.new("TextButton")
+airTpButton.Size = UDim2.new(0, 100, 0, 50)
+airTpButton.Position = UDim2.new(0.5, -50, 0.5, -100)  -- 位置を画面中央に設定
+airTpButton.Text = "空中TP"
+airTpButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+airTpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+airTpButton.Parent = screenGui
+airTpButton.Active = true
+airTpButton.Draggable = true
 
-local floatingButton = Instance.new("TextButton")
-floatingButton.Size = UDim2.new(0, 100, 0, 50)
-floatingButton.Position = UDim2.new(0.5, -50, 1, -100)
-floatingButton.Text = "空中TP"
-floatingButton.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-floatingButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-floatingButton.Parent = screenGui
-floatingButton.Active = true
-floatingButton.Draggable = true
 
 
 MainTab:AddToggle({
