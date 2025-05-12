@@ -223,7 +223,7 @@ MainTab:AddToggle({
 local floating = false
 local originalPosition
 
-floatingButton.MouseButton1Click:Connect(function()
+airTpButton.MouseButton1Click:Connect(function()
     local character = LocalPlayer.Character
     if character and character:FindFirstChild("HumanoidRootPart") then
         local hrp = character.HumanoidRootPart
@@ -253,6 +253,7 @@ floatingButton.MouseButton1Click:Connect(function()
             ground.Position = hrp.Position - Vector3.new(0, 5, 0)
             ground.Anchored = true
             ground.CanCollide = true
+            ground.Name = "SkyPlatform"
             ground.Parent = workspace
 
             floating = true
@@ -260,10 +261,14 @@ floatingButton.MouseButton1Click:Connect(function()
             -- 戻す処理
             hrp.CFrame = CFrame.new(originalPosition)
 
-            -- 落下防止解除
             local float = hrp:FindFirstChild("FloatForce")
             if float then
                 float:Destroy()
+            end
+
+            local platform = workspace:FindFirstChild("SkyPlatform")
+            if platform then
+                platform:Destroy()
             end
 
             if humanoid then
